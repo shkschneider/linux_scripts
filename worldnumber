@@ -1,0 +1,8 @@
+#!/bin/bash
+#
+# (C) 2010 - Alan SCHNEIDER <shk.schneider@gmail.com>
+# Distributed under GNU GPLv2+
+#
+
+HUMANS=$(wget -q -O - http://www.census.gov/ipc/www/popclockworld.html | grep worldnumber | sed -r 's/^.*id="worldnumber">([0-9\,]+)<\/div>.*$/\1/')
+echo -e "$HUMANS humans on earth we are"

@@ -1,0 +1,12 @@
+#!/bin/bash
+#
+# (C) 2010 - Alan SCHNEIDER <shk.schneider@gmail.com>
+# Distributed under GNU GPLv2+
+#
+
+COLUMNS=$(echo `tput cols`"/2" | bc -q)
+for ARGV in "$@" ; do
+    OFFSET=$(echo `echo $ARGV | wc -c`"/2" | bc -q)
+    COLS=$(($COLUMNS + $OFFSET + 1))
+    printf "%${COLS}s\n" "$ARGV"
+done

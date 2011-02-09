@@ -1,0 +1,10 @@
+#!/bin/bash
+#
+# (C) 2010 - Alan SCHNEIDER <shk.schneider@gmail.com>
+# Distributed under GNU GPLv2+
+#
+
+COLUMNS=$(tput cols)
+for ARGV in "$@" ; do
+    printf "%${COLUMNS}s\n" "$ARGV"
+done

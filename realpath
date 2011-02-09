@@ -1,0 +1,13 @@
+#!/bin/bash
+#
+# (C) 2011 - Alan SCHNEIDER <shk.schneider@gmail.com>
+# Distributed under GNU GPLv2+
+#
+
+if [ $# -eq 0 ] ; then
+    echo $(basename `readlink -f .`)": "$(readlink -f .)
+else
+    for ARGV in $@ ; do
+	echo $(basename $ARGV)": "$(readlink -f $ARGV)
+    done
+fi

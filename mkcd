@@ -1,0 +1,9 @@
+#!/bin/bash
+#
+# (C) 2010 - Alan SCHNEIDER <shk.schneider@gmail.com>
+# Distributed under GNU GPLv2+
+#
+
+[ $# -ne 1 ] && echo "Usage: `basename $0` <dir>" >&2 && exit 1
+
+mkdir "$1" && cd "$1"

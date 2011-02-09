@@ -1,0 +1,13 @@
+#!/bin/bash
+#
+# (C) 2010 - Alan SCHNEIDER <shk.schneider@gmail.com>
+# Distributed under GNU GPLv2+
+#
+
+DIR=$(readlink -f .)
+SIZE="500M"
+[ $# -eq 2 ] && DIR=$(readlink -f "$1") && SIZE=$2
+
+echo " * Searching in $DIR for files bigger than ${SIZE}B..."
+
+find . -type f -size +$SIZE -exec ls -lh {} \; 2>/dev/null | cut -d' ' -f5,8- | sed "s/ /\t/"

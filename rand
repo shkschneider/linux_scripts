@@ -1,0 +1,10 @@
+#!/bin/bash
+#
+# (C) 2009 - Alan SCHNEIDER <shk.schneider@gmail.com>
+# Distributed under GNU GPLv2+
+#
+
+NB=10
+[ $# -gt 0 ] && NB=$1
+
+echo $[ ( $RANDOM % $NB  ) + 1 ]

@@ -1,0 +1,8 @@
+#!/bin/bash
+#
+# (C) 2010 - Alan SCHNEIDER <shk.schneider@gmail.com>
+# Distributed under GNU GPLv2+
+#
+
+LATEST=$(wget -q -O - http://www.kernel.org | grep -E '[^\[]<a href="http://www\.kernel\.org/pub/linux/kernel/v[0-9]\.[0-9]/' | grep '</a>' | sed -r 's/^.*>([^<]+)<\/a>.*$/\1/')
+echo $LATEST" http://www.kernel.org/pub/linux/kernel/v"$(echo $LATEST | cut -c1-3)"/linux-"$LATEST".tar.bz2"
