@@ -36,7 +36,7 @@ for FILE in "$@" ; do
     OUTPUT_NAME=$(echo "$FILE" | sed -r 's/\.[^\.]+$/.avi/')
     # TODO: check if output file exists and size > 0
     echo " [$I/$#] Converting '$INPUT_NAME' ($INPUT_SIZE) to '$OUTPUT_NAME'..."
-    AUDIO=$(ffmpeg -i tbbt.mkv 2>&1 | grep ": Audio: " | head -1 | sed -r 's/^ +//' | cut -d' ' -f4 | cut -d',' -f1 | tr "[A-Z]" "[a-z]")
+    AUDIO=$(ffmpeg -i "$FILE" 2>&1 | grep ": Audio: " | head -1 | sed -r 's/^ +//' | cut -d' ' -f4 | cut -d',' -f1 | tr "[A-Z]" "[a-z]")
     if [ "_$AUDIO" = "_ac3" ] ; then
 	mencoder -oac mp3lame -lameopts cbr=128 -ovc copy "$INPUT_NAME" -o "$OUTPUT_NAME" >/dev/null 2>&1
     else
