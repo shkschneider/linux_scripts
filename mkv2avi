@@ -47,7 +47,7 @@ I=$(($I - 1))
 echo "$I files converted."
 echo -n " Would you like to delete all converted MKV files? [Y/n] : "
 read REP
-if [ " _$REP" != "_n" ] ; then
+if [ "_$REP" != "_n" ] ; then
     for FILE in "$@" ; do
 	FILE=$(readlink -f "$FILE")
 	rm -f "$FILE"
