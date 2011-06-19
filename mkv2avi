@@ -33,7 +33,8 @@ for FILE in "$@" ; do
     FILE=$(readlink -f "$FILE")
     INPUT_NAME=$(echo "$FILE")
     INPUT_SIZE=$(du -sh "$FILE" | tr "\t" " " | cut -d' ' -f1)
-    OUTPUT_NAME=$(echo "$FILE" | sed -r 's/\..+$/.avi/')
+    OUTPUT_NAME=$(echo "$FILE" | sed -r 's/\.[^\.]+$/.avi/')
+    # TODO: check if output file exists and size > 0
     echo " [$I/$#] Converting '$INPUT_NAME' ($INPUT_SIZE) to '$OUTPUT_NAME'..."
     AUDIO=$(ffmpeg -i tbbt.mkv 2>&1 | grep ": Audio: " | head -1 | sed -r 's/^ +//' | cut -d' ' -f4 | cut -d',' -f1 | tr "[A-Z]" "[a-z]")
     if [ "_$AUDIO" = "_ac3" ] ; then
@@ -41,6 +42,7 @@ for FILE in "$@" ; do
     else
 	mencoder -oac copy -ovc copy "$INPUT_NAME" -o "$OUTPUT_NAME" >/dev/null 2>&1
     fi
+    # TODO: ask to delete old file? (or make an option)
     I=$(($I + 1))
 done
 echo "done."
