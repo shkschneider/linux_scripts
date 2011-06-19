@@ -1,0 +1,41 @@
+#!/bin/bash
+#
+# mkv2avi -- convert mkv files to avi
+# Copyright (C) 2011  Alan "Shtark" SCHNEIDER
+#                     <shk.schneider[at]gmail.com>
+#
+# This program comes with ABSOLUTELY NO WARRANTY.
+# This is free software, and you are welcome to redistribute it
+# under certain conditions.
+#
+
+[ "_`which mencoder`" = "_" ] && echo "E: mencoder: Command not found" >&2 && return 1
+[ "_`which lame`" = "_" ] && echo "E: lame: Command not found" >&2 && return 1
+[ "_`which ffmpeg`" = "_" ] && echo "E: ffmpeg: Command not found" >&2 && return 1
+[ "_`which du`" = "_" ] && echo "E: du: Command not found" >&2 && return 1
+
+[ $# -eq 0 ] && echo "Usage: `basename $0` <FILE> [...]" >&2 && exit 1
+
+SIZE=0
+for FILE in "$@" ; do
+    FILE=$(readlink -f "$FILE")
+    [ ! -e "$FILE" ] && echo "E: $FILE: No such file or directory" >&2 && exit 1
+    [ -d "$FILE" ] && echo "E: $FILE: Is a directory" >&2 && exit 1
+    [ ! -r "$FILE" ] && echo "E: $FILE: Permission denied" >&2 && exit 1
+    INPUT_SIZE=$(du -s "$FILE" | tr "\t" " " | cut -d' ' -f1)
+    SIZE=$(($SIZE + $INPUT_SIZE))
+done
+
+echo "$# file(s) will be proceed ("$(echo "$SIZE/1024" | bc -q)"M)"
+
+I=1
+for FILE in "$@" ; do
+    FILE=$(readlink -f "$FILE")
+    INPUT_NAME=$(echo "$FILE")
+    INPUT_SIZE=$(du -sh "$FILE" | tr "\t" " " | cut -d' ' -f1)
+    OUTPUT_NAME=$(echo "$FILE" | sed -r 's/\..+$/.avi/')
+    echo " [$I/$#] Converting '$INPUT_NAME' ($INPUT_SIZE) to '$OUTPUT_NAME'..."
+    mencoder -oac copy -ovc copy "$INPUT_NAME" -o "$OUTPUT_NAME" >/dev/null 2>&1
+    I=$(($I + 1))
+done
+echo "done."
