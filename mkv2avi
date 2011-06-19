@@ -38,9 +38,8 @@ for FILE in "$@" ; do
     OUTPUT_NAME=$(echo "$FILE" | sed -r 's/\.[^\.]+$/.avi/')
     echo " [$I/$#] Converting '$INPUT_NAME' ($INPUT_SIZE) to '$OUTPUT_NAME'..."
     AUDIO=$(ffmpeg -i "$FILE" 2>&1 | grep ": Audio: " | head -1 | sed -r 's/^ +//' | cut -d' ' -f4 | cut -d',' -f1 | tr "[A-Z]" "[a-z]")
-    if [ "_$AUDIO" = "_ac3" ] ; then
-	mencoder -oac mp3lame -lameopts cbr=128 -ovc copy "$INPUT_NAME" -o "$OUTPUT_NAME" >/dev/null 2>&1
-    elif [ "_$AUDIO" = "_aac" ] ; then
+    # looks like VLC does not like non-mp3 audio source coming from mkv files
+    if [ "_$AUDIO" != "_mp3" ] ; then
 	mencoder -oac mp3lame -lameopts cbr=128 -ovc copy "$INPUT_NAME" -o "$OUTPUT_NAME" >/dev/null 2>&1
     else
 	mencoder -oac copy -ovc copy "$INPUT_NAME" -o "$OUTPUT_NAME" >/dev/null 2>&1
