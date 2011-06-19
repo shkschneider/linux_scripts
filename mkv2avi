@@ -28,7 +28,9 @@ done
 
 echo "$# file(s) will be proceed ("$(echo "$SIZE/1024" | bc -q)"M)"
 
+# begin
 I=1
+F=0
 for FILE in "$@" ; do
     FILE=$(readlink -f "$FILE")
     INPUT_NAME=$(echo "$FILE")
@@ -38,19 +40,37 @@ for FILE in "$@" ; do
     AUDIO=$(ffmpeg -i "$FILE" 2>&1 | grep ": Audio: " | head -1 | sed -r 's/^ +//' | cut -d' ' -f4 | cut -d',' -f1 | tr "[A-Z]" "[a-z]")
     if [ "_$AUDIO" = "_ac3" ] ; then
 	mencoder -oac mp3lame -lameopts cbr=128 -ovc copy "$INPUT_NAME" -o "$OUTPUT_NAME" >/dev/null 2>&1
+    elif [ "_$AUDIO" = "_aac" ] ; then
+	mencoder -oac mp3lame -lameopts cbr=128 -ovc copy "$INPUT_NAME" -o "$OUTPUT_NAME" >/dev/null 2>&1
     else
 	mencoder -oac copy -ovc copy "$INPUT_NAME" -o "$OUTPUT_NAME" >/dev/null 2>&1
+    fi
+    OUTPUT_SIZE=$(du -s "$OUTPUT_NAME" | tr "\t" " " | cut -d' ' -f1)
+    if [ $OUTPUT_SIZE -eq 0 ] ; then
+	echo " FAILURE: The conversion seems to have failed! (audio: $AUDIO)"
+	shift
+	F=$(($F + 1))
     fi
     I=$(($I + 1))
 done
 I=$(($I - 1))
-echo "$I files converted."
-echo -n " Would you like to delete all converted MKV files? [Y/n] : "
-read REP
-if [ "_$REP" != "_n" ] ; then
-    for FILE in "$@" ; do
-	FILE=$(readlink -f "$FILE")
-	rm -f "$FILE"
-    done
-    echo "$I files deleted."
+
+# end
+if [ $F -gt 0 ] ; then
+    echo $(($I - $F))" files converted ($F fails)."
+else
+    echo $(($I - $F))" files converted."
+fi
+
+# delete mkv
+if [ $F -ne $I ] ; then
+    echo -n " Would you like to delete all converted MKV files? [Y/n] : "
+    read REP
+    if [ "_$REP" != "_n" ] ; then
+	for FILE in "$@" ; do
+	    FILE=$(readlink -f "$FILE")
+	    rm -f "$FILE"
+	done
+	echo "$I files deleted."
+    fi
 fi
