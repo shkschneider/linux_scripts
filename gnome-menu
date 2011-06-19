@@ -6,7 +6,7 @@
 
 [ "_`which gconftool`" = "_" ] && echo "E: gconftool: No such file or directory" >&2 && exit 1
 
-echo " * menu:minimize,maximize,close"
+echo " * button_layout = menu:minimize,maximize,close"
 gconftool-2 --set /apps/metacity/general/button_layout --type string "menu:minimize,maximize,close"
 echo " * menu_have_icons = true"
 gconftool-2 --set /desktop/gnome/interface/menus_have_icons --type boolean "true"

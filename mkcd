@@ -1,9 +1,14 @@
 #!/bin/bash
 #
-# (C) 2010 - Alan SCHNEIDER <shk.schneider@gmail.com>
+# (C) 2010,2011 - Alan SCHNEIDER <shk.schneider@gmail.com>
 # Distributed under GNU GPLv2+
 #
 
 [ $# -ne 1 ] && echo "Usage: `basename $0` <dir>" >&2 && exit 1
+[ -d "$1" ] && echo "E: $1: Directory already exists" >&2 && exit 1
+[ ! -w "`dirname $1`" ] && echo "E: `dirname $1`: Permission denied" >&2 && exit 1
 
+# You MUST use that script as follow:
+# /> . mkcd <DIR>
 mkdir "$1" && cd "$1"
+# If you don't like it, just set an alias in your shell.

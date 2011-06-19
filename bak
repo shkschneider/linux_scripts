@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# (C) 2010 - Alan SCHNEIDER <shk.schneider@gmail.com>
+# (C) 2010,2011 - Alan SCHNEIDER <shk.schneider@gmail.com>
 # Distributed under GNU GPLv2+
 #
 
@@ -8,6 +8,7 @@
 
 [ ! -f "$1" -a ! -d "$1" ] && echo "E: $1: No such file or directory" && exit 1
 [ ! -e "$1" ] && echo "E: $1: Permission denied" && exit 1
+[ ! -w "$`dirname "$1"`" ] && echo "E: $`dirname "$1"`: Permission denied" && exit 1
 
 BACK="$1.`date +%Y%m%d-%H%m%S`"
 cp -R "$1" "$BACK"

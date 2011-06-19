@@ -6,3 +6,5 @@
 
 find . -type f -name "*~" -exec rm -vf {} \;
 find . -type f -name "#*#" -exec rm -vf {} \;
+#find . -type f -name "*.orig" -exec rm -vf {} \;
+#find . -type f -name "*.bak" -exec rm -vf {} \;
