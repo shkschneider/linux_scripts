@@ -9,10 +9,10 @@
 # under certain conditions.
 #
 
-[ "_`which mencoder`" = "_" ] && echo "E: mencoder: Command not found" >&2 && return 1
-[ "_`which lame`" = "_" ] && echo "E: lame: Command not found" >&2 && return 1
-[ "_`which ffmpeg`" = "_" ] && echo "E: ffmpeg: Command not found" >&2 && return 1
-[ "_`which du`" = "_" ] && echo "E: du: Command not found" >&2 && return 1
+[ "_`which mencoder`" = "_" ] && echo "E: mencoder: Command not found." >&2 && exit 1
+[ "_`which lame`" = "_" ] && echo "E: lame: Command not found." >&2 && exit 1
+[ "_`which ffmpeg`" = "_" ] && echo "E: ffmpeg: Command not found." >&2 && exit 1
+[ "_`which du`" = "_" ] && echo "E: du: Command not found." >&2 && exit 1
 
 [ $# -eq 0 ] && echo "Usage: `basename $0` <FILE> [...]" >&2 && exit 1
 

@@ -1,4 +1,5 @@
 #!/bin/bash
+#
 # ping-apt -- ping your apt repositories
 # Copyright (C) 2010  Alan "Shtark" SCHNEIDER
 #                     <shk.schneider[at]gmail.com>
@@ -10,6 +11,8 @@
 
 OK=$(echo -e "[ \033[0;32mok\033[0;0m ]")
 KO=$(echo -e "[ \033[0;31mko\033[0;0m ]")
+
+[ "_`which curl`" = "_" ] && echo "E: curl: Command not found" >&2 && exit 1
 
 function ping_apt() {
     HTTP_STATUS=$(curl -I "$URL" 2>/dev/null | grep -E '^HTTP' | tr -d "\r" | awk '{print "HTTP/"$2}')
@@ -30,8 +33,6 @@ function ping_apt() {
 	printf "%${OFFSET}s\n" "$KO"
     fi
 }
-
-[ "_`which curl`" = "_" ] && echo "E: which: Command not found" >&2 && exit 1
 
 if [ $# -ne 0 ] ; then
     FILE=$(readlink -f "$1")

@@ -1,12 +1,19 @@
 #!/bin/bash
 #
-# (C) 2010,2011 - Alan SCHNEIDER <shk.schneider@gmail.com>
-# Distributed under GNU GPLv2+
+# mkcd -- mkdir then cd
+# Copyright (C) 2010-2011  Alan "Shtark" SCHNEIDER
+#                          <shk.schneider[at]gmail.com>
+#
+# This program comes with ABSOLUTELY NO WARRANTY.
+# This is free software, and you are welcome to redistribute it
+# under certain conditions.
 #
 
-[ $# -ne 1 ] && echo "Usage: `basename $0` <dir>" >&2 && exit 1
-[ -d "$1" ] && echo "E: $1: Directory already exists" >&2 && exit 1
-[ ! -w "`dirname $1`" ] && echo "E: `dirname $1`: Permission denied" >&2 && exit 1
+[ $# -ne 1 ] && echo "Usage: . `basename $0` <dir>" >&2 && exit 1
+
+[ -d "$1" ] && echo "$1: Directory already exists." >&2 && cd "$1" && pwd && exit 1
+
+[ ! -w "`dirname $1`" ] && echo "E: `dirname $1`: Permission denied." >&2 && exit 1
 
 # You MUST use that script as follow:
 # /> . mkcd <DIR>

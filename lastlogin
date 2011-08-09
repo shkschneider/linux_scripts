@@ -1,0 +1,31 @@
+#!/bin/bash
+#
+# lastlogin -- retrieve last login
+# Copyright (C) 2010-2011  Alan "Shtark" SCHNEIDER
+#                          <shk.schneider[at]gmail.com>
+#
+# This program comes with ABSOLUTELY NO WARRANTY.
+# This is free software, and you are welcome to redistribute it
+# under certain conditions.
+#
+
+function lastlogin_user() {
+    # 1: user
+    if [ "_`egrep "$1:" /etc/passwd`" != "_" ] ; then
+	lastlog -u "$1" | tail -1 | awk '{print $1,$3}' | tr '-' '.' | sed -r 's/\.$//'
+    else
+	echo "E: $1: No such user." >&2
+    fi
+}
+
+if [ $# -eq 0 ] ; then
+    if [ "_`echo ${USER}`" != "_" ] ; then
+	lastlogin_user ${USER}
+    else
+	echo "E: " >&2 && exit 1
+    fi
+else
+    for USER in $@ ; do
+	lastlogin_user $USER
+    done
+fi

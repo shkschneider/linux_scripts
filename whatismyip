@@ -1,9 +1,19 @@
 #!/bin/bash
 #
-# (C) 2010 - Alan SCHNEIDER <shk.schneider@gmail.com>
-# Distributed under GNU GPLv2+
+# whatismyip -- retrieve your external IP from command line
+# Copyright (C) 2010  Alan "Shtark" SCHNEIDER
+#                     <shk.schneider[at]gmail.com>
 #
+# This program comes with ABSOLUTELY NO WARRANTY.
+# This is free software, and you are welcome to redistribute it
+# under certain conditions.
+#
+
+[ "_`which ifconfig`" = "_" ] && echo "E: ifconfig: Command not found." >&2 && exit 1
+[ "_`which wget`" = "_" ] && echo "E: wget: Command not found." >&2 && exit 1
 
 INTERNAL=$(ifconfig  | grep "inet addr:" | grep Bcast | awk '{print $2}' | cut -d':' -f2)
 EXTERNAL=$(wget -q -O- checkip.dyndns.org | sed -r 's/^.* ([0-9\.]+)<.*/\1/g')
 echo "$INTERNAL $EXTERNAL"
+
+# Todo: retrieve interface

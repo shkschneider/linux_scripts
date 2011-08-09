@@ -22,7 +22,7 @@
 
 function cmd() {
     for BIN in "$1" ; do
-	[ "_`which $BIN`" = "_" ] && echo "E: $BIN: Command not found" >&2 && return 1
+	[ "_`which $BIN`" = "_" ] && echo "E: $BIN: Command not found." >&2 && return 1
     done
     return 0
 }
@@ -82,7 +82,7 @@ for FILE in "$@" ; do
 	[ "_$REP" = "_n" ] && continue
 	rm "$NAME" -rf
     fi
-#   prevent from tab-bombs
+    # prevent tab-bombs
     mkdir "$NAME" && cd "$NAME"
     extract
 done

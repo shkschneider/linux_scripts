@@ -1,12 +1,15 @@
 #!/bin/bash
 #
-# (C) 2011 - Alan SCHNEIDER <shk.schneider@gmail.com>
-# Distributed under GNU GPLv2+
+# apt-get-key -- resolve your missing gpg keys
+# Copyright (C) 2010  Alan "Shtark" SCHNEIDER
+#                     <shk.schneider[at]gmail.com>
 #
-# Usage: apt-get-key [key ...]
+# This program comes with ABSOLUTELY NO WARRANTY.
+# This is free software, and you are welcome to redistribute it
+# under certain conditions.
 #
 
-[ `whoami` != "root" ] && echo "Are you root?" >&2 && exit 1
+[ `whoami` != "root" ] && echo "E: Permission denied. Are you root?" >&2 && exit 1
 
 [ "_`which aptitude`" = "_" ] && echo "E: aptitude: Command not found" >&2 && exit 1
 [ "_`which apt-key`" = "_" ] && echo "E: apt-key: Command not found" >&2 && exit 1

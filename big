@@ -1,7 +1,12 @@
 #!/bin/bash
 #
-# (C) 2010,2011 - Alan SCHNEIDER <shk.schneider@gmail.com>
-# Distributed under GNU GPLv2+
+# big -- list big files
+# Copyright (C) 2010-2011  Alan "Shtark" SCHNEIDER
+#                          <shk.schneider[at]gmail.com>
+#
+# This program comes with ABSOLUTELY NO WARRANTY.
+# This is free software, and you are welcome to redistribute it
+# under certain conditions.
 #
 
 if [ $# -ne 2 ] ; then
@@ -12,10 +17,10 @@ fi
 
 DIR=$(readlink -f "$1")
 SIZE=$(echo "$2" | tr "[a-z]" "[A-Z]" | egrep "^[0-9]+[MGT]?$") 
-[ ! -e "$DIR" ] && echo "E: $DIR: No such file or directory" >&2 && exit 1
-[ ! -d "$DIR" ] && echo "E: $DIR: Not a directory" >&2 && exit 1
-[ ! -r "$DIR" ] && echo "E: $DIR: Permission denied" >&2 && exit 1
-[ "_$SIZE" = "_" ] && echo "E: Invalid size" >&2 && exit 1
+[ ! -e "$DIR" ] && echo "E: $DIR: No such file or directory." >&2 && exit 1
+[ ! -d "$DIR" ] && echo "E: $DIR: Not a directory." >&2 && exit 1
+[ ! -r "$DIR" ] && echo "E: $DIR: Permission denied." >&2 && exit 1
+[ "_$SIZE" = "_" ] && echo "E: Invalid size." >&2 && exit 1
 
 echo " * Searching in $DIR for files bigger than ${SIZE}B..."
 find "$DIR" -type f -size +$SIZE -exec ls -lh {} \; 2>/dev/null | sed -r 's/ +/ /g' | cut -d' ' -f5,9-

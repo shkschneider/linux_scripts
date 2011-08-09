@@ -1,7 +1,12 @@
 #!/bin/bash
 #
-# (C) 2010 - Alan SCHNEIDER <shk.schneider@gmail.com>
-# Distributed under GNU GPLv2+
+# repeat -- re-code of zsh's repeat built-in
+# Copyright (C) 2010  Alan "Shtark" SCHNEIDER
+#                     <shk.schneider[at]gmail.com>
+#
+# This program comes with ABSOLUTELY NO WARRANTY.
+# This is free software, and you are welcome to redistribute it
+# under certain conditions.
 #
 
 [ $# -lt 2 ] && echo "Usage: `basename $0` <time> <command [...]>" >&2 && exit 1

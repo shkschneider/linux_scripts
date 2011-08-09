@@ -1,10 +1,15 @@
 #!/bin/bash
 #
-# (C) 2010 - Alan SCHNEIDER <shk.schneider@gmail.com>
-# Distributed under GNU GPLv2+
+# gnome-menu -- use GNOME2 menu style
+# Copyright (C) 2010  Alan "Shtark" SCHNEIDER
+#                     <shk.schneider[at]gmail.com>
+#
+# This program comes with ABSOLUTELY NO WARRANTY.
+# This is free software, and you are welcome to redistribute it
+# under certain conditions.
 #
 
-[ "_`which gconftool`" = "_" ] && echo "E: gconftool: No such file or directory" >&2 && exit 1
+[ "_`which gconftool`" = "_" ] && echo "E: gconftool: Command not found." >&2 && exit 1
 
 echo " * button_layout = menu:minimize,maximize,close"
 gconftool-2 --set /apps/metacity/general/button_layout --type string "menu:minimize,maximize,close"

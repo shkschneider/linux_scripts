@@ -1,10 +1,15 @@
 #!/bin/bash
 #
-# (C) 2009 - Alan SCHNEIDER <shk.schneider@gmail.com>
-# Distributed under GNU GPLv2+
+# clean -- delete annoying tmp files
+# Copyright (C) 2009  Alan "Shtark" SCHNEIDER
+#                     <shk.schneider[at]gmail.com>
+#
+# This program comes with ABSOLUTELY NO WARRANTY.
+# This is free software, and you are welcome to redistribute it
+# under certain conditions.
 #
 
 find . -type f -name "*~" -exec rm -vf {} \;
 find . -type f -name "#*#" -exec rm -vf {} \;
-#find . -type f -name "*.orig" -exec rm -vf {} \;
-#find . -type f -name "*.bak" -exec rm -vf {} \;
+find . -type f -name "*.orig" -exec rm -vf {} \;
+find . -type f -name "*.bak" -exec rm -vf {} \;

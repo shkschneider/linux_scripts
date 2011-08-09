@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# hidden -- list only hidden files in cwd
+# revcat -- output a file from bottom to top
 # Copyright (C) 2011  Alan "Shtark" SCHNEIDER
 #                     <shk.schneider[at]gmail.com>
 #
@@ -9,4 +9,8 @@
 # under certain conditions.
 #
 
-ls -d .[[:alnum:]]* 2> /dev/null || echo "`basename $0`: No hidden files here..."
+[ $# -eq 0 ] && echo "Usage: `basename $0` <FILE> [...]" >&2 && exit 1
+
+for FILE in $@ ; do
+    sed -n '1!G;h;$p' "$FILE"
+done

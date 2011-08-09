@@ -1,7 +1,18 @@
 #!/bin/bash
 #
-# (C) 2011 - Alan SCHNEIDER <shk.schneider@gmail.com>
-# Distributed under GNU GPLv2+
+# psx -- ps aux | grep alias-like script
+# Copyright (C) 2011  Alan "Shtark" SCHNEIDER
+#                     <shk.schneider[at]gmail.com>
+#
+# This program comes with ABSOLUTELY NO WARRANTY.
+# This is free software, and you are welcome to redistribute it
+# under certain conditions.
 #
 
-[ $# -gt 0 ] && ps aux | grep $1 || ps aux
+if [ $# -eq 0 ] ; then
+    ps aux | grep -v "/bin/bash $0"
+else
+    for ARGV in $@ ; do
+	ps aux | grep "$ARGV" | grep -v "grep $ARGV" | grep -v "/bin/bash $0 $*"
+    done
+fi

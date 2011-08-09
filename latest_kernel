@@ -1,7 +1,12 @@
 #!/bin/bash
 #
-# (C) 2010 - Alan SCHNEIDER <shk.schneider@gmail.com>
-# Distributed under GNU GPLv2+
+# lastest_kernel -- outputs latest Linux kernel version
+# Copyright (C) 2010  Alan "Shtark" SCHNEIDER
+#                     <shk.schneider[at]gmail.com>
+#
+# This program comes with ABSOLUTELY NO WARRANTY.
+# This is free software, and you are welcome to redistribute it
+# under certain conditions.
 #
 
 LATEST=$(wget -q -O - http://www.kernel.org | grep -E '[^\[]<a href="http://www\.kernel\.org/pub/linux/kernel/v[0-9]\.[0-9]/' | grep '</a>' | sed -r 's/^.*>([^<]+)<\/a>.*$/\1/')

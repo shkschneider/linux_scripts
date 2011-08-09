@@ -1,8 +1,15 @@
 #!/bin/bash
 #
-# (C) 2010 - Alan SCHNEIDER <shk.schneider@gmail.com>
-# Distributed under GNU GPLv2+
+# alignr -- output text on the right in a terminal
+# Copyright (C) 2010  Alan "Shtark" SCHNEIDER
+#                     <shk.schneider[at]gmail.com>
 #
+# This program comes with ABSOLUTELY NO WARRANTY.
+# This is free software, and you are welcome to redistribute it
+# under certain conditions.
+#
+
+[ $# -eq 0 ] && echo "Usage: `basename $0` <text> [...]" >&2 && exit 1
 
 COLUMNS=$(tput cols)
 for ARGV in "$@" ; do
