@@ -1,8 +1,0 @@
-#!/bin/bash
-#
-# (C) 2011 - Alan SCHNEIDER <shk.schneider@gmail.com>
-# Distributed under GNU GPLv2+
-#
-
-echo " * Taking ownership over $@"
-chown -R `whoami`:`whoami` $@
