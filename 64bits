@@ -11,5 +11,5 @@
 
 [ "_`which file`" = "_" ] && echo "E: file: Command not found." >&2 && exit 1
 
-echo $(uname -o)" "$(file /usr/bin/file | awk '{print $3}')
+echo $(uname -o)" "$(file -b `which file` | awk '{print $2}')
 echo $(cat /proc/cpuinfo | grep flags | grep lm > /dev/null && echo "Yes" || echo "No")
