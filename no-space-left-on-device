@@ -1,0 +1,43 @@
+#!/bin/bash
+#
+# no-space-left-on-device -- cleanup some space
+# Copyright (C) 2011  Alan "Shtark" SCHNEIDER
+#                     <shk.schneider[at]gmail.com>
+#
+# This program comes with ABSOLUTELY NO WARRANTY.
+# This is free software, and you are welcome to redistribute it
+# under certain conditions.
+#
+
+echo " * Actual situation"
+
+df -h /
+
+[ `whoami` != "root" ] && echo "E: Permission denied. Are you root?" >&2 && exit 1
+
+echo " * Cleaning..."
+
+echo "   dpkg --purge"
+dpkg --purge $(COLUMNS=200 dpkg -l | grep "^rc" | tr -s ' ' | cut -d ' ' -f 2)
+
+echo "   aptitude autoclean"
+aptitude autoclean
+
+echo "   aptitude clean"
+aptitude clean
+
+echo "   empty trash"
+rm -r -f /home/*/.local/share/Trash/files/*
+
+echo "   empty old thumbnails"
+find /home/*/.thumbnails -type f -atime +7 -exec rm {} \;
+
+echo "   aptitude purge"
+aptitude purge $(dpkg -l | grep '^ii  linux\-\(headers\|image\)\-[0-9]' | grep -v `uname -r` | cut -d' ' -f3)
+
+echo "   localepurge"
+aptitude install localepurge
+
+echo "Done."
+
+exit 0
