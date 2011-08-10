@@ -1,0 +1,57 @@
+#!/bin/sh
+#
+# netcraft -- retrieve web server from URL
+# Copyright (C) 2010-2011  Alan "Shtark" SCHNEIDER
+#                          <shk.schneider[at]gmail.com>
+#
+# This program comes with ABSOLUTELY NO WARRANTY.
+# This is free software, and you are welcome to redistribute it
+# under certain conditions.
+#
+
+[ -x curl ] && echo "E: curl: Command not found" && exit 1
+
+if [ $# -eq 0 ] ; then
+    echo "Usage: `basename $0` <host> [...]" >&2
+    echo "       host must be HTTP or HTTPS" >&2
+    exit 1
+fi
+
+function get_server() {
+    # 1: url
+    DUMP=$(curl -I "$1" 2>/dev/null | cat -e | sed -r 's/...$//g' | sed 's/: /:/g')
+    for LINE in $DUMP ; do
+	case "$LINE" in
+	    Server*)
+		SERVER=$(echo "$LINE" | cut -d':' -f2-)
+		echo "$1  $SERVER"
+		return
+		;;
+	    Location*)
+		LOCATION=$(echo "$LINE" | cut -d':' -f2- | sed -r 's#/$##')
+		get_server "$LOCATION"
+		return
+		;;
+	esac
+    done
+    echo "$1 "
+}
+
+for ARGV in $@ ; do
+    case "$ARGV" in
+	http://*|https://*)
+	    get_server "$ARGV"
+	    continue
+	    ;;
+	*)
+	    if [ "_`echo "$ARGV" | egrep '^[a-z]*://'`" != "_" ] ; then
+		echo "E: Unsupported protocol: \`"$(echo "$ARGV" | cut -d':' -f1)"'" >&2
+		continue
+	    fi
+	    get_server "http://$ARGV"
+	    continue
+	    ;;
+    esac
+done
+
+exit 0
