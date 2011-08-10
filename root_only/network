@@ -12,8 +12,8 @@
 [ `whoami` != "root" ] && echo "E: Permission denied. Are you root?" >&2 && exit 1
 
 [ "_`which ifconfig`" = "_" ] && echo "E: ifconfig: Command not found." >&2 && exit 1
-[ "_`which iwlist`" = "_" ] && echo "E: iwlist: Command not found." >&2 && exit 1
-[ "_`which iwconfig`" = "_" ] && echo "E: iwconfig: Command not found." >&2 && exit 1
+#[ "_`which iwlist`" = "_" ] && echo "E: iwlist: Command not found." >&2 && exit 1
+#[ "_`which iwconfig`" = "_" ] && echo "E: iwconfig: Command not found." >&2 && exit 1
 [ "_`which dhclient`" = "_" ] && echo "E: dhclient: Command not found." >&2 && exit 1
 
 # Usage
@@ -56,7 +56,7 @@ function getIp() {
 # Devices
 
 function devices() {
-    lspci -nn | egrep -i '(ethernet|wlan|wireless|wifi)'
+    lspci -nn | egrep -i '(ethernet|wlan|wireless|wifi)' | cut -d' ' -f2- | sed -r 's/ \[[0-9a-fA-F:]+\]//g' | uniq
 }
 
 # List
@@ -106,10 +106,10 @@ function eth_list() {
 }
 
 function eth_list_up() {
-    INTERFACES=$(ifconfig -a -s | egrep '^eth' | awk '{print $1}')
+    INTERFACES=$(ifconfig -s | egrep '^eth' | awk '{print $1}')
     [ "_$INTERFACES" = "_" ] && return
     for INTERFACE in $INTERFACES ; do
-	if [ `interface_type $INTERFACE` = "eth" ] && [ `interface_status $INTERFACE` = "up" ] ; then
+	if [ `interface_type $INTERFACE` = "eth" ] ; then
 	    echo "$INTERFACE"
 	fi
     done
@@ -170,7 +170,7 @@ function wlan_list() {
 }
 
 function wlan_list_up() {
-    INTERFACES=$(ifconfig -a -s | egrep '^wlan' | awk '{print $1}')
+    INTERFACES=$(ifconfig -s | egrep '^wlan' | awk '{print $1}')
     [ "_$INTERFACES" = "_" ] && return
     for INTERFACE in $INTERFACES ; do
 	if [ `interface_type $INTERFACE` = "wlan" ] ; then
@@ -183,7 +183,7 @@ function wlan_list_down() {
     INTERFACES=$(ifconfig -a -s | egrep '^wlan' | awk '{print $1}')
     [ "_$INTERFACES" = "_" ] && return
     for INTERFACE in $INTERFACES ; do
-	if [ `interface_type $INTERFACE` = "wlan" ] ; then
+	if [ `interface_type $INTERFACE` = "wlan" ] && [ `interface_status $INTERFACE` = "down" ] ; then
 	    echo "$INTERFACE"
 	fi
     done

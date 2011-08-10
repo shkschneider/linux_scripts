@@ -11,33 +11,56 @@
 
 [ "_`which shutdown`" = "_" ] && echo "E: shutdown: Command not found" >&2 && exit 1
 
-if [ $# -eq 0 ] ; then
-    echo "E: Usage: `basename $0` <TIME>" >&2
-    echo "          TIME can have a format dd:hh:mm, hh:mm, mm" >&2
+function usage() {
+    echo "Usage: `basename $0` <TIME>" >&2
+    echo "       TIME can have a format dd:hh:mm, hh:mm, mm" >&2
     exit 1
+}
+
+function down() {
+    # 1: time
+    shutdown -h "+$1" "System is going down NOW!" &
+}
+
+function cancel() {
+    shutdown -c
+}
+
+PID=$(ps aux | grep "shutdown -h" | grep -v "grep shutdown -h" | awk '{print $2}')
+
+if [ $# -eq 0 ] ; then
+    usage
 elif [ "_`echo "$1" | egrep '^[0-9]+:[0-9]+:[0-9]+$'`" != "_" ] ; then
     # dd:hh:mm
     DAYS=$(echo "$1" | cut -d':' -f1)
     HOURS=$(echo "$1" | cut -d':' -f2)
     MINUTES=$(echo "$1" | cut -d':' -f3)
+    [ "_$PID" != "_" ] && cancel
     echo "Shutdown in: ${DAYS}d ${HOURS}h${MINUTES}m"
-    shutdown -h +$(echo "$DAYS * 3600 + $HOURS * 60 + $MINUTES" | bc -q)
+    down $(echo "$DAYS * 3600 + $HOURS * 60 + $MINUTES" | bc -q)
 elif [ "_`echo "$1" | egrep '^[0-9]+:[0-9]+$'`" != "_" ] ; then
     # hh:mm
     DAYS=0
     HOURS=$(echo "$1" | cut -d':' -f1)
     MINUTES=$(echo "$1" | cut -d':' -f2)
+    [ "_$PID" != "_" ] && cancel
     echo "Shutdown in: ${DAYS}d ${HOURS}h${MINUTES}m"
-    shutdown -h +$(echo "$DAYS * 3600 + $HOURS * 60 + $MINUTES" | bc -q)
+    down $(echo "$DAYS * 3600 + $HOURS * 60 + $MINUTES" | bc -q)
 elif [ "_`echo "$1" | egrep '^[0-9]+$'`" != "_" ] ; then
     # mm
     DAYS=0
     HOURS=0
     MINUTES=$(echo "$1")
+    [ "_$PID" != "_" ] && cancel
     echo "Shutdown in: ${DAYS}d ${HOURS}h${MINUTES}m"
-    shutdown -h +$(echo "$DAYS * 3600 + $HOURS * 60 + $MINUTES" | bc -q)
+    down $(echo "$DAYS * 3600 + $HOURS * 60 + $MINUTES" | bc -q)
+elif [ "_$1" = "_cancel" ] ; then
+    if [ "_$PID" != "_" ] ; then
+	echo "Shutdown (pid:$PID) canceled."
+	cancel
+    else
+	echo "No shutdown detected."
+    fi
 else
-    echo "E: Usage: `basename $0` <TIME>" >&2
-    echo "          TIME can have a format dd:hh:mm, hh:mm, mm" >&2
-    exit 1
+    usage
 fi
