@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # netcraft -- retrieve web server from URL
 # Copyright (C) 2010-2011  Alan "Shtark" SCHNEIDER
@@ -24,7 +24,7 @@ function get_server() {
 	case "$LINE" in
 	    Server*)
 		SERVER=$(echo "$LINE" | cut -d':' -f2-)
-		echo "$1  $SERVER"
+		echo "$1 $SERVER"
 		return
 		;;
 	    Location*)
