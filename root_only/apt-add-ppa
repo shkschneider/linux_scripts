@@ -1,17 +1,18 @@
 #!/bin/bash
 #
 # This script should be placed in /usr/sbin/
-# chown root:root /usr/sbin/add-apt-repository
-# chmod 755 /usr/sbin/add-apt-repository
+# chown root:root /usr/sbin/apt-add-ppa
+# chmod 755 /usr/sbin/apt-add-ppa
 #
 
 [ `whoami` != "root" ] && echo "E: Permission denied. Are you root?" >&2 && exit 1
-if [ "_`which lsb_release`" = "_" ] ; then
+
+if [ -z "`which lsb_release`" ] ; then
     echo "E: lsb_release: Command not found" >&2
     echo "   This most certainly means that this script ain't for your distro." >&2
     exit 1
 fi
-[ "_`which curl`" = "_" ] && echo "E: curl: Command not found" >&2 && exit 1
+[ -z "`which curl`" ] && echo "E: curl: Command not found" >&2 && exit 1
 
 [ $# -eq 0 ] && echo "Usage: `basename $0` <ppa> [...]" >&2 && exit 1
 
@@ -38,10 +39,6 @@ case "$LINUX_DISTRO" in
 	;;
 esac
 
-#
-# Add PPA
-#
-
 echo "Adding repositories as for $LINUX_DISTRO/$LINUX_CODENAME..."
 I=0
 for ARGV in $@ ; do
@@ -56,7 +53,7 @@ for ARGV in $@ ; do
     EXISTS=$(grep "deb http://ppa.launchpad.net/$PPA/" /etc/apt/sources.list)
     [ "_$EXISTS" != "_" ] && echo "   E: Already exists: $PPA" >&2 && continue
     echo "" >> /etc/apt/sources.list
-    echo "# add-apt-repository: $PPA" >> /etc/apt/sources.list
+    echo "# apt-add-ppa: $PPA" >> /etc/apt/sources.list
     echo "deb http://ppa.launchpad.net/$PPA/$LINUX_DISTRO $LINUX_CODENAME main" >> /etc/apt/sources.list
     HTTP=$(curl -I "https://launchpad.net/~$USER" 2>/dev/null | head -1 | cut -d' ' -f2)
     if [ "_$HTTP" = "_" ] || [ "_$HTTP" != "_200" ] ; then
@@ -68,28 +65,5 @@ done
 echo -n "Added $I repositor"
 [ $I -gt 1 ] && echo -n "ies" || echo -n "y"
 echo " to /etc/apt/sources.list"
-
-#
-# Get GPG
-#
-
-echo " * Running aptitude update..."
-ERRORS=$(aptitude update 2>&1 | grep "W: GPG error:" | awk '{print $NF}')
-E=0
-for ERROR in $ERRORS ; do
-    E=$(($E + 1))
-done
-echo "   $E GPG error(s) found"
-[ $E -eq 0 ] && exit 0
-SERVER="keyserver.ubuntu.com"
-echo " * Resolving with <$SERVER>..."
-for ERROR in $ERRORS ; do
-    KEY=$(echo $ERROR | rev | cut -c 1-8 | rev)
-    echo "   GPG error: "$ERROR" -> keycode: "$KEY
-    gpg --keyserver $SERVER --recv-key $KEY 2>/dev/null >&2
-    gpg -a --export $KEY | apt-key add - 2>/dev/null >&2
-done
-
-echo "Done."
 
 exit 0

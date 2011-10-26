@@ -12,21 +12,22 @@
 OK=$(echo -e "[ \033[0;32mok\033[0;0m ]")
 KO=$(echo -e "[ \033[0;31mko\033[0;0m ]")
 
-[ "_`which curl`" = "_" ] && echo "E: curl: Command not found" >&2 && exit 1
+[ -z "`which curl`" ] && echo "E: curl: Command not found" >&2 && exit 1
 
 function ping_apt() {
     HTTP_STATUS=$(curl -I "$URL" 2>/dev/null | grep -E '^HTTP' | tr -d "\r" | awk '{print "HTTP/"$2}')
-    if [ "$HTTP_STATUS" != "HTTP/200" ] ; then
-	LOCATION=$(curl -I "$URL" 2>/dev/null | grep -E '^Location' | tr -d "\r" | cut -d' ' -f2-)
-	if [ "_$LOCATION" != "_" ] ; then
-	    HTTP_STATUS=$(curl -I "$LOCATION" 2>/dev/null | grep -E '^HTTP' | tr -d "\r" | awk '{print "HTTP/"$2}')
-	    URL="$LOCATION"
-	fi
-    fi
-    if [ "$HTTP_STATUS" == "HTTP/200" ] ; then
+    [ -z "$HTTP_STATUS" ] && return
+    if [ "$HTTP_STATUS" = "HTTP/200" ] ; then
 	echo -ne "   $HTTP_STATUS $URL"
 	OFFSET=$(echo "`tput cols` - `echo $URL | wc -c` + 2" | bc -q)
 	printf "%${OFFSET}s\n" "$OK"
+    elif [ "$HTTP_STATUS" = "HTTP/302" ] ; then
+	LOCATION=$(curl -I "$URL" 2>/dev/null | grep -E '^Location' | tr -d "\r" | cut -d' ' -f2-)
+	if [ ! -z "$LOCATION" ] ; then
+	    HTTP_STATUS=$(curl -I "$LOCATION" 2>/dev/null | grep -E '^HTTP' | tr -d "\r" | awk '{print "HTTP/"$2}')
+	    #URL=$(echo $LOCATION | cut -d' ' -f3- | cut -d'/' -f1,2,3)
+	    ping_apt "$FILE" "$LINE" "$LOCATION"
+	fi
     else
 	echo -ne "   $HTTP_STATUS $URL ($FILE:$LINE)"
 	OFFSET=$(echo "`tput cols` - `echo "$URL$FILE$LINE" | wc -c` - 2" | bc -q)
@@ -54,7 +55,7 @@ else
 	    grep -HEn '^deb' $FILE 2>/dev/null | sed -e 's/:deb//g' -e 's/:/ /' | awk '{print $1" "$2" " $3}' | \
 		while read REPOSITORY ; do
 		    LINE=$(echo $REPOSITORY | cut -d' ' -f2)
-		    URL=$(echo $REPOSITORY | cut -d' ' -f3-)
+		    URL=$(echo $REPOSITORY | cut -d' ' -f3- | cut -d'/' -f1,2,3)
 		    ping_apt "$FILE" "$LINE" "$URL"
                 done
            done

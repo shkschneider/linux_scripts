@@ -9,11 +9,8 @@
 # under certain conditions.
 #
 
-[ "_`which ifconfig`" = "_" ] && echo "E: ifconfig: Command not found." >&2 && exit 1
 [ "_`which wget`" = "_" ] && echo "E: wget: Command not found." >&2 && exit 1
 
-INTERNAL=$(ifconfig  | grep "inet addr:" | grep Bcast | awk '{print $2}' | cut -d':' -f2)
+INTERNAL=$(cat /proc/net/arp | egrep '^[0-9]' | cut -d' ' -f1 | tr "\n" " " | sed -r 's/ $//')
 EXTERNAL=$(wget -q -O- checkip.dyndns.org | sed -r 's/^.* ([0-9\.]+)<.*/\1/g')
 echo "$INTERNAL $EXTERNAL"
-
-# Todo: retrieve interface

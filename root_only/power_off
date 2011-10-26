@@ -9,7 +9,7 @@
 # under certain conditions.
 #
 
-[ "_`which shutdown`" = "_" ] && echo "E: shutdown: Command not found" >&2 && exit 1
+[ -z "`which shutdown`" ] && echo "E: shutdown: Command not found" >&2 && exit 1
 
 function usage() {
     echo "Usage: `basename $0` <TIME>" >&2
@@ -18,8 +18,7 @@ function usage() {
 }
 
 function down() {
-    # 1: time
-    shutdown -h "+$1" "System is going down NOW!" &
+    shutdown -h "+$1" &
 }
 
 function cancel() {
@@ -30,32 +29,32 @@ PID=$(ps aux | grep "shutdown -h" | grep -v "grep shutdown -h" | awk '{print $2}
 
 if [ $# -eq 0 ] ; then
     usage
-elif [ "_`echo "$1" | egrep '^[0-9]+:[0-9]+:[0-9]+$'`" != "_" ] ; then
+elif [ ! -z "`echo "$1" | egrep '^[0-9]+:[0-9]+:[0-9]+$'`" ] ; then
     # dd:hh:mm
     DAYS=$(echo "$1" | cut -d':' -f1)
     HOURS=$(echo "$1" | cut -d':' -f2)
     MINUTES=$(echo "$1" | cut -d':' -f3)
-    [ "_$PID" != "_" ] && cancel
+    [ ! -z "$PID" ] && cancel
     echo "Shutdown in: ${DAYS}d ${HOURS}h${MINUTES}m"
     down $(echo "$DAYS * 3600 + $HOURS * 60 + $MINUTES" | bc -q)
-elif [ "_`echo "$1" | egrep '^[0-9]+:[0-9]+$'`" != "_" ] ; then
+elif [ ! -z "`echo "$1" | egrep '^[0-9]+:[0-9]+$'`" ] ; then
     # hh:mm
     DAYS=0
     HOURS=$(echo "$1" | cut -d':' -f1)
     MINUTES=$(echo "$1" | cut -d':' -f2)
-    [ "_$PID" != "_" ] && cancel
+    [ ! -z "$PID" ] && cancel
     echo "Shutdown in: ${DAYS}d ${HOURS}h${MINUTES}m"
     down $(echo "$DAYS * 3600 + $HOURS * 60 + $MINUTES" | bc -q)
-elif [ "_`echo "$1" | egrep '^[0-9]+$'`" != "_" ] ; then
+elif [ ! -z "`echo "$1" | egrep '^[0-9]+$'`" ] ; then
     # mm
     DAYS=0
     HOURS=0
     MINUTES=$(echo "$1")
-    [ "_$PID" != "_" ] && cancel
+    [ ! -z "$PID" ] && cancel
     echo "Shutdown in: ${DAYS}d ${HOURS}h${MINUTES}m"
     down $(echo "$DAYS * 3600 + $HOURS * 60 + $MINUTES" | bc -q)
 elif [ "_$1" = "_cancel" ] ; then
-    if [ "_$PID" != "_" ] ; then
+    if [ ! -z "$PID" ] ; then
 	echo "Shutdown (pid:$PID) canceled."
 	cancel
     else
