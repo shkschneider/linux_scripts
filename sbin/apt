@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# apt - wrapper for aptitude/apt-*/dpkg*
+# apt -- wrapper for aptitude/apt-*/dpkg*
 # Copyright (C) 2011  Alan "Shtark" SCHNEIDER
 #                     <shk.schneider[at]gmail.com>
 #

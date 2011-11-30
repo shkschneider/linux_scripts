@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# apt-add-ppa - recode for debian
+# apt-add-ppa -- recode for debian
 # Copyright (C) 2011  Alan "Shtark" SCHNEIDER
 #                     <shk.schneider[at]gmail.com>
 #

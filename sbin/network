@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# network - manage ethernet and wireless connections easily from the command line
+# network -- manage ethernet and wireless connections easily from the command line
 # Copyright (C) 2010-2011  Alan "Shtark" SCHNEIDER
 #                          <shk.schneider[at]gmail.com>
 #
