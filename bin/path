@@ -1,0 +1,22 @@
+#!/bin/bash
+#
+# path -- print a formatted $PATH
+# Copyright (C) 2011  Alan "Shtark" SCHNEIDER
+#                     <shk.schneider[at]gmail.com>
+#
+# This program comes with ABSOLUTELY NO WARRANTY.
+# This is free software, and you are welcome to redistribute it
+# under certain conditions.
+#
+
+set -f
+
+PP=$(echo $PATH | tr ':' ' ')
+
+N=0
+for P in $PP ; do
+    NN=$(find $P -type f -executable | wc -l)
+    printf "%5d %s\n" $NN "$P"
+    N=$(($N + $NN))
+done
+printf "%5d %s\n" $N "\$PATH"

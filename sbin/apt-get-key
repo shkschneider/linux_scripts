@@ -1,0 +1,53 @@
+#!/bin/bash
+#
+# apt-get-key -- auto-retrieve missing PUBKEY
+# Copyright (C) 2010-2011  Alan "Shtark" SCHNEIDER
+#                          <shk.schneider[at]gmail.com>
+#
+# This program comes with ABSOLUTELY NO WARRANTY.
+# This is free software, and you are welcome to redistribute it
+# under certain conditions.
+#
+
+SERVER="keyserver.ubuntu.com"
+
+[ `id -u` -ne 0 ] && echo "E: Permission denied. Are you root?" >&2 && exit 1
+[ ! -x "`which aptitude`" ] && echo "E: aptitude: Command not found" >&2 && exit 1
+[ ! -x "`which wget`" ] && echo "E: wget: Command not found" >&2 && exit 1
+
+chown -R `id -u`:`id -g` ~/.gnupg
+
+function get_keycode() {
+    SERVER=$1
+    KEY=$2
+    wget -q keyserver.ubuntu.com > /dev/null
+    [ $? -ne 0 ] && echo "E: $SERVER: Could not resolve host" >&2 && exit 1
+    gpg --keyserver $SERVER --recv-key $KEY 2>/dev/null >&2
+    gpg -a --export $KEY | apt-key add - 2>/dev/null >&2
+    # Error: 'ping: sendmsg: Operation not permitted' = firewall problem
+}
+
+if [ $# -eq 0 ] ; then
+    echo " * Running aptitude update..."
+    ERRORS=$(aptitude update 2>&1 | grep "W: GPG error:" | awk '{print $NF}')
+    E=0
+    for ERROR in $ERRORS ; do
+	E=$(($E + 1))
+    done
+    echo "   $E GPG error(s) found"
+    [ $E -eq 0 ] && exit 0
+    echo " * Resolving with <$SERVER>..."
+    for ERROR in $ERRORS ; do
+	KEY=$(echo $ERROR | rev | cut -c 1-8 | rev)
+	echo "   GPG error: "$ERROR" -> keycode: "$KEY
+	get_keycode "$SERVER" "$KEY"
+    done
+else
+    echo " * Resolving with <$SERVER>..."
+    for KEY in $@ ; do
+	echo "   GPG error: "$ERROR" -> keycode: "$KEY
+	get_keycode "$SERVER" "$KEY"
+    done
+fi
+
+echo "Done."

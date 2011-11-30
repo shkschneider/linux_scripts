@@ -1,0 +1,41 @@
+#!/bin/bash
+#
+# idc -- id classes (on Debian)
+# Copyright (C) 2011  Alan "Shtark" SCHNEIDER
+#                     <shk.schneider[at]gmail.com>
+#
+# This program comes with ABSOLUTELY NO WARRANTY.
+# This is free software, and you are welcome to redistribute it
+# under certain conditions.
+#
+
+[ $# -eq 0 ] && echo "Usage: `basename \"$0\"` <UID/GID> [...]" >&2 && exit 1
+
+E=0
+for ID in $@ ; do
+    if [ -n "`echo $ID | tr -d '[0-9]'`" ] ; then
+	echo "E: $ID: Not a number" >&2
+	E=1
+	continue
+    fi
+    if [ $ID -lt 99 ] ; then
+	echo "1 Debian project +"$(($ID - 0))
+    elif [ $ID -lt 999 ] ; then
+	echo "2 System users and groups +"$(($ID - 100))
+    elif [ $ID -lt 59999 ] ; then
+	echo "3 User accounts +"$(($ID - 1000))
+    elif [ $ID -lt 64999 ] ; then
+	echo "4 Debian project but available on-demand +"$(($ID - 60000))
+    elif [ $ID -lt 65533 ] ; then
+	echo "5 Strictly reserved +"$(($ID - 65000))
+    elif [ $ID -eq 64534 ] ; then
+	echo "6 Reserved nobody/nogroup +0"
+    elif [ $ID -eq 65535 ] ; then
+	echo "7 Unusable +0"
+    else
+	echo "0 Out of range (0-65535)" >&2
+	E=1
+    fi
+done
+
+exit $E

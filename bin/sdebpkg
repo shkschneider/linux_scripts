@@ -1,0 +1,396 @@
+#!/bin/bash
+#
+# sdebpkg -- simple deb packager from scratch
+# Copyright (C) 2011  Alan "Shtark" SCHNEIDER
+#                     <shk.schneider[at]gmail.com>
+#
+# This program comes with ABSOLUTELY NO WARRANTY.
+# This is free software, and you are welcome to redistribute it
+# under certain conditions.
+#
+# version history:
+#	v3.18  nov 2011  updated code on cleanup after build and list kept files
+#	v3.17  nov 2011  options: --keep-all
+#	v3.16  nov 2011  fixed --tar-gz -> --tarball
+#	v3.15  nov 2011  first changelog entry do not get ignored on first build
+#	v3.14  nov 2011  remove --new-version (now automatic)
+#	v3.13  nov 2011  global fixes and better output
+#	v3.12  nov 2011  never get interactive: --force
+#	v3.11  nov 2011  restored interactives mode: --interactive
+#	v3.10  nov 2011  reads ~/.sdebpkg as configuration file
+#	v3.07  nov 2011  options: --list-copyrights, --list-architectures
+#	v3.06  nov 2011  checks architecture and copyright
+#	v3.05  nov 2011  better output for prepare
+#	                 better help as (I) after prepare
+#	v3.04  nov 2011  fixed -t option with v3
+#	v3.03  nov 2011  using apt-cache to get latest standard version
+#	v3.02  nov 2011  lintian now checks the deb instead of the dsc
+#	v3.01  nov 2011  removed --interactive,-p,-b
+#	v3.00  nov 2011  code refresh: now split in 3
+#	                 1. reset 2. prepare 3. build
+#	                 prepare on first call, then directly build
+#	v2.22  nov 2011  examples -> extras
+#	v2.21  nov 2011  prompt the user if --reset is called and debian directory exists
+#	v2.20  nov 2011  fixed cleanup, tar.gz
+#	v2.19  nov 2011  removed pkgname.install, use default debian/pkgname instead
+#	v2.18  nov 2011  check for supported architecture
+#	v2.17  nov 2011  let dh_make and dpkg-buildpackage handle their own errors
+#	v2.16  nov 2011  fixed bug in --prepare/--build parsing
+#	v2.15  nov 2011  options: --prepare -> --only-prepare
+#	                 options: --build -> --only-build
+#	v2.14  nov 2011  added --quiet option
+#	v2.13  nov 2011  can keep .tar.gz generated file
+#	                 options: -z and its long alias
+#	v2.12  nov 2011  better --help output
+#	v2.11  nov 2011  dir cannot have spaces in name (because of cleanups)
+#	v2.10  nov 2011  fixed deb final path when building in dir != cwd
+#	v2.09  nov 2011  check dh_make return value
+#	v2.08  nov 2011  removed architecture 'any', assimilated to all
+#	v2.07  nov 2011  change architecture in debian/control if changed
+#	                 from --prepare to --build
+#	v2.06  nov 2011  forces debian/postinst and debian/prerm
+#	v2.05  nov 2011  default ./install dir for debian/pkgname.install
+#	v2.04  nov 2011  forces debian/watch and debian/source/format (3.0)
+#	v2.03  nov 2011  added flag to add an incremental entry in the debian/changelog
+#	                 and rename the directory and its deb
+#	                 options: -n and its long aliases
+#	v2.02  nov 2011  litian can check the generated deb
+#	                 options: -v and its long aliases
+#	v2.01  nov 2011  warns for missing Makefile rules (all,install,clean,distclean)
+#	[beta]
+#	v1.50  nov 2011  handles Makefile-based sources as well as scripts and files
+#	v1.43  nov 2011  add (I)nformative and (W)arning outputs (stderr)
+#	v1.40  nov 2011  added support of debian/pkgname.install
+#	v1.31  nov 2011  default is to prepare+build
+#	v1.30  nov 2011  added options to control the steps execution
+#	                 options: -s,-p,-b,-x,-i and their long aliases
+#	v1.20  nov 2011  added support for many architectures
+#	                 added flag to reset (removes debian directory)
+#	                 options: -a,-r and their long aliases
+#	v1.10  nov 2011  working script for Makefile without debian/pkgname.install
+#	v1.07  nov 2011  clean dh_make's .ex files
+#	v1.06  nov 2011  options: --help,--version,--author
+#	v1.03  nov 2011  options: -f,-e,-c, and their long aliases
+#	v1.00  nov 2011  uses dh_make and dpkg-buildpackage
+#	[alpha]
+#	v0.20  nov 2011  added paranoid checks
+#	v0.10  nov 2011  added parser
+#	v0.01  nov 2011  working simple script using checkinstall
+#
+# Depends:	build-essential debhelper dpkg-dev fakeroot dh-make devcripts litian
+# DIR format:	pkgname-pkgversion
+# DEB format:	pkgname_pkgversion-debrelease_arch.deb
+#
+# Please read:	<http://www.debian.org/doc/debian-policy/>
+#
+
+COPYRIGHTS=$(find /usr/share/debhelper/dh_make/licenses -maxdepth 1 -type f | rev | cut -d'/' -f1 | rev | tr "\n" " ")
+ARCHS=$(dpkg-architecture -L | grep -v '-' | tr "\n" " ")"all"
+function usage() {
+    echo "Usage: `basename "$0"` [OPTIONS] <DIR>" >&2
+    echo "       prepare:" >&2
+    echo "       {-c|--copyright}              license for debian/control [be careful]" >&2
+    echo "           --list-copyrights" >&2
+    echo "       {-r|--reset}                  removes debian directory [be careful]" >&2
+    echo "       {-x|--extras}                 keep examples files form dh_make" >&2
+    echo "       build:" >&2
+    echo "       {-v|--verify}                 check debian policy" >&2
+    echo "       {-t|--tarball}                 keep .tar.gz" >&2
+    echo "       {-k|--keep-all}               keep everything (implies --tar-gz)" >&2
+    echo "       {-q|--quiet}                  less verbose packaging [be careful]" >&2
+    echo "       any:" >&2
+    echo "       {-s|--summarize}              break after summary" >&2
+    echo "       {-a|--architecture} <ARCH>    target architecture" >&2
+    echo "           --list-architectures" >&2
+    echo "       {-i|--interactive}            prompt the user on each step and upon errors" >&2
+    echo "       {-f|--force}                  never get interactive even upon errors" >&2
+    echo "       {--help|--version|--author}" >&2
+}
+
+function pause() {
+    [ $FORCE -eq 1 ] && return
+    if [ $INTERACTIVE -eq 1 ] || [ -n "$2" -a "_$2" = "_force" ] ; then
+	[ -n "$1" -a "$1" = "3" ] && echo -n "   "
+	echo -n "Hit [Enter] to continue, anything to exit: "
+	TTY=$(stty -g)
+	stty -icanon -echo
+	KEY=$(head -c1)
+	stty icanon echo
+	echo $KEY
+	[ -n "$KEY" ] && exit 0
+    fi
+}
+
+# Options (1/4): Defaults
+DEBFULLNAME=${DEBFULLNAME:-`whoami`}
+DEBEMAIL=${DEBEMAIL:-`whoami`@`hostname -f`}
+DEBCOPYRIGHT="gpl3"
+DEBARCH=$(dpkg --print-architecture)
+# Default is semi-interactive (prompt on big errors)
+INTERACTIVE=0 ; FORCE=0 ; RESET=0 ; SUMMARIZE=0 ; EXTRAS=0 ; VERIFY=0 ; CHANGE=0 ; TARBALL=0 ; KEEP=0 ; QUIET=0
+
+# Options (2/4): Configuration file
+if [ -f ~/.sdebpkg ] ; then
+    E=0
+    if [ ! -r ~/.sdebpkg ] ; then
+	echo "E: ~/.sdebpkg: Permission denied" >&2
+    else
+	L=1
+	while read LINE ; do
+	    if [ -n "`echo $LINE | egrep -v '^\s*#'`" ] ; then
+		LINE=$(echo $LINE | sed -r 's/^\s+//g' | sed -r 's/\s+$//g')
+	    LINE=$(echo $LINE | cut -d'#' -f1)
+	    VAR=$(echo $LINE | cut -d':' -f1)
+	    VALUE=$(echo $LINE | cut -d':' -f2- | sed -r 's/^\s+//g')
+	    [ -z "$VAR" -o -z "$VALUE" ] && echo "E: ~/.sdebpkg l.$L: Bad format (expected: Var: Value)" >&2
+	    case $VAR in
+		"Fullname")	DEBFULLNAME="$VALUE" ;;
+		"Email")	DEBEMAIL="$VALUE" ;;
+		"Copyright")	DEBCOPYRIGHT="$VALUE" ;;
+		"Architecture")	DEBARCH="$VALUE" ;;
+		"Priority")	DEBPRIORITY="$VALUE" ;;
+		"Section")	DEBSECTION="$VALUE" ;;
+		*)		echo "E: ~/.sdebpkg l.$L: Unknown var \`$VAR'" >&2 && E=1 ;;
+	    esac
+	    fi
+	    L=$(($L + 1))
+	done < ~/.sdebpkg
+    fi
+    if [ $E -ne 0 ] ; then
+	echo "W: Unrecognized options in configuration file"
+    fi
+fi
+
+# Options (3/4): Command line parameters
+if [ $# -gt 0 ] ; then
+    ARGC=0
+    while [ $ARGC -lt $# ] ; do
+	for ARGV in $@ ; do
+	    case $1 in
+		"-c"|"--copyright")	[ -z "$2" ] && usage && exit 1 ; DEBCOPYRIGHT=$2 ; shift ; shift ;;
+		"-a"|"--architecture")	[ -z "$2" ] && usage && exit 1 ; DEBARCH=$2 ; shift ; shift ;;
+		"-r"|"--reset")		RESET=1 ; shift ;;
+		"-s"|"--summarize")	SUMMARIZE=1 ; shift ;;
+		"-x"|"--extras")	EXTRAS=1 ; shift ;;
+		"-v"|"--verify")	VERIFY=1 ; shift ;;
+		"-t"|"--tarball")	TARBALL=1 ; shift ;;
+		"-k"|"--keep-all")	KEEP=1 ; TARBALL=1 ; shift ;;
+		"-q"|"--quiet")		QUIET=1 ; shift ;;
+		"-i"|"--interactive")	INTERACTIVE=1 ; shift ;;
+		"-f"|"--force")		FORCE=1 ; shift ;;
+		"--list-copyrights")	echo "$COPYRIGHTS" && exit 0 ;;
+		"--list-architectures")	echo "$ARCHS" && exit 0 ;;
+		"--help")		usage && exit 0 ;;
+		"--version")		cat "`readlink -f "$0"`" | egrep '^#\s+v[0-9]' | sed -r 's/^#\s+//' && exit 0 ;;
+		"--author")		head -5 "`readlink -f "$0"`" | tail -2 && exit 0 ;;
+		*)			break ;;
+	    esac
+	done
+	ARGC=$(($ARGC + 1))
+    done
+fi
+
+# Options (4/4)
+export DEBFULLNAME DEBEMAIL
+OPTS="#"
+[ $INTERACTIVE -eq 1 ] && OPTS="${OPTS}interactive#"
+[ $RESET -eq 1 ] && OPTS="${OPTS}reset#"
+[ $SUMMARIZE -eq 1 ] && OPTS="${OPTS}summarize#"
+[ $EXTRAS -eq 1 ] && OPTS="${OPTS}extras#"
+[ $VERIFY -eq 1 ] && OPTS="${OPTS}verify#"
+[ $TARBALL -eq 1 ] && OPTS="${OPTS}tarball#"
+[ $KEEP -eq 1 ] && OPTS="${OPTS}keep#"
+[ $QUIET -eq 1 ] && OPTS="${OPTS}quiet#"
+
+# Usage
+[ $# -lt 1 ] && echo "E: Too few arguments" >&2 && usage && exit 1
+[ $# -gt 1 ] && echo "E: Too many arguments" >&2 && usage && exit 1
+
+# Checks (1/3): Options
+F=0 ; for ARCH in $ARCHS ; do [ $ARCH = "$DEBARCH" ] && F=1 && break ; done
+[ $F -eq 0 ] && echo "E: $DEBARCH: Invalid architecture" >&2 && exit 1
+F=0 ; for COPYRIGHT in $COPYRIGHTS ; do [ $COPYRIGHT = "$DEBCOPYRIGHT" ] && F=1 && break ; done
+if [ $F -eq 0 ] ; then
+    echo "W: Unknown copyright to dh_make ($DEBCOPYRIGHT)" >&2
+    echo "   Will use the default 'gpl' license instead" >&2
+    echo "   So MAKE SURE to edit debian/copyright with your copyrights" >&2
+    DEBCOPYRIGHT="gpl"
+    pause 3 force
+fi
+
+# Checks (2/3): Dir
+DIR=$(echo $1 | sed -r 's#/$##')
+[ -n "`echo $DIR | grep ' '`" ] && echo "E: $DIR: Cannot have spaces in path nor name" >&2 && exit 1
+[ ! -e "$DIR" ] && echo "E: $DIR: No such file or directory" >&2 && exit 1
+[ ! -d "$DIR" ] && echo "E: $DIR: Not a directory" >&2 && exit 1
+[ ! -r "$DIR" -o ! -w "$DIR" ] && echo "E: $DIR: Permission denied" >&2 && exit 1
+BASEDIR=$(basename "$DIR")
+DIRDIR=$(dirname "$DIR")
+[ -z "`echo $BASEDIR | egrep '^[a-z0-9\-]+\-[0-9\.]+$'`" ] && echo "E: $BASEDIR: Bad format (expected: pkgename-pkgversion)" >&2 && exit 1
+
+# Checks (3/3): Makefile
+if [ -f "$DIR/Makefile" ] ; then
+    MAKEFILE=1
+    E=0
+    [ -z "`egrep '^all:' "$DIR/Makefile"`" ] && E=1 && echo "E: $DIR/Makefile: No target \`all'" >&2 && exit 1
+    [ -z "`egrep '^install:' "$DIR/Makefile"`" ] && E=1 && echo "E: $DIR/Makefile: No target \`install'" >&2
+    [ -z "`egrep '^clean:' "$DIR/Makefile"`" ] && E=1 && echo "W: $DIR/Makefile: No target \`clean'" >&2
+    [ -z "`egrep '^distclean:' "$DIR/Makefile"`" ] && E=1 && echo "W: $DIR/Makefile: No target \`distclean'" >&2
+    [ $E -ne 0 ] && pause 0
+else
+    MAKEFILE=0
+    [ -z "`find \"$DIR\" -maxdepth 1 -executable`" ] && echo "W: No Makefile nor any executable file found" >&2
+    pause 0
+fi
+
+# Summary
+PKG=$(basename "$DIR" | rev | cut -d'-' -f2- | rev)
+VER=$(basename "$DIR" | rev | cut -d'-' -f1 | rev)
+[ -f "$DIR/debian/changelog" ] && REL=$(head -1 "$DIR/debian/changelog" | awk '{print $2}' | tr -d "[\(\)]" | cut -d'-' -f2) || REL=1
+DEB="${PKG}_${VER}-${REL}_${DEBARCH}.deb"
+[ -f "$DEB" ] && rm -f "$DEB"
+echo " * Working directory: `readlink -f .`"
+echo " * Source directory: `readlink -f \"$DIR\"`"
+echo " * Package: $PKG v$VER-$REL [$DEBARCH] under License $DEBCOPYRIGHT"
+echo " * Maintainer: $DEBFULLNAME <$DEBEMAIL>"
+echo " * Options:"$(echo $OPTS | tr "#" " ")
+
+[ $SUMMARIZE -eq 1 ] && exit 0
+[ $INTERACTIVE -eq 1 ] && pause 3
+for FILE in $DIRDIR/${PKG}_${VERSION}* ; do rm -f $FILE ; done
+WPWD=$(pwd)
+cd "$DIR"
+echo
+
+# Reset
+# sdeb [--reset] ...
+if [ $RESET -eq 1 ] ; then
+    echo " * Reset"
+    if [ -d "debian" ] ; then
+	while read FILE ; do echo "   $FILE" ; done < <(find "debian" -maxdepth 1)
+	rm -rf "debian"
+    else
+	echo "W: debian directory not found" >&2
+	echo "I: No need to reset" >&2
+	pause 3
+    fi
+    echo
+fi
+
+# Prepare
+# sdeb [--reset] [-c|-a|-x] <DIR>
+if [ ! -d "debian" ] ; then
+    echo " * Prepare"
+    case $DEBARCH in
+	"all")	echo | dh_make --copyright "$DEBCOPYRIGHT" --createorig -i > /dev/null ;;
+	*)	echo | dh_make --copyright "$DEBCOPYRIGHT" --createorig -s > /dev/null
+	        sed -i "s/^Architecture: any/Architecture: $DEBARCH/" debian/control ;;
+    esac
+    [ ! -d debian ] && echo "E: dh_make failed" >&2 && exit 1
+    echo "   Cleanup..."
+    [ -d "../$PKG-$VER.orig" ] && rm -rf "../$PKG-$VER.orig"
+    mkdir essentials
+    mv debian/{changelog,compat,rules,control,copyright} essentials
+    mv debian/postinst.ex essentials/postinst
+    mv debian/prerm.ex essentials/premrm
+    if [ $EXTRAS -eq 1 ] ; then
+	echo "   Extras..."
+	mv debian/{manpage.1.ex,README} essentials 2>/dev/null
+	mv debian/{$PKG.cron.d.ex,init.d.ex} essentials 2>/dev/null
+	mv debian/{postrm.ex,preinst.ex} essentials 2>/dev/null
+    fi
+    rm -rf debian
+    mv essentials debian
+    echo "   Fixes..."
+    echo "./$PKG.d/* /" > debian/$PKG.install
+    mkdir -p $PKG.d
+    mkdir -p $PKG.d/usr/share/doc/$PKG/
+    touch $PKG.d/usr/share/doc/$PKG/copyright
+    while read FILE ; do echo "   $FILE" ; done < <(find debian -maxdepth 1)
+    sed -r -i '/^\s*#/d' debian/control
+    sed -i 's/Priority: extra/Priority: optional/' debian/control
+    chmod a+x debian/{rules,post,pre}* 2>/dev/null
+    mkdir -p debian/source
+    [ ! -f "debian/source/format" ] && echo "1.0" > debian/source/format
+    STDV=$(apt-cache show debian-policy | grep Version | cut -d' ' -f2)
+    sed -r -i "s/Standards-Version: [0-9\.]+/Standards-Version: $STDV/g" debian/control
+    touch debian/.nochanges
+    # Comments
+    if [ $QUIET -eq 0 ] ; then
+	echo
+	echo "I: To install files on the system, put them in ./$PKG.d" >&2
+	echo "   Think about it when writing a Makefile: use \$DESTDIR ?= ./$PKG.d" >&2
+	echo "   Use ./$PKG.d as the root directory \`/'" >&2
+	echo "W: Do not forget to edit:" >&2
+	echo "   debian/copyright" >&2
+	echo "   debian/watch" >&2
+	echo "   debian/control" >&2
+	echo "I: Feel free to edit:" >&2
+	echo "   debian/postinst" >&2
+	echo "   debian/prerm" >&2
+	echo "   debian/rules" >&2
+	echo "   debian/changelog" >&2
+	echo "W: Put content copyrights in debian/$PKG/usr/share/doc/$PKG/copyright" >&2
+    fi
+    [ $EXTRAS -eq 1 ] && echo "W: You should edit and rename debian/*.ex or remove them" >&2
+    [ $F -eq 0 ] && echo "W: REMEMBER to edit debian/copyright with your copyrights" >&2
+    exit 0
+fi
+
+# Build
+# sdeb [-v|-t|-k] <DIR>
+if [ -d "debian" ] ; then
+    echo " * Build"
+    [ ! -f "debian/control" ] && echo "E: $DIR/debian/control: No such file or directory" >&2 && exit 1
+    DEBARCH=$(egrep '^Architecture:' debian/control | cut -d' ' -f2-)
+    if [ -f "debian/.nochanges" ] ; then
+	rm -f debian/.nochanges
+	/etc/alternatives/editor debian/changelog || pause 3
+    else
+	debchange -i
+    fi
+    NEW_VER=$(head -1 debian/changelog | awk '{print $2}' | tr -d "[\(\)]" | cut -d'-' -f1)
+    NEW_REL=$(head -1 debian/changelog | awk '{print $2}' | tr -d "[\(\)]" | cut -d'-' -f2)
+    DEB="${PKG}_${NEW_VER}-${NEW_REL}_${DEBARCH}.deb"
+    echo "   DEB: `readlink -f . `/$DEB"
+    DIR=$(echo $DIR | sed "s/${PKG}-${VER}/${PKG}-${NEW_VER}/")
+    cd "$DIR"
+    #rm -f $DIR/debian/*.ex
+    [ $VERIFY -eq 1 -a -f "./configure" ] && echo "   Verifying..." && dpkg-depcheck -d ./configure
+    if [ $QUIET -eq 1 ] ; then
+	case $DEBARCH in
+	    "all")	dpkg-buildpackage -uc -us -rfakeroot -sd | egrep -v '^(dpkg-|\s*dh_)' ;;
+	    *)		dpkg-buildpackage -uc -us -rfakeroot -sd -a$DEBARCH | egrep -v '^(dpkg-|\s*dh_)' ;;
+	esac
+    else
+	case $DEBARCH in
+	    "all")	dpkg-buildpackage -uc -us -rfakeroot -sd ;;
+	    *)		dpkg-buildpackage -uc -us -rfakeroot -sd -a$DEBARCH ;;
+	esac
+    fi
+    rm -f $DIR/debian/$PKG.* 2>/dev/null
+    cd "$WPWD"
+    [ ! -f "$DIRDIR/$DEB" ] && echo "W: $DEB: File could not be found..." >&2 && exit 1
+    [ $VERIFY -eq 1 ] && echo "   Verifying..." && lintian -vi "$DIRDIR/$DEB" | egrep -v '^N:'
+    MKTEMP=$(mktemp -d)
+    while read FILE ; do
+	case $FILE in
+	    *deb)	mv $FILE $MKTEMP ;;
+	    *tar.gz)	[ $TARBALL -eq 1 ] && mv $FILE $MKTEMP ;;
+	    *)		[ $KEEP -eq 1 ] && mv $FILE $MKTEMP ;;
+	esac
+    done < <(find "$DIRDIR" -maxdepth 1 -name "${PKG}_${VER}*")
+    for FILE in $DIRDIR/${PKG}_${VERSION}* ; do rm -f $FILE ; done
+    mv $MKTEMP/* .
+    rmdir $MKTEMP
+    echo
+    while read FILE ; do echo "   $FILE" ; done < <(find $DIR/$PKG.d -type f | sed -r "s#^$DIR/$PKG.d##g")
+    echo
+    echo -n "Package: "
+    dpkg-deb --show "$DEB" | sed -r 's/\s+/ v/g'
+    while read FILE ; do echo "   $FILE" ; done < <(find . -maxdepth 1 -name "${PKG}_${VER}-${REL}[_.]*")
+    readlink -f "$DEB"
+    dpkg-deb --contents "$DEB"
+fi
+
+# EOF

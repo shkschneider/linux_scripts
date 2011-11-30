@@ -1,0 +1,29 @@
+#!/bin/bash
+#
+# ktime - kernel's up/idle time with radio
+# Copyright (C) 2011  Alan "Shtark" SCHNEIDER
+#                     <shk.schneider[at]gmail.com>
+#
+# This program comes with ABSOLUTELY NO WARRANTY.
+# This is free software, and you are welcome to redistribute it
+# under certain conditions.
+#
+
+PREFERED="h" # s m h d
+
+BUSY=$(cat /proc/uptime | cut -d' ' -f1 | cut -d'.' -f1)
+BUSY_UNIT="s"
+while [ $BUSY_UNIT != $PREFERED ] ; do
+    BUSY=$(($BUSY / 60))
+    case $BUSY_UNIT in s) BUSY_UNIT="m" ;; m) BUSY_UNIT="h" ;; h) BUSY_UNIT="d" ;; d) BUSY_UNIT="*" ;; esac
+done
+IDLE=$(cat /proc/uptime | cut -d' ' -f2 | cut -d'.' -f1)
+IDLE_UNIT="s"
+while [ $IDLE_UNIT != $PREFERED ] ; do
+    IDLE=$(($IDLE / 60))
+    case $IDLE_UNIT in s) IDLE_UNIT="m" ;; m) IDLE_UNIT="h" ;; h) IDLE_UNIT="d" ;; d) IDLE_UNIT="*" ;; esac
+done
+
+RATIO=$(echo "scale=2;$(cat /proc/uptime | sed 's# #/#')" | bc -q)
+
+echo "$BUSY$BUSY_UNIT $IDLE$IDLE_UNIT $RATIO"

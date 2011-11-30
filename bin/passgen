@@ -1,0 +1,20 @@
+#!/bin/bash
+#
+# passgen -- randomly generates Unix password
+# Copyright (C) 2011  Alan "Shtark" SCHNEIDER
+#                     <shk.schneider[at]gmail.com>
+#
+# This program comes with ABSOLUTELY NO WARRANTY.
+# This is free software, and you are welcome to redistribute it
+# under certain conditions.
+#
+
+if [ $# -eq 1 ] ; then
+    [ -z "`echo "$1" | egrep '^[0-9]+$'`" ] && echo "E: $1: Not a number" >&2 && exit 1
+    LENGTH=$1
+else
+    # Default length
+    LENGTH=16
+fi
+
+tr -dc A-Za-z0-9_ < /dev/urandom | head -c ${LENGTH} | xargs

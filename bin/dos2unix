@@ -1,0 +1,25 @@
+#!/bin/bash
+#
+# dos2unix - change Dos/CRLF to Unix/LF
+# Copyright (C) 2011  Alan "Shtark" SCHNEIDER
+#                     <shk.schneider[at]gmail.com>
+#
+# This program comes with ABSOLUTELY NO WARRANTY.
+# This is free software, and you are welcome to redistribute it
+# under certain conditions.
+#
+
+set -f
+
+[ $# -eq 0 ] && echo "Usage: `basename "$0"` <FILE> [...]" >&2 && exit 1
+
+for ARGV in $@ ; do
+    FILE=$(readlink -f "$ARGV")
+    [ ! -f "$FILE" ] && echo "E: $FILE: No such file or directory" >&2 && continue
+    [ ! -r "$FILE" -o ! -w "$FILE" ] && echo "E: $FILE: Permission denied" >&2 && continue
+    TMP=$(tempfile)
+    echo " * $FILE -> $TMP -> $FILE"
+    tr -d '\r' < "$FILE" > "$TMP"
+    cat "$TMP" > "$FILE"
+    rm -f "$TMP"
+done

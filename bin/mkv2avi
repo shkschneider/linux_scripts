@@ -1,0 +1,75 @@
+#!/bin/bash
+#
+# mkv2avi -- convert mkv files to avi
+# Copyright (C) 2011  Alan "Shtark" SCHNEIDER
+#                     <shk.schneider[at]gmail.com>
+#
+# This program comes with ABSOLUTELY NO WARRANTY.
+# This is free software, and you are welcome to redistribute it
+# under certain conditions.
+#
+
+[ ! -x `which mencoder` ] && echo "E: mencoder: Command not found" >&2 && exit 1
+[ ! -x `which lame` ] && echo "E: lame: Command not found" >&2 && exit 1
+[ ! -x `which ffmpeg` ] && echo "E: ffmpeg: Command not found" >&2 && exit 1
+[ ! -x `which du` ] && echo "E: du: Command not found" >&2 && exit 1
+
+[ $# -eq 0 ] && echo "Usage: `basename "$0"` <FILE> [...]" >&2 && exit 1
+
+SIZE=0
+for FILE in "$@" ; do
+    FILE=$(readlink -f "$FILE")
+    [ ! -e "$FILE" ] && echo "E: $FILE: No such file or directory" >&2 && exit 1
+    [ -d "$FILE" ] && echo "E: $FILE: Is a directory" >&2 && exit 1
+    [ ! -r "$FILE" ] && echo "E: $FILE: Permission denied" >&2 && exit 1
+    INPUT_SIZE=$(du -s "$FILE" | tr "\t" " " | cut -d' ' -f1)
+    SIZE=$(($SIZE + $INPUT_SIZE))
+done
+
+echo "$# file(s) will be proceed ("$(echo "$SIZE/1024" | bc -q)"M)"
+
+# begin
+I=1
+F=0
+for FILE in "$@" ; do
+    FILE=$(readlink -f "$FILE")
+    INPUT_NAME=$(echo "$FILE")
+    INPUT_SIZE=$(du -sh "$FILE" | tr "\t" " " | cut -d' ' -f1)
+    OUTPUT_NAME=$(echo "$FILE" | sed -r 's/\.[^\.]+$/.avi/')
+    echo " [$I/$#] Converting '$INPUT_NAME' ($INPUT_SIZE) to '$OUTPUT_NAME'..."
+    AUDIO=$(ffmpeg -i "$FILE" 2>&1 | grep ": Audio: " | head -1 | sed -r 's/^ +//' | cut -d' ' -f4 | cut -d',' -f1 | tr "[A-Z]" "[a-z]")
+    # looks like VLC does not like non-mp3 audio source coming from mkv files
+    if [ "_$AUDIO" != "_mp3" ] ; then
+	mencoder -oac mp3lame -lameopts cbr=128 -ovc copy "$INPUT_NAME" -o "$OUTPUT_NAME" >/dev/null 2>&1
+    else
+	mencoder -oac copy -ovc copy "$INPUT_NAME" -o "$OUTPUT_NAME" >/dev/null 2>&1
+    fi
+    OUTPUT_SIZE=$(du -s "$OUTPUT_NAME" | tr "\t" " " | cut -d' ' -f1)
+    if [ $OUTPUT_SIZE -eq 0 ] ; then
+	echo " FAILURE: The conversion seems to have failed! (audio: $AUDIO)" >&2
+	shift
+	F=$(($F + 1))
+    fi
+    I=$(($I + 1))
+done
+I=$(($I - 1))
+
+# end
+if [ $F -gt 0 ] ; then
+    echo $(($I - $F))" files converted ($F fails)"
+else
+    echo $(($I - $F))" files converted"
+fi
+
+# delete mkv
+if [ $F -ne $I ] ; then
+    echo -n " Would you like to delete all converted MKV files? [Y/n] : "
+    read REP
+    if [ "_$REP" != "_n" ] ; then
+	for FILE in "$@" ; do
+	    FILE=$(readlink -f "$FILE")
+	    rm -f "$FILE"
+	done
+	echo "$I files deleted"
+    fi
+fi

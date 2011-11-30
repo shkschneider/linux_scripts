@@ -1,0 +1,63 @@
+#!/bin/bash
+#
+# supercopier -- cp with progress bar (with pv)
+# Copyright (C) 2010-211  Alan "Shtark" SCHNEIDER
+#                         <shk.schneider[at]gmail.com>
+# ChangeLog:
+#	v0.4	2011	improved checks and script
+#	v0.3	2010	added support for directories and shell globings
+#                       released on <http://blog.shk-desktop.com>
+#       v0.2    2010    support for spaces in names
+#	v0.1	2010	support for single file
+#
+# This program comes with ABSOLUTELY NO WARRANTY.
+# This is free software, and you are welcome to redistribute it
+# under certain conditions.
+#
+
+[ ! -x `which pv` ] && echo "E: pv: Command not found" >&2 && exit 1
+
+[ $# -lt 2 ] && echo "Usage: `basename "$0"` <source [...]> <destination>" >&2 && exit 1
+
+function supercopier() {
+    # 1: source
+    # 2: destination
+    [ ! -e "$1" ] && echo "E: $1: No such file or directory." >&2 && exit 1
+    [ ! -r "$1" ] && echo "E: $1: Premission denied." >&2 && exit 1
+    [ "$1" = "$2" ] && echo "E: Input file is output file." >&2 && exit 1
+    [ -d "$S1" -a ! -d "$2" ] && mkdir -p "$2"
+    OFFSET=$(echo "`tput cols` - `echo "$1$2 "| wc -c` - 6" | bc -q)
+    printf " * %s -> %s %${OFFSET}s\n" "$1" "$2" $(du -sh "$SOURCE" 2>/dev/null | awk '{print $1}')
+    find "$1" | sed "s#$1##g" | while read TARGET ; do
+	SOURCE=$1$TARGET
+	DESTINATION=$2$TARGET
+	if [ -d "$SOURCE" ] ; then
+	    [ ! -d "$DESTINATION" ] && mkdir -p "$DESTINATION"
+	elif [ -d "$DESTINATION" ] ; then
+	    echo "E: $DESTINATION: Is a directory" >&2 && sleep 1
+	else
+	    pv -pert "$SOURCE" > "$DESTINATION"
+	    [ $? -ne 0 ] && echo "E: pv seems to have failed ($?)" >&2 && sleep 1
+	fi
+    done
+}
+
+CMD_SOURCE=$(echo "$1" | sed "s#~#$HOME#g")
+CMD_DESTINATION=$(echo "$2" | sed "s#~#$HOME#g")
+
+if [ $# -eq 2 ] ; then
+    SOURCE=$(readlink -f "$CMD_SOURCE")
+    DESTINATION=$(readlink -f "$CMD_DESTINATION")
+    supercopier "$SOURCE" "$DESTINATION/$(basename "$SOURCE")"
+else
+    CMD_DESTINATION=$(while [ $# -gt 1 ] ; do shift; done ; echo $1)
+    I=1
+    for SOURCE in "$@" ; do
+	SOURCE=$(readlink -f "$SOURCE")
+	DESTINATION=$CMD_DESTINATION/$(basename "$SOURCE")
+	DESTINATION=$(readlink -f "$DESTINATION")
+	supercopier "$SOURCE" "$DESTINATION"
+	I=$(($I + 1))
+	[ $I -eq $# ] && break
+    done
+fi

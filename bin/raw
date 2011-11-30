@@ -1,0 +1,14 @@
+#!/bin/bash
+#
+# From <http://tldp.org/LDP/abs/html/system.html#KEYPRESS>
+#
+
+TTY=$(stty -g)
+stty -icanon
+stty -echo
+KEY=$(head -c1)
+stty echo
+
+echo $KEY
+
+stty "$TTY"
