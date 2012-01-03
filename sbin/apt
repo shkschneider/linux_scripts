@@ -9,6 +9,7 @@
 # under certain conditions.
 #
 # version history:
+#	v2.90  jan 2012  cmd: hold
 #	v2.89  jan 2012  cmd: keep
 #	v2.88  jan 2012  fix on file (duplicates)
 #	v2.87  jan 2012  fix on file (duplicates)
@@ -115,6 +116,7 @@ function usage() {
     echo "       download <PACKAGE ...>" >&2
     echo "       source <PACKAGE ...>" >&2
     echo "       depends <PACKAGE ...>" >&2
+    echo "       hold [PACKAGE ...]" >&2
     echo "       policy [PACKAGE ...]" >&2
     echo "       size [LINES]" >&2
     echo "       architecture" >&2
@@ -220,7 +222,7 @@ function do_size() {
 	COLUMNS=$(echo "`tput cols`-`echo "$PACKAGE" | wc -c`-6" | bc -q)
 	case $REVERSE in
 	    1)	printf "%5d \e[7m%s\e[0m \e[1m%${COLUMNS}s\e[0m\n" $N "$PACKAGE" "$SIZE" ;;
-	    *)	printf "%5d %s %${COLUMNS}s\n" $N "$PACKAGE" "$SIZE" ll
+	    *)	printf "%5d %s %${COLUMNS}s\n" $N "$PACKAGE" "$SIZE" ;;
 	esac
     done < <(dpkg-query -W --showformat='${Installed-Size;10}\t${Package}\n' | sort -k1,1n | sed -n '1!G;h;$p' | head -$1)
 }
@@ -265,19 +267,44 @@ function do_repositories() {
 		FILE=$(find /var/lib/apt/lists -type f -name "${REPO}_${TARGET}*-${ARCH}_Packages")
 		SITE=$(basename $FILE | cut -d'_' -f1)
 		N=$(egrep '^Package:' $FILE | wc -l)
-		if [ $REVERSE -eq 1 ] ; then
-		    printf "\e[1m%5d\e[0m %s/%s/%s\n" $N "$SITE" "$REL" "$TARGET"
-		else
-		    printf "%5d %s/%s/%s\n" $N "$SITE" "$REL" "$TARGET"
-		fi
+		case $REVERSE in
+		    1)	printf "\e[1m%5d\e[0m %s/%s/%s\n" $N "$SITE" "$REL" "$TARGET" ;;
+		    *)	printf "%5d %s/%s/%s\n" $N "$SITE" "$REL" "$TARGET" ;;
+		esac
 		P=$(($P + $N))
 	    done
 	done < <(egrep '^deb ' "$FILE" | sed -r 's#^deb\s+https?://##g' | tr '/' '_' | sed -r 's#_?\s+#_dists_#')
     done < <(find /etc/apt -type f -name "*.list")
-    if [ $REVERSE -eq 1 ] ; then
-	printf "\e[1m%5d\e[0m packages indexed\n" $P
+    case $REVERSE in
+	1)	printf "\e[1m%5d\e[0m packages indexed\n" $P ;;
+	*)	printf "%5d packages indexed\n" $P ;;
+    esac
+}
+
+function do_hold() {
+    check_package $PACKAGE
+    [ $? -ne 0 ] && echo "E: $PACKAGE: Package not found" >&2 && return
+    IGNORE=$(dpkg --get-selections | grep hold)
+    if [ -z "$IGNORE" ] ; then
+	echo "$PACKAGE hold" | dpkg --set-selections
+	echo "$PACKAGE: put on hold"
     else
-	printf "%5d packages indexed\n" $P
+	echo "$PACKAGE install" | dpkg --set-selections
+	echo "$PACKAGE: taken off hold"
+    fi
+}
+
+function do_post_hold() {
+    N=$(dpkg --get-selections | grep hold | wc -l)
+    [ $N -eq 0 ] && echo "No package holded" >&2
+    if [ $# -eq 0 ] ; then
+	PACKAGES=$(dpkg --get-selections | grep hold | awk '{print $1}')
+	for PACKAGE in $PACKAGES ; do
+	    case $REVERSE in
+		1)	printf "hold \e[7m%s\e[0m\n" "$PACKAGE";;
+		*)	printf "hold %s\n" "$PACKAGE" ;;
+	    esac
+	done
     fi
 }
 
@@ -348,6 +375,9 @@ case $1 in
 	[ -z "`find /etc/apt -type f -name "*.list"`" ] && echo "E: $1: No .list file found in /etc/apt/" >&2 && exit 1
 	[ ! -e /var/lib/apt/lists ] && echo "E: $1: /var/lib/apt/lists not found" >&2 && exit 1
 	[ ! -d /var/lib/apt/lists ] && echo "E: $1: /var/lib/apt/lists not found" >&2 && exit 1
+	;;
+    "hold")
+	[ ! -x "`which dpkg`" ] && echo "E: $1: That command requiers dpkg" >&2 && exit 1
 	;;
     "--help"|"--version"|"--author")
 	[ -z "`readlink -f "$0" | egrep '^/'`" ] && exit 1
@@ -451,6 +481,13 @@ case $1 in
 	;;
     "repositories")
 	do_repositories
+	;;
+    "hold")
+	shift
+	for PACKAGE in $@ ; do
+	    do_hold $PACKAGE
+	done
+	do_post_hold
 	;;
     "keep")
 	aptitude keep-all
