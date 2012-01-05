@@ -9,6 +9,8 @@
 # under certain conditions.
 #
 
+[ ! -x "`which xset`" ] && echo "E: xset: Command not found" >&2 && exit 1
+
 XSET=$(xset q | egrep '^\s+DPMS' | sed -r 's/^\s+//')
 
 STATUS=$(echo $XSET | rev | cut -d' ' -f1 | rev)
