@@ -1,0 +1,16 @@
+network -- manage ethernet and wireless connections easily from the command line
+Copyright (C) 2010-2011  Alan "Shtark" SCHNEIDER
+                         <shk.schneider[at]gmail.com>
+
+This program comes with ABSOLUTELY NO WARRANTY.
+This is free software, and you are welcome to redistribute it
+under certain conditions.
+
+Usage: network devices                        list devices
+       network [eth|wlan|usb] list [up|down]  list interfaces
+       network [eth|wlan|usb] status          interfaces status
+       network <interface> up                 enable interface
+       network <interface> down               disable interface
+       network <interface> status             interface status
+       network <wlan> ssid                    list SSID for interface
+       network <wlan> connect <ssid> [key]    connect to SSID throught interface
