@@ -1,0 +1,9 @@
+#!/bin/bash
+
+ls | while read -r FILE ; do
+    NEW_FILE=$(echo $FILE | tr ' ' '_' | tr -d '[{}(),\!]' | tr -d "'\"" | tr '[A-Z]' '[a-z]' | sed 's/_-_/_/g')
+    if [ "_$FILE" != "_${NEW_FILE}" ] ; then
+	[ -e "$NEW_FILE" ] && echo "W: \`$FILE' not renamed because \`$NEW_FILE' already exists" && continue
+	mv "$FILE" "$NEW_FILE"
+    fi
+done
