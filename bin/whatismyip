@@ -1,0 +1,18 @@
+#!/bin/bash
+#
+# whatismyip -- retrieve your external IP from command line
+# Copyright (C) 2010-2012  Alan "Shtark" SCHNEIDER
+#                          <shk.schneider[at]gmail.com>
+#
+# This program comes with ABSOLUTELY NO WARRANTY.
+# This is free software, and you are welcome to redistribute it
+# under certain conditions.
+#
+
+[ -z `which curl` ] && echo "E: curl: Command not found" >&2 && exit 1
+
+[ "_`cat /proc/net/arp | egrep '^[0-9]'`" = "_" ] && echo "W: `basename "$0"`: No network connection" >&2 && exit 1
+
+INTERNAL=$(cat /proc/net/arp | egrep '^[0-9]' | cut -d' ' -f1 | tr "\n" " " | sed -r 's/ $//')
+EXTERNAL=$(curl ifconfig.me/ip)
+echo "$INTERNAL $EXTERNAL"

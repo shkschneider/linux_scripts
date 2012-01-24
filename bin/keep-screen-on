@@ -1,0 +1,21 @@
+#!/bin/bash
+#
+# keep-screen-on -- tells X to never go to sleep
+# Copyright (C) 2012  Alan "Shtark" SCHNEIDER
+#                     <shk.schneider[at]gmail.com>
+#
+# This program comes with ABSOLUTELY NO WARRANTY.
+# This is free software, and you are welcome to redistribute it
+# under certain conditions.
+#
+
+[ ! -x "`which xset`" ] && echo "E: xset: Command not found" >&2 && exit 1
+
+XSET=$(xset q | egrep '^\s+DPMS' | sed -r 's/^\s+//')
+
+STATUS=$(echo $XSET | rev | cut -d' ' -f1 | rev)
+[ "_$STATUS" = "_Disabled" ] && echo $XSET && exit
+
+xset -dpms
+xset s off
+xset q | egrep '^\s+DPMS' | sed -r 's/^\s+//'

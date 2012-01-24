@@ -1,0 +1,32 @@
+apt -- wrapper for aptitude/apt-*/dpkg*
+Copyright (C) 2011  Alan "Shtark" SCHNEIDER
+                    <shk.schneider[at]gmail.com>
+
+This program comes with ABSOLUTELY NO WARRANTY.
+This is free software, and you are welcome to redistribute it
+under certain conditions.
+
+Usage: apt [OPTION] COMMAND [PARAMS]
+     Options
+       -ap, --use-aptitude
+       -ag, --use-apt-get
+       -nr, --no-reverse
+     Commands
+       {--help|--version|--author}
+       update
+       upgrade
+       search <PACKAGE>
+       show <PACKAGE>
+       file <FILE>
+       install <PACKAGE ...>
+       reinstall <PACKAGE ...>
+       remove <PACKAGE ...>
+       purge <PACKAGE ...>
+       download <PACKAGE ...>
+       source <PACKAGE ...>
+       depends <PACKAGE ...>
+       policy [PACKAGE ...]
+       size [LINES]
+       architecture
+       repositories
+       available

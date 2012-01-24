@@ -1,0 +1,88 @@
+#!/bin/bash
+#
+# extract -- one script to extract them all
+# Copyright (C) 2008-2010  Alan "Shtark" SCHNEIDER
+#                          <shk.schneider[at]gmail.com>
+# ChangeLog:
+#	v1.3	2010	added generic decompression if everything else failed using p7zip and tar
+#			added generic decompression: *.tar.* *.t*
+#			added support for lzma archives
+#	v1.2	2010	improved commands
+#       v1.1    2010	support for spaces in names
+#	v1.0	2010	rewritten
+#			now supports .tar.bz2 .tar.gz .tar.xz .bz2 .rar .gz .tar
+#			.tbz2 .tgz .zip .Z .7z .xz .exe .rpm .deb .iso .ace
+#	v0.2	2009	extended version with .rar .gz .tgz and better code
+#	v0.1	2008	basic version for .tar.gz .zip .tar.bz2
+#
+# This program comes with ABSOLUTELY NO WARRANTY.
+# This is free software, and you are welcome to redistribute it
+# under certain conditions.
+#
+
+function cmd() {
+    for BIN in "$1" ; do
+	[ -n `which $BIN` ] && echo "E: $BIN: Command not found" >&2 && return 1
+    done
+    return 0
+}
+
+function extract() {
+    echo " * Extracting `basename $FILE` to `pwd`..."
+    case "$FILE" in
+	*.tar)			cmd "tar" && tar xvf "$FILE" ;;
+	*.tar.bz2|*.tbz2)	cmd "tar" && tar xvjf "$FILE" ;;
+	*.tar.gz|*.tgz)		cmd "tar" && tar xvzf "$FILE" ;;
+	*.tar.xz|*.txz)		cmd "tar" && tar xvJf "$FILE" ;;
+	*.tar.lzma|*.tlzma)	cmd "tar" && tar --lzma xf "$FILE" ;;
+	*.tar.*|*.t*)		cmd "tar" && \
+	    echo "W: Using generic tar decompression -- might not work" && \
+	    tar xf "$FILE" ;;
+	*.bz2)			cmd "bunzip2" && bunzip2 "$FILE" ;;
+	*.rar)			cmd "unrar" && unrar x "$FILE" ;;
+	*.gz)			cmd "gunzip" && gunzip "$FILE" ;;
+	*.zip)			cmd "unzip" && unzip "$FILE" ;;
+	*.Z)			cmd "uncompress" && uncompress "$FILE" ;;
+	*.7z)			cmd "p7zip" && p7zip -d "$FILE" ;;
+	*.xz)			cmd "unxz" && unxz "$FILE" ;;
+	*.exe|*.cab)		cmd "cabextract" && cabextract "$FILE" ;;
+	*.ace)			cmd "unace" && unace e "$FILE" ;;
+	*.rpm)			cmd "rpm2cpio cpio" && rpm2cpio "$FILE" | cpio -idmv ;;
+	*.iso)			cmd "poweriso" && poweriso extract "$FILE" / ;;
+#	*.deb)			cmd "dpkg-deb" && dpkg-deb -x "$FILE" ;;
+	*.deb)			cmd "ar" && ar xv "$FILE"
+            # this one also extract the tarballs witin the .deb
+	    [ $? -ne 0 ] && continue
+	    ar t "$FILE" | grep -E '\.tar\.gz$' | \
+		while read SUBFILE ; do
+		extract "$SUBFILE"
+	    done
+	    ;;
+	*)
+	    cmd "tar" && \
+		echo "W: Using generic tar decompression -- will most likely not work" >&2 && \
+		tar xf "$FILE"
+	    [ $? -ne 0 ] && cmd "p7zip" && \
+		echo "W: Using generic p7zip decompression -- will most likely not work" >&2 && \
+		p7zip -d "$FILE";;
+    esac
+}
+
+[ $# -eq 0 ] && echo "Usage: `basename "$0"` <FILE> [...]" >&2 && exit 1
+
+for FILE in "$@" ; do
+    [ ! -e "$FILE" ] && echo "E: $FILE: No such file or directory" >&2 && exit 1
+    [ -d "$FILE" ] && echo "E: $FILE: Is a directory" >&2 && exit 1
+    [ ! -r "$FILE" ] && echo "E: $FILE: Permission denied" >&2 && exit 1
+    FILE=$(readlink -f "$FILE")
+    NAME=$(basename "$FILE" | sed -r 's/(\.[a-zZ2]{2,3})?\.[a-zZ2]{1,4}$//')
+    if [ -d "$NAME" ] ; then
+	echo -n "   Directory \`$NAME' exists. Overwite [Y/n]? "
+	read REP
+	[ "_$REP" = "_n" ] && continue
+	rm -rf "$NAME"
+    fi
+    # prevent tab-bombs
+    mkdir "$NAME" && cd "$NAME"
+    extract
+done

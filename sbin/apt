@@ -1,0 +1,506 @@
+#!/bin/bash
+#
+# apt -- wrapper for aptitude/apt-*/dpkg*
+# Copyright (C) 2011  Alan "Shtark" SCHNEIDER
+#                     <shk.schneider[at]gmail.com>
+#
+# This program comes with ABSOLUTELY NO WARRANTY.
+# This is free software, and you are welcome to redistribute it
+# under certain conditions.
+#
+# version history:
+#	v2.90  jan 2012  cmd: hold
+#	v2.89  jan 2012  cmd: keep
+#	v2.88  jan 2012  fix on file (duplicates)
+#	v2.87  jan 2012  fix on file (duplicates)
+#	v2.86  jan 2012  allow status/search/show to have 1+ args
+#	v2.85  jan 2012  cmd: status (req. apt-show-versions)
+#	v2.84  jan 2012  minor fix on depends
+#	v2.83  jan 2012  added check_package which return 0 on success
+#	v2.82  jan 2012  minor fixes
+#	v2.81  jan 2012  better output
+#	v2.80  nov 2011  display release in repositories command
+#	v2.70  nov 2011  run only once install,reinstall,remove,purge,download,source
+#	v2.60  nov 2011  policy usage changed (alone or 1+ arguments)
+#	                 policy now handles more than one source and sort them
+#	v2.50  nov 2011  handles SIGINT
+#	v2.40  nov 2011  paranoid mode for checks
+#	v2.30  nov 2011  cmd: repositories
+#	v2.20  nov 2011  use of tput cols and printf to align some elements
+#	                 one the right, which makes the output nicer
+#	v2.10  nov 2011  cmd: available
+#	v2.00  nov 2011  cmd: size, architecture
+#	[beta]
+#	v1.5   nov 2011  script wont break if aptitude & apt-get not present
+#	                 user could only want to use apt-cache
+#	v1.4   nov 2011  fixes and improvements on conditions and evals
+#	v1.3   nov 2011  fixes on parser
+#	v1.2   nov 2011  reducing sizes, using while to read by line and parse
+#	v1.1   nov 2011  externalized routines into little functions
+#	v1.0   oct 2011  arguments are checked before running the code
+#	[alpha]
+#	v0.9   oct 2011  cmd: depends, policy
+#	v0.8   oct 2011  improved reverse video and filtering
+#	v0.7   oct 2011  cmd: download, source
+#	v0.6   oct 2011  added optional reverse video mode
+#	v0.5   oct 2011  nicer output
+#	v0.4   oct 2011  cmd: search, show, file
+#	v0.3   oct 2011  cmd: update, upgrade, remove, purge, reinstall
+#	v0.2   oct 2011  handles aptitude or apt-get
+#	v0.1   oct 2011  skeleton and parser
+#
+# bugs:
+#	wc -c counts special chars (with accents) twice
+#
+
+set -f
+BINS="aptitude apt-get"
+SOURCE_LIST="sources.list"
+APT=""
+REVERSE=1
+
+#
+## SIGINT handler
+#
+
+trap bashtrap INT
+
+function bashtrap()
+{
+    echo
+    echo "*** SIGINT detected!" >&2
+    echo "    Please try to NOT interrupt your package management system like that!" >&2
+    exit 1
+}
+
+#
+## Parsing options
+#
+
+case $1 in
+    -ap|--use-aptitude)
+	APT="aptitude" && shift ;;
+    -ag|--use-apt-get)
+	APT="apt-get" && shift ;;
+    -nr|--no-reverse)
+	REVERSE=0 && shift ;;
+esac
+
+# For full features, this script requiers:
+# dpkg + apt-cache + (aptitude | apt-get) + apt-show-versions + dpkg-query
+# Note that apt-get is mandatory for the source command
+[ -z "$APT" ] && for BIN in $BINS ; do [ -x "`which $BIN`" ] && APT=$BIN && break ; done
+
+#
+## Functions
+#
+
+function usage() {
+    echo "Usage: `basename "$0"` [OPTION] COMMAND [PARAMS]" >&2
+    echo "     Options" >&2
+    echo "       -ap, --use-aptitude" >&2
+    echo "       -ag, --use-apt-get" >&2
+    echo "       -nr, --no-reverse" >&2
+    echo "     Commands" >&2
+    echo "       {--help|--version|--author}" >&2
+    echo "       update" >&2
+    echo "       upgrade" >&2
+    echo "       status <PACKAGE ...>" >&2
+    echo "       search <PACKAGE ...>" >&2
+    echo "       show <PACKAGE ...>" >&2
+    echo "       file <FILE>" >&2
+    echo "       install <PACKAGE ...>" >&2
+    echo "       reinstall <PACKAGE ...>" >&2
+    echo "       remove <PACKAGE ...>" >&2
+    echo "       purge <PACKAGE ...>" >&2
+    echo "       download <PACKAGE ...>" >&2
+    echo "       source <PACKAGE ...>" >&2
+    echo "       depends <PACKAGE ...>" >&2
+    echo "       hold [PACKAGE ...]" >&2
+    echo "       policy [PACKAGE ...]" >&2
+    echo "       size [LINES]" >&2
+    echo "       architecture" >&2
+    echo "       repositories" >&2
+    echo "       available" >&2
+    echo "       keep" >&2
+}
+
+function do_status() {
+    LINE=$(apt-show-versions --package=$PACKAGE)
+    MSTATUS=$(dpkg -l $PACKAGE 2>/dev/null | tail -1 | cut -c1,2)
+    [ -z "$MSTATUS" ] && MSTATUS=" "
+    check_package $PACKAGE
+    if [ $? -ne 0 ] ; then
+	STATUS="not available"
+	case $REVERSE in
+            1)	printf "%s \e[7m%s\e[0m - %s\n" "$MSTATUS" "$PACKAGE" "$STATUS" ;;
+            *)	printf "%s %s - %s\n" "$MSTATUS" "$PACKAGE" "$STATUS" ;;
+	esac
+    elif [ -z "`echo $LINE | egrep "^$PACKAGE/"`" ] ; then
+	STATUS="not installed"
+	case $REVERSE in
+	    1)	printf "%s \e[7m%s\e[0m - %s\n" "$MSTATUS" "$PACKAGE" "$STATUS" ;;
+	    *)	printf "%s %s - %s\n" "$MSTATUS" "$PACKAGE" "$STATUS" ;;
+	esac
+    else
+	if [ -z "`apt-show-versions -u | egrep "^$PACKAGE/"`" ] ; then
+	    STATUS="installed and up-to-date"
+	else
+	    STATUS="installed but updatable"
+	fi
+	REPO=$(echo $LINE | cut -d'/' -f2- | cut -d' ' -f1)
+	VERSION=$(echo $LINE | rev | cut -d' ' -f1 | rev)
+	COLUMNS=$(echo "`tput cols`-`echo "$MSTATUS $PACKAGE - $STATUS" | wc -c`+1" | bc -q)
+	case $REVERSE in
+	    1)	printf "%s \e[7m%s\e[0m - %s%${COLUMNS}s\n" "$MSTATUS" "$PACKAGE" "$STATUS" "$REPO/$VERSION" ;;
+	    *)	printf "%s %s - %s%${COLUMNS}s\n" "$MSTATUS" "$PACKAGE" "$STATUS" "$REPO/$VERSION" ;;
+	esac
+    fi
+}
+
+function do_search() {
+    N=0
+    PACKAGE=$1
+    while read LINE ; do
+	N=$(($N + 1))
+	PACKAGE=$(echo $LINE | cut -d' ' -f1)
+	VERSION=$(echo $LINE | cut -d' ' -f2)
+	SIZE=$(echo $LINE | awk '{print $NF}')
+	[ -z "`echo $SIZE | egrep '^[0-9]+$'`" ] && SIZE=$(echo $LINE | cut -d' ' -f3)
+	[ -z "`echo $SIZE | egrep '^[0-9]+$'`" ] && SIZE=0
+	DESCRIPTION=$(echo $LINE | cut -d' ' -f4- | sed -r 's# [0-9]+$##')
+	if [ $SIZE -gt 1048576 ] ; then
+	    SIZE=$(echo "$SIZE/1024/1024" | bc -q)" MB"
+	elif [ $SIZE -gt 1024 ] ; then
+	    SIZE=$(echo "$SIZE/1024" | bc -q)" kB"
+	else
+	    SIZE="$SIZE kB"
+	fi
+	STATUS=$(dpkg -l $PACKAGE 2>/dev/null | tail -1 | cut -c1,2)
+	[ -z "$STATUS" ] && STATUS=" "
+	COLUMNS=$(echo "`tput cols`-`echo "$STATUS $PACKAGE - $DESCRIPTION" | wc -c`-`echo "$VERSION - $SIZE" | wc -c`+1" | bc -q)
+	case $REVERSE in
+            1)	printf "%s \e[7m%s\e[0m - %s%${COLUMNS}sv%s - \e[1m%s\e[0m\n" "$STATUS" "$PACKAGE" "$DESCRIPTION" " " "$VERSION" "$SIZE" ;;
+            *)	printf "%s %s - %s%${COLUMNS}sv%s - %s\n" "$STATUS" "$PACKAGE" "$DESCRIPTION" " " "$VERSION" "$SIZE" ;;
+	esac
+    done < <(apt-cache show $PACKAGE 2>/dev/null \
+	| egrep '^(Package|Version|Description|Size)' \
+	| sed "s#Package: #\n#g" \
+	| sed "s#Version: ##g" \
+	| sed "s#Description: ##g" \
+	| sed "s#Size: ##g" \
+	| sed '1d' | tr "\n" "@" | sed "s#@@#\n#g" | tr '@' ' ' | sed -r "s#\s\$#\n#")
+    [ $N -eq 0 ] && echo "No package found for \`$PACKAGE'" >&2
+}
+
+function do_depends() {
+    PACKAGE=$1
+    check_package $PACKAGE
+    [ $? -ne 0 ] && echo "E: $PACKAGE: Package not found" >&2 && return
+    D=$(apt-cache depends -i $PACKAGE | sed '1d' | sed -r 's#\s+\w+: ##' | wc -l)
+    case $REVERSE in
+	1)	echo -ne "\e[7m$PACKAGE\e[0m (\e[1m$D\e[0m) " ;;
+	*)	echo -n "$PACKAGE ($D) " ;;
+    esac
+    DEPENDS=$(apt-cache depends -i $PACKAGE | sed '1d' | sed -r "s#\s+\w+: ##")
+    echo $DEPENDS
+}
+
+function do_size() {
+    N=0
+    while read LINE ; do
+	N=$(($N + 1))
+	SIZE=$(echo $LINE | cut -d' ' -f1)
+	if [ $SIZE -gt 1048576 ] ; then
+	    SIZE=$(echo "$SIZE/1024/1024" | bc -q)" GB"
+	elif [ $SIZE -gt 1024 ] ; then
+	    SIZE=$(echo "$SIZE/1024" | bc -q)" MB"
+	else
+	    SIZE="$SIZE kB"
+	fi
+	PACKAGE=$(echo $LINE | cut -d' ' -f2)
+	COLUMNS=$(echo "`tput cols`-`echo "$PACKAGE" | wc -c`-6" | bc -q)
+	case $REVERSE in
+	    1)	printf "%5d \e[7m%s\e[0m \e[1m%${COLUMNS}s\e[0m\n" $N "$PACKAGE" "$SIZE" ;;
+	    *)	printf "%5d %s %${COLUMNS}s\n" $N "$PACKAGE" "$SIZE" ;;
+	esac
+    done < <(dpkg-query -W --showformat='${Installed-Size;10}\t${Package}\n' | sort -k1,1n | sed -n '1!G;h;$p' | head -$1)
+}
+
+function do_policy() {
+    check_package $PACKAGE
+    [ $? -ne 0 ] && echo "E: $PACKAGE: Package not found" >&2 && return
+    while read LINE ; do
+	[ $REVERSE -eq 1 ] && echo -ne "\e[7m$PACKAGE\e[0m " || echo -n "$PACKAGE "
+	PRIOR=$(echo $LINE | cut -d' ' -f1)
+	REPO=$(echo $LINE | cut -d' ' -f2-)
+	TARGET=$(echo $REPO | cut -d' ' -f2- | cut -d'/' -f1)
+	COLUMNS=$(echo "`tput cols`-`echo "$PACKAGE$REPO" | wc -c`-5" | bc -q)
+	printf "%4d %s" $PRIOR "$REPO"
+	[ $REVERSE -eq 1 ] && printf "\e[1m%${COLUMNS}s\e[0m\n" "$TARGET" || printf "%${COLUMNS}s\n" "$TARGET"
+    done < <(apt-cache policy $PACKAGE | egrep 'Packages$' | sort -nr)
+}
+
+function do_available() {
+    N=0
+    while read LINE ; do
+	N=$(($N + 1))
+	PACKAGE=$(echo $LINE | cut -d'/' -f1)
+	OLD=$(echo $LINE | awk '{print $4}')
+	NEW=$(echo $LINE | awk '{print $6}')
+	L=$(echo $PACKAGE | wc -c)
+	COLUMNS=$(echo "`tput cols`-$L-6" | bc -q)
+	printf "%5d %s %${COLUMNS}s\n" $N "$PACKAGE" "$OLD -> $NEW"
+    done < <(apt-show-versions -u 2>/dev/null)
+    [ $N -eq 0 ] && echo "Everything is up-to-date" >&2
+}
+
+function do_repositories() {
+    P=0
+    ARCH=$(dpkg --print-architecture)
+    while read FILE ; do
+	while read LINE ; do
+	    REPO=$(echo $LINE | cut -d' ' -f1)
+	    REL=$(echo $LINE | cut -d' ' -f1 | rev | cut -d'_' -f1 | rev)
+	    TARGETS=$(echo $LINE | cut -d' ' -f2-)
+	    for TARGET in $TARGETS ; do
+		FILE=$(find /var/lib/apt/lists -type f -name "${REPO}_${TARGET}*-${ARCH}_Packages")
+		SITE=$(basename $FILE | cut -d'_' -f1)
+		N=$(egrep '^Package:' $FILE | wc -l)
+		case $REVERSE in
+		    1)	printf "\e[1m%5d\e[0m %s/%s/%s\n" $N "$SITE" "$REL" "$TARGET" ;;
+		    *)	printf "%5d %s/%s/%s\n" $N "$SITE" "$REL" "$TARGET" ;;
+		esac
+		P=$(($P + $N))
+	    done
+	done < <(egrep '^deb ' "$FILE" | sed -r 's#^deb\s+https?://##g' | tr '/' '_' | sed -r 's#_?\s+#_dists_#')
+    done < <(find /etc/apt -type f -name "*.list")
+    case $REVERSE in
+	1)	printf "\e[1m%5d\e[0m packages indexed\n" $P ;;
+	*)	printf "%5d packages indexed\n" $P ;;
+    esac
+}
+
+function do_hold() {
+    check_package $PACKAGE
+    [ $? -ne 0 ] && echo "E: $PACKAGE: Package not found" >&2 && return
+    IGNORE=$(dpkg --get-selections | grep hold)
+    if [ -z "$IGNORE" ] ; then
+	echo "$PACKAGE hold" | dpkg --set-selections
+	echo "$PACKAGE: put on hold"
+    else
+	echo "$PACKAGE install" | dpkg --set-selections
+	echo "$PACKAGE: taken off hold"
+    fi
+}
+
+function do_post_hold() {
+    N=$(dpkg --get-selections | grep hold | wc -l)
+    [ $N -eq 0 ] && echo "No package holded" >&2
+    if [ $# -eq 0 ] ; then
+	PACKAGES=$(dpkg --get-selections | grep hold | awk '{print $1}')
+	for PACKAGE in $PACKAGES ; do
+	    case $REVERSE in
+		1)	printf "hold \e[7m%s\e[0m\n" "$PACKAGE";;
+		*)	printf "hold %s\n" "$PACKAGE" ;;
+	    esac
+	done
+    fi
+}
+
+function check_package() {
+    while read TMP ; do
+	return 0
+    done < <(apt-cache policy $1)
+    return 1
+}
+
+#
+## Checking arguments
+#
+
+[ $# -eq 0 ] && usage && exit 1
+
+case $1 in
+    "update"|"upgrade")
+	[ `id -u` -ne 0 ] && echo "E: `id -un`: are you root?" >&2 && exit 1
+	[ $# -ne 1 ] && echo "E: Too many arguments" >&2 && usage && exit 1
+	;;
+    "install"|"reinstall"|"remove"|"purge"|"download"|"source")
+	[ `id -u` -ne 0 ] && echo "E: $1: Are you root, `id -un`?" >&2 && exit 1
+	[ $# -lt 2 ] && echo "E: $1: Too few arguments" >&2 && usage && exit 1
+	[ -z "$APT" ] && echo "E: $1: That command requiers `echo $BINS | sed 's/ / or /g'`" >&2 && exit 1
+	[ $1 = "source" -a $APT != "apt-get" ] && echo "E: $1: That Command requiers apt-get" >&2 && exit 1
+	;;
+    "status"|"search"|"show")
+	[ $1 != "status" -a ! -x "`which apt-cache`" ] && echo "E: $1: That command requiers apt-cache" >&2 && exit 1
+	[ $1 = "status" -a ! -x "`which apt-show-versions`" ] && echo "E: $1: That command requiers apt-show-versions" >&2 && exit 1
+	[ $# -lt 1 ] && echo "E: $1: Too few arguments" >&2 && usage && exit 1
+	;;
+    "file")
+	[ ! -x "`which apt-cache`" ] && echo "E: $1: That command requiers apt-cache" >&2 && exit 1
+	[ $# -lt 2 ] && echo "E: $1: Too few arguments" >&2 && usage && exit 1
+	[ $# -gt 2 ] && echo "E: $1: Too many arguments" >&2 && usage && exit 1
+	[ ! -x "`which dpkg`" ] && echo "E: $1: That command requiers dpkg" >&2 && exit 1
+	[ ! -x "`which apt-cache`" ] && echo "E: $1: That command requiers apt-cache" >&2 && exit 1
+	;;
+    "depends")
+	[ ! -x "`which apt-cache`" ] && echo "E: $1: That command requiers apt-cache" >&2 && exit 1
+	[ $# -lt 2 ] && echo "E: $1: Too few arguments" >&2 && usage && exit 1
+	[ $# -gt 2 ] && echo "E: $1: Too many arguments" >&2 && usage && exit 1
+	;;
+    "policy")
+	[ ! -x "`which apt-cache`" ] && echo "E: $1: That command requiers apt-cache" >&2 && exit 1
+	[ $# -lt 1 ] && echo "E: $1: Too few arguments" >&2 && usage && exit 1
+	;;
+    "size")
+	[ ! -x "`which dpkg-query`" ] && echo "E: $1: That command requiers dpkg-query" >&2 && exit 1
+	[ $# -gt 2 ] && echo "E: $1: Too many arguments" >&2 && usage && exit 1
+	[ -n "`echo "$2" | tr -d '[0-9]'`" ] && echo "E: $1: Not a number" >&2 && usage && exit 1
+	;;
+    "architecture")
+	[ ! -x "`which dpkg`" ] && echo "E: $1: That command requiers dpkg" >&2 && exit 1
+	[ $# -gt 1 ] && echo "E: $1: Too many arguments" >&2 && usage && exit 1
+	;;
+    "available")
+	[ ! -x "`which apt-show-versions`" ] && echo "E: $1: That command requiers apt-show-versions" >&2 && exit 1
+	[ $# -gt 1 ] && echo "E: $1: Too many arguments" >&2 && usage && exit 1
+	;;
+    "keep")
+	[ $APT != "aptitude" ] && echo "E: $1: That command requiers aptitude" >&2 && exit 1
+	[ $# -gt 1 ] && echo "E: $1: Too many arguments" >&2 && usage && exit 1
+	;;
+    "repositories")
+	[ ! -x "`which dpkg`" ] && echo "E: $1: That command requiers dpkg" >&2 && exit 1
+	[ -z "`find /etc/apt -type f -name "*.list"`" ] && echo "E: $1: No .list file found in /etc/apt/" >&2 && exit 1
+	[ ! -e /var/lib/apt/lists ] && echo "E: $1: /var/lib/apt/lists not found" >&2 && exit 1
+	[ ! -d /var/lib/apt/lists ] && echo "E: $1: /var/lib/apt/lists not found" >&2 && exit 1
+	;;
+    "hold")
+	[ ! -x "`which dpkg`" ] && echo "E: $1: That command requiers dpkg" >&2 && exit 1
+	;;
+    "--help"|"--version"|"--author")
+	[ -z "`readlink -f "$0" | egrep '^/'`" ] && exit 1
+	;;
+    *)	echo "E: $1: Unknown argument" >&2 && usage && exit 1 ;;
+esac
+
+#
+## Parsing arguments
+#
+
+case $1 in
+    "update")
+	$APT update
+	;;
+    "upgrade")
+	case $APT in
+	    "aptitude")	$APT safe-upgrade ;;
+	    *)		$APT upgrade ;;
+	esac
+	;;
+    "status")
+	shift
+	for PACKAGE in $@ ; do
+	    do_status $PACKAGE
+	done
+	;;
+    "search")
+	shift
+	for PACKAGE in $@ ; do
+	    do_search $PACKAGE
+	done
+	;;
+    "show")
+	shift
+	N=0
+	for PACKAGE in $@ ; do
+	    [ $N -gt 0 ] && echo ""
+	    N=$(($N + 1))
+	    check_package $PACKAGE
+	    [ $? -eq 0 ] && apt-cache show $PACKAGE 2>/dev/null | sed '/^$/d' || echo "E: $PACKAGE: Package not found" >&2
+	done
+	;;
+    "file")
+	PACKAGES=$(dpkg -S $2 | cut -d':' -f1 | uniq)
+	for PACKAGE in $PACKAGES ; do
+	    do_search $PACKAGE
+	done
+	;;
+    "install")
+	shift
+	$APT install $@
+	;;
+    "reinstall")
+	shift
+	case $APT in
+	    "apt-get")	$APT install --reinstall $@ ;;
+	    *)		$APT reinstall $@ ;;
+	esac
+	;;
+    "remove")
+	shift
+	$APT remove $@
+	;;
+    "purge")
+	shift
+	$APT purge $@
+	;;
+    "download")
+	shift
+	$APT download $@
+	;;
+    "source")
+	shift
+	$APT source $@
+	;;
+    "depends")
+	shift
+	for PACKAGE in $@ ; do
+	    do_depends $PACKAGE
+	done
+	;;
+    "policy")
+	shift
+	[ $# -eq 0 ] && apt-cache policy
+	for PACKAGE in $@ ; do
+	    do_policy $PACKAGE
+	done
+	;;
+    "size")
+	shift
+	[ $# -eq 2 ] && do_size 5 || do_size $1
+	;;
+    "architecture")
+	ARCH=$(dpkg --print-architecture)
+	COLUMNS=$(echo "`tput cols`-`echo "$ARCH" | wc -c`+1" | bc -q)
+	printf "%s%${COLUMNS}s\n" "$ARCH" "`hostname -f` (`uname -a | sed -r 's/\s#.+$//'`)"
+	;;
+    "available")
+	do_available
+	;;
+    "repositories")
+	do_repositories
+	;;
+    "hold")
+	shift
+	for PACKAGE in $@ ; do
+	    do_hold $PACKAGE
+	done
+	do_post_hold
+	;;
+    "keep")
+	aptitude keep-all
+	;;
+    "--author")
+	head -5 "`readlink -f "$0"`" | tail -2
+	;;
+    "--version")
+	cat "`readlink -f "$0"`" | egrep '^#\s+v[0-9]' | sed -r 's/^#\s+//'
+	;;
+    "--help")
+	usage
+	;;
+esac
+
+# EOF

@@ -1,0 +1,20 @@
+#!/bin/bash
+#
+# repeat -- re-code of zsh's repeat built-in
+# Copyright (C) 2010-2011  Alan "Shtark" SCHNEIDER
+#                          <shk.schneider[at]gmail.com>
+#
+# This program comes with ABSOLUTELY NO WARRANTY.
+# This is free software, and you are welcome to redistribute it
+# under certain conditions.
+#
+
+[ $# -lt 2 ] && echo "Usage: `basename "$0"` <time> <command [...]>" >&2 && exit 1
+N=$(echo "$1" | tr -d '[0-9]')
+[ -n "$N" ] && echo "E: $1: Not a number" >&2 && exit 1
+
+MAX=$1;
+shift
+for ((I=1; $I <= $MAX ; I++)); do
+    eval "$@";
+done

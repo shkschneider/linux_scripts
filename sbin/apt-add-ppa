@@ -1,0 +1,71 @@
+#!/bin/bash
+#
+# apt-add-ppa -- recode for debian
+# Copyright (C) 2011  Alan "Shtark" SCHNEIDER
+#                     <shk.schneider[at]gmail.com>
+#
+# This program comes with ABSOLUTELY NO WARRANTY.
+# This is free software, and you are welcome to redistribute it
+# under certain conditions.
+#
+
+[ `id -u` -ne 0 ] && echo "E: Permission denied. Are you root?" >&2 && exit 1
+
+if [ ! -x "`which lsb_release`" ] ; then
+    echo "E: lsb_release: Command not found" >&2
+    echo "   This most certainly means that this script ain't for your distro." >&2
+    exit 1
+fi
+[ ! -x "`which curl`" ] && echo "E: curl: Command not found" >&2 && exit 1
+
+[ $# -eq 0 ] && echo "Usage: `basename "$0"` <ppa> [...]" >&2 && exit 1
+
+LINUX_DISTRO=$(lsb_release -is)
+LINUX_CODENAME=$(lsb_release -cs)
+
+case "$LINUX_DISTRO" in
+    debian|Debian)
+	LINUX_DISTRO="ubuntu"
+	case "$LINUX_CODENAME" in
+	    squeeze)
+		LINUX_CODENAME="lucid"
+		;;
+	    *)
+		echo "E: Unsupported distro codename: $LINUX_CODENAME" >&2 && exit 1
+		;;
+	esac
+	;;
+    ubuntu|Ubuntu)
+	LINUX_DISTRO="ubuntu"
+	;;
+    *)
+	echo "E: Unsupported distro: $LINUX_DISTRO" >&2 && exit 1
+	;;
+esac
+
+echo "Adding repositories as for $LINUX_DISTRO/$LINUX_CODENAME..."
+I=0
+for ARGV in $@ ; do
+    if [ "_`echo "$ARGV" | egrep '^ppa:[A-Za-z0-9]+/.+$'`" = "_" ] ; then
+	echo "E: Bad PPA: $ARGV" >&2
+	continue
+    fi
+    PPA=$(echo "$ARGV" | cut -d':' -f2)
+    USER=$(echo "$ARGV" | cut -d':' -f2 | cut -d'/' -f1)
+    REPO=$(echo "$ARGV" | cut -d':' -f2 | cut -d'/' -f2)
+    echo " * $PPA"
+    EXISTS=$(grep "deb http://ppa.launchpad.net/$PPA/" /etc/apt/sources.list)
+    [ "_$EXISTS" != "_" ] && echo "   E: Already exists: $PPA" >&2 && continue
+    echo " >> /etc/apt/sources.list
+    echo "# apt-add-ppa: $PPA" >> /etc/apt/sources.list
+    echo "deb http://ppa.launchpad.net/$PPA/$LINUX_DISTRO $LINUX_CODENAME main" >> /etc/apt/sources.list
+    HTTP=$(curl -I "https://launchpad.net/~$USER" 2>/dev/null | head -1 | cut -d' ' -f2)
+    if [ "_$HTTP" = "_" ] || [ "_$HTTP" != "_200" ] ; then
+	echo "   E: No such PPA user: $USER" >&2
+	continue
+    fi
+    I=$(($I + 1))
+done
+echo -n "Added $I repositor"
+[ $I -gt 1 ] && echo -n "ies" || echo -n "y"
+echo " to /etc/apt/sources.list"

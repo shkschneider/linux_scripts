@@ -1,0 +1,14 @@
+#!/bin/bash
+#
+# rand -- generate random numbers
+# Copyright (C) 2009-2011  Alan "Shtark" SCHNEIDER
+#                          <shk.schneider[at]gmail.com>
+#
+# This program comes with ABSOLUTELY NO WARRANTY.
+# This is free software, and you are welcome to redistribute it
+# under certain conditions.
+#
+
+[ $# -ne 1 ] && echo "Usage: `basename "$0"` <MAX>" >&2 && exit 1
+
+echo $[ ( $RANDOM % $1 ) + 1 ]
