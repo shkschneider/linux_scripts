@@ -40,7 +40,7 @@ case $1 in
 	;;
 esac
 
-# init
+# init: init empty bare repository
 function git_init() {
     mkdir -p $1
     cd $1
@@ -48,7 +48,7 @@ function git_init() {
     cd ..
 }
 
-# clone
+# clone: clones, first commit to master, creates development branch
 function git_clone() {
     git clone $1 $2
     cd $2
@@ -60,13 +60,15 @@ function git_clone() {
     [ -z "`git branch | egrep '^..development$'`" ] && git branch development master
 }
 
-# info
+# info: cats .git/config
 function git_info() {
     DIR=$(git rev-parse --git-dir)
-    cat $DIR/config
+    [ -f $DIR/config ] && cat $DIR/config | sed -r 's/^\s+/  /g'
+    [ -f .gitattributes ] && cat .gitattributes
+    [ -f .gitignore ] && cat .gitignore
 }
 
-# create
+# create: creates a secondary branch
 function git_create() {
     TYPE=$(echo $1 | cut -d'-' -f1)
     case $TYPE in
@@ -90,7 +92,7 @@ function git_create() {
     esac
 }
 
-# merge
+# merge: merges development or secondary branches
 function git_merge() {
     TYPE=$(echo $1 | cut -d'-' -f1)
     [ -z "`git branch | egrep ^..$1\$`" ] && echo "gg: $1 branch not found" && exit 0
@@ -125,7 +127,7 @@ function git_merge() {
     esac
 }
 
-# list
+# list: list secondary branches
 function git_list() {
     if [ -n "$1" ] ; then
 	case $1 in
@@ -161,20 +163,24 @@ function git_list() {
     fi
 }
 
-# release
+# release: commits, tags, merges development, pushes
 function git_release() {
     [ -z "`git branch | egrep '^..development$'`" ] && echo "gg: development branch not found" >&2 && exit 1
-    git checkout development
     [ -z "`git branch | egrep '^..master$'`" ] && echo "gg: master branch not found" >&2 && exit 1
-    [ -n "`git branch | egrep '^..hotfix(-.+)$'`" ] && echo "gg: a hotfix branch is still present" >&2 && exit 1
+    #?
+    [ -n "`git branch | egrep '^..hotfix(-.+)?$'`" ] && echo "gg: a hotfix branch is still present" >&2 && exit 1
     git checkout master
-    [ -n "`git status --porcelain`" ] && echo "gg: there are some things left to commit" >&2 && exit 1
-    TAG=$(echo $1 | sed -r 's/(v(er)?(sion)?|r(ev)?(ision)?|r(el?(ease)?)\s*//' | tr " " "_")
+    TAG=$(echo $1 | sed -r 's/(v|ver|version|r|rel|release|rev|revision)?\s/ /' | tr " " "_")
+    [ -n "`git tag | egrep ^$TAG\$`" ] && echo "gg: $TAG tag already exists" >&2 && exit 1
+    [ -n "`git status --porcelain`" ] && git commit -a -m "Release $TAG"
     git tag -a $TAG -m "Bump release '$TAG'"
     git merge --no-ff development
     [ -n "`git status --porcelain`" ] && echo "gg: there are some things left to commit" >&2 && exit 1
     git push
     git push --tags
+    #...
+    #git checkout development
+    #git merge --no-ff master
 }
 
 DIR=$(git rev-parse --git-dir 2>/dev/null)
