@@ -8,81 +8,14 @@
 # This is free software, and you are welcome to redistribute it
 # under certain conditions.
 #
-# version history:
-#	v3.18  nov 2011  updated code on cleanup after build and list kept files
-#	v3.17  nov 2011  options: --keep-all
-#	v3.16  nov 2011  fixed --tar-gz -> --tarball
-#	v3.15  nov 2011  first changelog entry do not get ignored on first build
-#	v3.14  nov 2011  remove --new-version (now automatic)
-#	v3.13  nov 2011  global fixes and better output
-#	v3.12  nov 2011  never get interactive: --force
-#	v3.11  nov 2011  restored interactives mode: --interactive
-#	v3.10  nov 2011  reads ~/.sdebpkg as configuration file
-#	v3.07  nov 2011  options: --list-copyrights, --list-architectures
-#	v3.06  nov 2011  checks architecture and copyright
-#	v3.05  nov 2011  better output for prepare
-#	                 better help as (I) after prepare
-#	v3.04  nov 2011  fixed -t option with v3
-#	v3.03  nov 2011  using apt-cache to get latest standard version
-#	v3.02  nov 2011  lintian now checks the deb instead of the dsc
-#	v3.01  nov 2011  removed --interactive,-p,-b
-#	v3.00  nov 2011  code refresh: now split in 3
-#	                 1. reset 2. prepare 3. build
-#	                 prepare on first call, then directly build
-#	v2.22  nov 2011  examples -> extras
-#	v2.21  nov 2011  prompt the user if --reset is called and debian directory exists
-#	v2.20  nov 2011  fixed cleanup, tar.gz
-#	v2.19  nov 2011  removed pkgname.install, use default debian/pkgname instead
-#	v2.18  nov 2011  check for supported architecture
-#	v2.17  nov 2011  let dh_make and dpkg-buildpackage handle their own errors
-#	v2.16  nov 2011  fixed bug in --prepare/--build parsing
-#	v2.15  nov 2011  options: --prepare -> --only-prepare
-#	                 options: --build -> --only-build
-#	v2.14  nov 2011  added --quiet option
-#	v2.13  nov 2011  can keep .tar.gz generated file
-#	                 options: -z and its long alias
-#	v2.12  nov 2011  better --help output
-#	v2.11  nov 2011  dir cannot have spaces in name (because of cleanups)
-#	v2.10  nov 2011  fixed deb final path when building in dir != cwd
-#	v2.09  nov 2011  check dh_make return value
-#	v2.08  nov 2011  removed architecture 'any', assimilated to all
-#	v2.07  nov 2011  change architecture in debian/control if changed
-#	                 from --prepare to --build
-#	v2.06  nov 2011  forces debian/postinst and debian/prerm
-#	v2.05  nov 2011  default ./install dir for debian/pkgname.install
-#	v2.04  nov 2011  forces debian/watch and debian/source/format (3.0)
-#	v2.03  nov 2011  added flag to add an incremental entry in the debian/changelog
-#	                 and rename the directory and its deb
-#	                 options: -n and its long aliases
-#	v2.02  nov 2011  litian can check the generated deb
-#	                 options: -v and its long aliases
-#	v2.01  nov 2011  warns for missing Makefile rules (all,install,clean,distclean)
-#	[beta]
-#	v1.50  nov 2011  handles Makefile-based sources as well as scripts and files
-#	v1.43  nov 2011  add (I)nformative and (W)arning outputs (stderr)
-#	v1.40  nov 2011  added support of debian/pkgname.install
-#	v1.31  nov 2011  default is to prepare+build
-#	v1.30  nov 2011  added options to control the steps execution
-#	                 options: -s,-p,-b,-x,-i and their long aliases
-#	v1.20  nov 2011  added support for many architectures
-#	                 added flag to reset (removes debian directory)
-#	                 options: -a,-r and their long aliases
-#	v1.10  nov 2011  working script for Makefile without debian/pkgname.install
-#	v1.07  nov 2011  clean dh_make's .ex files
-#	v1.06  nov 2011  options: --help,--version,--author
-#	v1.03  nov 2011  options: -f,-e,-c, and their long aliases
-#	v1.00  nov 2011  uses dh_make and dpkg-buildpackage
-#	[alpha]
-#	v0.20  nov 2011  added paranoid checks
-#	v0.10  nov 2011  added parser
-#	v0.01  nov 2011  working simple script using checkinstall
-#
 # Depends:	build-essential debhelper dpkg-dev fakeroot dh-make devcripts litian
 # DIR format:	pkgname-pkgversion
 # DEB format:	pkgname_pkgversion-debrelease_arch.deb
 #
 # Please read:	<http://www.debian.org/doc/debian-policy/>
 #
+
+# v3.18
 
 COPYRIGHTS=$(find /usr/share/debhelper/dh_make/licenses -maxdepth 1 -type f | rev | cut -d'/' -f1 | rev | tr "\n" " ")
 ARCHS=$(dpkg-architecture -L | grep -v '-' | tr "\n" " ")"all"

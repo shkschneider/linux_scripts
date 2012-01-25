@@ -8,50 +8,11 @@
 # This is free software, and you are welcome to redistribute it
 # under certain conditions.
 #
-# version history:
-#	v2.90  jan 2012  cmd: hold
-#	v2.89  jan 2012  cmd: keep
-#	v2.88  jan 2012  fix on file (duplicates)
-#	v2.87  jan 2012  fix on file (duplicates)
-#	v2.86  jan 2012  allow status/search/show to have 1+ args
-#	v2.85  jan 2012  cmd: status (req. apt-show-versions)
-#	v2.84  jan 2012  minor fix on depends
-#	v2.83  jan 2012  added check_package which return 0 on success
-#	v2.82  jan 2012  minor fixes
-#	v2.81  jan 2012  better output
-#	v2.80  nov 2011  display release in repositories command
-#	v2.70  nov 2011  run only once install,reinstall,remove,purge,download,source
-#	v2.60  nov 2011  policy usage changed (alone or 1+ arguments)
-#	                 policy now handles more than one source and sort them
-#	v2.50  nov 2011  handles SIGINT
-#	v2.40  nov 2011  paranoid mode for checks
-#	v2.30  nov 2011  cmd: repositories
-#	v2.20  nov 2011  use of tput cols and printf to align some elements
-#	                 one the right, which makes the output nicer
-#	v2.10  nov 2011  cmd: available
-#	v2.00  nov 2011  cmd: size, architecture
-#	[beta]
-#	v1.5   nov 2011  script wont break if aptitude & apt-get not present
-#	                 user could only want to use apt-cache
-#	v1.4   nov 2011  fixes and improvements on conditions and evals
-#	v1.3   nov 2011  fixes on parser
-#	v1.2   nov 2011  reducing sizes, using while to read by line and parse
-#	v1.1   nov 2011  externalized routines into little functions
-#	v1.0   oct 2011  arguments are checked before running the code
-#	[alpha]
-#	v0.9   oct 2011  cmd: depends, policy
-#	v0.8   oct 2011  improved reverse video and filtering
-#	v0.7   oct 2011  cmd: download, source
-#	v0.6   oct 2011  added optional reverse video mode
-#	v0.5   oct 2011  nicer output
-#	v0.4   oct 2011  cmd: search, show, file
-#	v0.3   oct 2011  cmd: update, upgrade, remove, purge, reinstall
-#	v0.2   oct 2011  handles aptitude or apt-get
-#	v0.1   oct 2011  skeleton and parser
-#
 # bugs:
 #	wc -c counts special chars (with accents) twice
 #
+
+# v2.90
 
 set -f
 BINS="aptitude apt-get"
