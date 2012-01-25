@@ -168,8 +168,8 @@ function git_release() {
     [ -n "`git branch | egrep '^..hotfix(-.+)$'`" ] && echo "gg: a hotfix branch is still present" >&2 && exit 1
     git checkout master
     [ -n "`git status --porcelain`" ] && echo "gg: there are some things left to commit" >&2 && exit 1
-    TAG=$(echo $1 | sed -r 's/v(er)?(sion)?\s*//' | sed -r 's/r(ev)?(ision)?\s*//' | tr " " "_")
-    git tag -a $TAG -m "Release version $TAG"
+    TAG=$(echo $1 | sed -r 's/(v(er)?(sion)?|r(ev)?(ision)?|r(el?(ease)?)\s*//' | tr " " "_")
+    git tag -a $TAG -m "Bump release '$TAG'"
     git merge --no-ff development
     [ -n "`git status --porcelain`" ] && echo "gg: there are some things left to commit" >&2 && exit 1
     git push
