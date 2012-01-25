@@ -12,10 +12,10 @@
 [ "_`cat /proc/net/arp | egrep '^[0-9]'`" = "_" ] && echo "E: `basename "$0"`: No network connection" >&2 && exit 1
 
 SCALE=$(echo "1024*1024" | bc -q)
-PREFERED=" # empty for auto (scale), B kB MB GB TB otherwise
+PREFERED="" # empty for auto (scale), B kB MB GB TB otherwise
 
 if [ $# -eq 0 ] ; then
-    INTERFACES=$(cat /proc/net/arp | sed -e '1d' | awk '{print $NF}')
+    INTERFACES=$(cat /proc/net/arp | sed -e '1d' | awk '{print $NF}' | uniq)
 else
     INTERFACES=$@
 fi

@@ -11,11 +11,7 @@
 
 [ ! -x "`which xset`" ] && echo "E: xset: Command not found" >&2 && exit 1
 
-XSET=$(xset q | egrep '^\s+DPMS' | sed -r 's/^\s+//')
-
-STATUS=$(echo $XSET | rev | cut -d' ' -f1 | rev)
-[ "_$STATUS" = "_Disabled" ] && echo $XSET && exit
-
+#xset dpms 0 0 0
 xset -dpms
 xset s off
 xset q | egrep '^\s+DPMS' | sed -r 's/^\s+//'
