@@ -9,7 +9,7 @@
 # under certain conditions.
 #
 
-# v2.26
+# v2.27
 
 [ -z `which git` ] && echo "E: git: Command not found" >&2 && exit 1
 
@@ -55,7 +55,6 @@ function git_clone() {
 	touch README
 	git add README
 	git commit -m "Initial commit"
-	git push origin master
     fi
     [ -z "`git branch | egrep '^..development$'`" ] && git branch development master
 }
