@@ -1,0 +1,196 @@
+#!/bin/bash
+#
+# gg -- git branches manager script
+# Copyright (C) 2012  Alan "Shtark" SCHNEIDER
+#                     <shk.schneider[at]gmail.com>
+#
+# This program comes with ABSOLUTELY NO WARRANTY.
+# This is free software, and you are welcome to redistribute it
+# under certain conditions.
+#
+
+# v2.26
+
+[ -z `which git` ] && echo "E: git: Command not found" >&2 && exit 1
+
+function usage() {
+    echo "Usage: gg init <name>                 # inits a local repository" >&2
+    echo "          clone <path> [name]         # clones an existing repository" >&2
+    echo "          info                        # prints informations about local repository" >&2
+    echo "          create <hotfix[-name]>      # creates a secondary branch (from master)" >&2
+    echo "          create <{feature|fix}-name> # creates a secondary branch (from development)" >&2
+    echo "          merge development           # merges the development branch (to master)" >&2
+    echo "          merge <hotfix[-name]>       # merges a hotfix branch (to master)" >&2
+    echo "          merge <{feature|fix}-name>  # merges a secondary branch (to development)" >&2
+    echo "          list [hostfix|feature|fix]  # lists secondary branches" >&2
+    echo "          release <version>           # tags and releases a new release" >&2
+    exit 1
+}
+
+[ $# -eq 0 ] && usage
+case $1 in
+    "info")    [ $# -ne 1 ] && usage ;;
+    "init"|"create"|"merge"|"release")    [ $# -ne 2 ] && usage ;;
+    "list")    [ $# -lt 1 -a $# -gt 2 ] && usage ;;
+    "clone")   [ $# -lt 2 -a $# -gt 3 ] && usage ;;
+    *)
+	echo "gg: $1 unknown -- giving the hand to git"
+	git $@
+	;;
+esac
+
+# init
+function git_init() {
+    mkdir -p $1
+    cd $1
+    git init --bare
+    cd ..
+}
+
+# clone
+function git_clone() {
+    git clone $1 $2
+    cd $2
+    if [ -z "`git branch | egrep '^..master$'`" ] ; then
+	touch README
+	git add README
+	git commit -m "Initial commit"
+	git push origin master
+    fi
+    [ -z "`git branch | egrep '^..development$'`" ] && git branch development master
+}
+
+# info
+function git_info() {
+    DIR=$(git rev-parse --git-dir)
+    cat $DIR/config
+}
+
+# create
+function git_create() {
+    TYPE=$(echo $1 | cut -d'-' -f1)
+    case $TYPE in
+	"hotfix")
+	    NAME=$(echo $1 | tr " " "-")
+	    [ -z "`echo $1 | tr " " "-" | egrep '^hotfix-$'`" ] || NAME="hotfix"
+	    [ -z "`git branch | egrep '^..master$'`" ] && echo "gg: master branch not found" && exit 0
+	    git checkout -b $NAME master
+	    ;;
+	"feature")
+	    NAME=$(echo $1 | tr " " "-" | sed -r 's/^feature-//')
+	    [ -z "`git branch | egrep '^..development$'`" ] && echo "gg: development branch not found" && exit 0
+	    git checkout -b feature-$NAME development
+	    ;;
+	"fix")
+	    NAME=$(echo $1 | tr " " "-" | sed -r 's/^fix-//')
+	    [ -z "`git branch | egrep '^..development$'`" ] && echo "gg: development branch not found" && exit 0
+	    git checkout -b fix-$NAME development
+	    ;;
+	*) echo "gg: $1 bad format" >&2 && usage ;;
+    esac
+}
+
+# merge
+function git_merge() {
+    TYPE=$(echo $1 | cut -d'-' -f1)
+    [ -z "`git branch | egrep ^..$1\$`" ] && echo "gg: $1 branch not found" && exit 0
+    case $TYPE in
+	"development")
+	    [ -z "`git branch | egrep '^..master$'`" ] && echo "gg: master branch not found" >&2 && exit 1
+	    git checkout master
+	    [ -n "`git status --porcelain`" ] && echo "gg: there are some things left to commit" >&2 && exit 1
+	    [ -z "`git branch | egrep '^..development$'`" ] && echo "gg: development branch not found" >&2 && exit 1
+	    git merge --no-ff development
+	    echo "gg: consider using gg release"
+	    ;;
+	"hotfix")
+	    [ -z "`git branch | egrep '^..master$'`" ] && echo "gg: master branch not found" >&2 && exit 1
+	    git checkout master
+	    [ -n "`git status --porcelain`" ] && echo "gg: there are some things left to commit" >&2 && exit 1
+	    [ -z "`git branch | egrep ^..$1\$`" ] && echo "gg: development branch not found" >&2 && exit 1
+	    git merge --no-ff $1
+	    git branch -d $1
+	    echo "gg: consider using gg release"
+	    ;;
+	"feature"|"fix")
+	    git checkout $1
+	    [ -n "`git status --porcelain`" ] && echo "gg: there are some things left to commit" >&2 && exit 1
+	    [ -z "`git branch | egrep '^..development$'`" ] && echo "gg: development branch not found" && exit 0
+	    git checkout development
+	    [ -n "`git status --porcelain`" ] && echo "gg: there are some things left to commit" >&2 && exit 1
+	    git merge --no-ff $1
+	    git branch -d $1
+	    ;;
+	*) echo "gg: $1 unrecognized branch" >&2 && exit 1 ;;
+    esac
+}
+
+# list
+function git_list() {
+    if [ -n "$1" ] ; then
+	case $1 in
+	    "hotfix"|"feature"|"fix")
+		[ -z "`git branch | egrep ^..$1\$`" ] && echo "gg: $1 branch not found" && exit 0
+		BRANCHES=$(git branch | egrep ^..$1- | sed -r 's/^..//g')
+		for BRANCH in $BRANCHES ; do
+		    echo $BRANCH
+		done
+		;;
+	    *) echo "gg: $1 unrecognized branch" ;;
+	esac
+    else
+	[ -z "`git branch | egrep '^..master$'`" ] && echo "gg: master branch not found" && exit 0
+	MASTER_REV=$(git reflog -n 1 master | head -1 | cut -d' ' -f1)
+	MASTER_TAG=$(git tag | tail -1)
+	[ -n "$MASTER_TAG" ] && MASTER_TAG="v$MASTER_TAG"
+	echo "\`-- master $MASTER_REV $MASTER_TAG"
+	HOTFIXS=$(git branch | egrep '^..hotfix(-.+)?$' | sed -r 's/^..//g')
+	for HOTFIX in $HOTFIXS ; do
+	    echo "    |-- $HOTFIX "$(git reflog -n 1 $HOTFIX | head -1 | cut -d' ' -f1)
+	done
+	FIXS=$(git branch | egrep '^..fix(-.+)?$' | sed -r 's/^..//g')
+	for FIX in $FIXS ; do
+	    echo "    |    ,-- $FIX "$(git reflog -n 1 $FIX | head -1 | cut -d' ' -f1)
+	done
+	[ -z "`git branch | egrep '^..development$'`" ] && echo "gg: development branch not found" && exit 0
+	echo "    \`-- development "$(git reflog -n 1 development | head -1 | cut -d' ' -f1)
+	FEATURES=$(git branch | egrep '^..feature(-.+)?$' | sed -r 's/^..//g')
+	for FEATURE in $FEATURES ; do
+	    echo "         \`-- $FEATURE "$(git reflog -n 1 $FEATURE | head -1 | cut -d' ' -f1)
+	done
+    fi
+}
+
+# release
+function git_release() {
+    [ -z "`git branch | egrep '^..development$'`" ] && echo "gg: development branch not found" >&2 && exit 1
+    git checkout development
+    [ -z "`git branch | egrep '^..master$'`" ] && echo "gg: master branch not found" >&2 && exit 1
+    [ -n "`git branch | egrep '^..hotfix(-.+)$'`" ] && echo "gg: a hotfix branch is still present" >&2 && exit 1
+    git checkout master
+    [ -n "`git status --porcelain`" ] && echo "gg: there are some things left to commit" >&2 && exit 1
+    TAG=$(echo $1 | sed -r 's/v(er)?(sion)?\s*//' | sed -r 's/r(ev)?(ision)?\s*//' | tr " " "_")
+    git tag -a $TAG -m "Release version $TAG"
+    git merge --no-ff development
+    [ -n "`git status --porcelain`" ] && echo "gg: there are some things left to commit" >&2 && exit 1
+    git push
+    git push --tags
+}
+
+DIR=$(git rev-parse --git-dir 2>/dev/null)
+case $1 in
+    "init")
+	NAME=$(echo "$2" | tr " " "-" | sed -r 's/\.git$//')
+	[ -e "$NAME.git" ] && echo "gg: $NAME.git already exists" >&2 && exit 1
+	git_init $NAME.git
+	git_clone "file://`readlink -f .`/$NAME.git" $NAME
+	;;
+    "clone")   git_clone "$2" "$3" ;;
+    "info")    [ -z "$DIR" ] && echo "gg: not a git repository" || git_info ;;
+    "create")  [ -z "$DIR" ] && echo "gg: not a git repository" || git_create "$2" ;;
+    "merge")   [ -z "$DIR" ] && echo "gg: not a git repository" || git_merge "$2" ;;
+    "list")    [ -z "$DIR" ] && echo "gg: not a git repository" || git_list "$2" ;;
+    "release") [ -z "$DIR" ] && echo "gg: not a git repository" || git_release "$2" ;;
+esac
+
+# EOF
