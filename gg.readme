@@ -1,0 +1,33 @@
+gg -- git branches manager script
+Copyright (C) 2012  Alan "Shtark" SCHNEIDER
+                    <shk.schneider[at]gmail.com>
+
+This program comes with ABSOLUTELY NO WARRANTY.
+This is free software, and you are welcome to redistribute it
+under certain conditions.
+
+Depends:	git
+Please read:	<...>
+
+Usage: gg init <name>                 # inits a local repository
+          clone <path> [name]         # clones an existing repository
+	  info                        # prints informations about local repository
+	  create <hotfix[-name]>      # creates a secondary branch (from master)
+	  create <{feature|fix}-name> # creates a secondary branch (from development)
+	  merge development           # merges the development branch (to master)
+	  merge <hotfix[-name]>       # merges a hotfix branch (to master)
+	  merge <{feature|fix}-name>  # merges a secondary branch (to development)
+	  list [hostfix|feature|fix]  # lists secondary branches
+	  release <version>           # tags and releases a new release
+	  <other>                     # will give the hand to git
+
+Model
+
+  main branches
+    master is production
+    development is the latest working version (from master)
+
+  secondary branches
+    hotfix[-*] are branches that fix bugs affecting production (from master)
+    feature-* are branches that implements new things (form development)
+    fix-* are branches that fix bugs in development (from development)
