@@ -24,6 +24,7 @@ function usage() {
     echo "          merge <{feature|fix}-name>  # merges a secondary branch (to development)" >&2
     echo "          list [hostfix|feature|fix]  # lists secondary branches" >&2
     echo "          release <version>           # tags and releases a new release" >&2
+    echo "          <other>                     # will give the hand to git" >&2
     exit 1
 }
 
