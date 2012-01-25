@@ -9,7 +9,7 @@
 # under certain conditions.
 #
 
-# v2.27
+# v2.28
 
 [ -z `which git` ] && echo "E: git: Command not found" >&2 && exit 1
 
