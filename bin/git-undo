@@ -1,0 +1,57 @@
+#!/bin/bash
+#
+# git-undo -- undo recent git changes
+# Copyright (C) 2012  Alan "Shtark" SCHNEIDER
+#                     <shk.schneider[at]gmail.com>
+#
+# From <https://github.com/jwiegley/git-scripts/blob/master/git-undo>
+#
+# This program comes with ABSOLUTELY NO WARRANTY.
+# This is free software, and you are welcome to redistribute it
+# under certain conditions.
+#
+
+[ -z `which git` ] && echo "E: git: Command not found" >&2 && exit 1
+
+function usage() {
+    echo "Usage: git-undo <commit> [file ...]" >&2
+    echo "                <add|rm>" >&2
+    echo "                <changes>" >&2
+    echo "                <change> [file ...]" >&2
+    echo "                <pull|merge|rebase>" >&2
+    exit 1
+}
+
+DIR=$(git rev-parse --git-dir 2>/dev/null)
+[ -z "$DIR" ] && echo "git-undo: not a git repository" >&2 && exit 1
+
+[ $# -eq 0 ] && usage
+
+CMD="$1"
+shift
+
+case $CMD in
+    "commit")
+        if [ $# -eq 0 ]; then
+            git reset --soft HEAD^
+        else
+            git revert "$@"
+        fi
+        ;;
+    "add"|"rm")
+        git reset --mixed
+        ;;
+    "changes")
+        git reset --hard HEAD
+        ;;
+    "change")
+	[ $# -lt 1 ] && usage
+        git checkout -f -- "$@"
+        ;;
+    "pull"|"merge"|"rebase")
+        git reset --hard HEAD@{0}
+        ;;
+    *) usage ;;
+esac
+
+# EOF

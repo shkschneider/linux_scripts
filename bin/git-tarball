@@ -1,0 +1,31 @@
+#!/bin/bash
+#
+# git-tarball -- create a tarball of a git repository/commit
+# Copyright (C) 2012  Alan "Shtark" SCHNEIDER
+#                     <shk.schneider[at]gmail.com>
+#
+# This program comes with ABSOLUTELY NO WARRANTY.
+# This is free software, and you are welcome to redistribute it
+# under certain conditions.
+#
+
+[ -z `which git` ] && echo "E: git: Command not found" >&2 && exit 1
+
+function usage() {
+    echo "Usage: git-tarball {tag|commit}" >&2
+    exit 1
+}
+
+DIR=$(git rev-parse --git-dir 2>/dev/null)
+[ -z "$DIR" ] && echo "git-tarball: not a git repository" >&2 && exit 1
+
+[ $# -ne 1 ] && usage
+
+NAME=$(basename $(git rev-parse --show-toplevel))
+BRANCH=$(git branch --no-color | egrep '^\*' | cut -d' ' -f2)
+TAG="$1"
+
+echo "$NAME/$BRANCH/$TAG $NAME-$TAG.tar.gz"
+git archive --prefix="$NAME-$TAG/" "$TAG" | gzip --best > $NAME-$TAG.tar.gz
+
+# EOF

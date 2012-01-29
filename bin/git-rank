@@ -1,0 +1,41 @@
+#!/bin/bash
+#
+# git-rank -- rank contributors for git
+# Copyright (C) 2012  Alan "Shtark" SCHNEIDER
+#                     <shk.schneider[at]gmail.com>
+#
+# This program comes with ABSOLUTELY NO WARRANTY.
+# This is free software, and you are welcome to redistribute it
+# under certain conditions.
+#
+
+[ -z `which git` ] && echo "E: git: Command not found" >&2 && exit 1
+
+function usage() {
+    echo "Usage: git-rank" >&2
+    exit 1
+}
+
+DIR=$(git rev-parse --git-dir 2>/dev/null)
+[ -z "$DIR" ] && echo "git-rank: not a git repository" >&2 && exit 1
+
+[ $# -ne 0 ] && usage
+
+RANK=""
+
+CONTRIBUTORS=$(git log | egrep '^Author: ' | cut -d' ' -f2- | sed -r 's/ <.+>//g' | sort | uniq)
+for CONTRIBUTOR in $CONTRIBUTORS ; do
+    N=$(git log | egrep  "^Author: $CONTRIBUTOR <" | wc -l)
+    RANK=$(echo "$RANK#$N:$CONTRIBUTOR")
+done
+
+for CONTRIBUTOR in `echo $RANK | sed -r 's/^.//' | tr "#" "\n" | sort -r` ; do
+    N=$(echo $CONTRIBUTOR | cut -d':' -f1)
+    if [ $N -gt 0 ] ; then
+	CONTRIBUTOR=$(echo $CONTRIBUTOR | cut -d':' -f2-)
+	CONTRIBUTOR=$(git log | egrep "^Author: $CONTRIBUTOR <" | head -1 | cut -d' ' -f2-)
+	printf "%5d %s\n" "$N" "$CONTRIBUTOR"
+    fi
+done
+
+# EOF
