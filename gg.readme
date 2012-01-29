@@ -1,25 +1,19 @@
-gg -- git branches manager script
+gg -- git branch manager updater
 Copyright (C) 2012  Alan "Shtark" SCHNEIDER
                     <shk.schneider[at]gmail.com>
+
+Based on the model from Vincent Driessen
+                        <http://nvie.com/posts/a-successful-git-branching-model/>
 
 This program comes with ABSOLUTELY NO WARRANTY.
 This is free software, and you are welcome to redistribute it
 under certain conditions.
 
-Depends:	git
-Please read:	<...>
+Depends:      git
 
-Usage: gg init <name>                 # inits a local repository
-          clone <path> [name]         # clones an existing repository
-	  info                        # prints informations about local repository
-	  create <hotfix[-name]>      # creates a secondary branch (from master)
-	  create <{feature|fix}-name> # creates a secondary branch (from development)
-	  merge development           # merges the development branch (to master)
-	  merge <hotfix[-name]>       # merges a hotfix branch (to master)
-	  merge <{feature|fix}-name>  # merges a secondary branch (to development)
-	  list [hostfix|feature|fix]  # lists secondary branches
-	  release <version>           # tags and releases a new release
-	  <other>                     # will give the hand to git
+Usage: gg
+
+This script will merge the right branches based off the model from Vicent Driessen.
 
 Model
 
