@@ -1,0 +1,38 @@
+#!/bin/bash
+#
+# bump -- bump a version number
+# Copyright (C) 2012  Alan "Shtark" SCHNEIDER
+#                     <shk.schneider[at]gmail.com>
+#
+# This program comes with ABSOLUTELY NO WARRANTY.
+# This is free software, and you are welcome to redistribute it
+# under certain conditions.
+#
+
+function usage() {
+    echo "Usage: bump <[<name><separator>]version>" >&2
+    exit 1
+}
+
+[ $# -ne 1 ] && usage
+
+# version
+VER="$1"
+[ -z "$VER" ] && VER="0.0"
+[ ${#VER} -eq 1 ] && VER="$VER.0"
+
+# separator
+SEP=$(echo $VER | sed -r 's/^.+(.)[0-9\.]+$/\1/')
+CHECK=$(echo $VER | tr -d "[0-9]")
+[ ${#VER} -eq ${#CHECK} ] && echo "bump: no version number recognized" >&2 && usage
+
+# bump
+if [ ${#SEP} -eq 0 ] ; then
+    echo "$((${VER}+1))"
+elif [ ${#SEP} -eq 1 ] ; then
+    echo "${VER%${SEP}*}${SEP}$((${VER##*${SEP}}+1))"
+else
+    echo "bump: unrecognized format" >&2 && usage
+fi
+
+# EOF
