@@ -48,7 +48,7 @@ case $1 in
 	echo -n "New Author Email: "
 	read NEW_EMAIL
 	[ -z "$NEW_EMAIL" ] && echo "Canceled." && exit 1
-	git filter-branch --commit-filter '
+	git filter-branch -f --commit-filter '
           aif [ "$GIT_COMMITTER_NAME" = "$OLD_NAME" ];
           then
                   GIT_COMMITTER_NAME="$NEW_NAME";
