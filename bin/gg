@@ -38,11 +38,25 @@ function git_next_tag() {
     fi
 }
 
+function git_merge_noff() {
+    FROM="$1"
+    INTO="$2"
+    git checkout $FROM 2> /dev/null
+    git pull 2> /dev/null
+    git_status
+    git checkout $INTO 2> /dev/null
+    git merge --no-ff --no-commit $FROM > /dev/null
+    git_status
+    git commit -v
+}
+
 CURRENT=$(git branch --no-color | egrep '^\*' | cut -d' ' -f2)
 TYPE=$(echo $CURRENT | cut -d'-' -f1)
 git_status
 
-git fetch && git fetch --tags && git pull
+git fetch
+git fetch --tags
+git pull 2> /dev/null
 git_status
 
 case $TYPE in
@@ -50,13 +64,11 @@ case $TYPE in
 	REF=$(git log -n1 | head -1 | cut -d' ' -f2 | cut -c1-7)
 	if [ -n "`git branch | egrep '^..hotfix$'`" ] ; then
 	    echo "gg: merging from hotfix"
-	    git checkout hotfix && git pull && git_status && git checkout master
-	    git merge --no-ff hotfix && git_status
+	    git_merge_noff "hotfix" "master"
 	fi
 	if [ -n "`git branch | egrep '^..release$'`" ] ; then
 	    echo "gg: merging from release"
-	    git checkout release && git pull && git_status && git checkout master
-	    git merge --no-ff release && git_status
+	    git_merge_noff "release" "master"
 	fi
 	NEW_REF=$(git log -n1 | head -1 | cut -d' ' -f2 | cut -c1-7)
 	if [ "$REF" != "$NEW_REF" ] ; then
@@ -71,8 +83,7 @@ case $TYPE in
 	REF=$(git log -n1 | head -1 | cut -d' ' -f2 | cut -c1-7)
 	if [ -n "`git branch | egrep '^..master$'`" ] ; then
 	    echo "gg: merging from master"
-	    git checkout master && git pull && git_status && git checkout hotfix
-	    git merge --no-ff master && git_status
+	    git_merge_noff "master" "hotfix"
 	fi
 	NEW_REF=$(git log -n1 | head -1 | cut -d' ' -f2 | cut -c1-7)
 	if [ "$REF" != "$NEW_REF" ] ; then
@@ -85,24 +96,20 @@ case $TYPE in
 	;;
     "release")
 	if [ -n "`git branch | egrep '^..hotfix$'`" ] ; then
-	    git checkout hotfix && git pull && git_status && git checkout release
-	    git merge --no-ff hotfix && git_status
+	    git_merge_noff "hotfix" "release"
 	fi
 	;;
     "development")
 	if [ -n "`git branch | egrep '^..hotfix$'`" ] ; then
 	    if [ -z "`git branch | egrep '^..release$'`" ] ; then
-		git checkout hotfix && git pull && git_status && git checkout development
-		git merge --no-ff hotfix && git_status
+		git_merge_noff "hotfix" "development"
 	    fi
 	fi
 	if [ -n "`git branch | egrep '^..release$'`" ] ; then
-	    git checkout release && git pull && git_status && git checkout development
-	    git merge --no-ff release && git_status
+	    git_merge_noff "release" "development"
 	fi
 	if [ -n "`git branch | egrep '^..feature$'`" ] ; then
-	    git checkout feature && git pull && git_status && git checkout development
-	    git merge --no-ff feature && git_status
+	    git_merge_noff "feature" "development"
 	fi
 	;;
     "feature")
