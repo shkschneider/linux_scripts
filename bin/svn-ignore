@@ -1,0 +1,74 @@
+#!/bin/bash
+#
+# svn-ignore -- quick access to svn props
+# Copyright (C) 2012  Alan "Shtark" SCHNEIDER
+#                     <shk.schneider[at]gmail.com>
+#
+# This program comes with ABSOLUTELY NO WARRANTY.
+# This is free software, and you are welcome to redistribute it
+# under certain conditions.
+#
+
+[ -z `which svn` ] && echo "E: svn: Command not found" >&2 && exit 1
+
+function usage() {
+    echo "Usage: svn-ignore <list|clear>" >&2
+    echo "                  <add|rm> <file> [...]" >&2
+    exit 1
+}
+
+DIR=".svn"
+[ ! -d "$DIR" ] && echo "svn-ignore: not a svn repository" >&2 && exit 1
+
+[ $# -eq 0 ] && usage
+
+LIST="#"
+for FILE in `svn propget svn:ignore .` ; do
+    LIST=$(echo "$LIST$FILE#")
+done
+
+function svn_ignore_list() {
+    echo $LIST | sed -r 's/(^#|#$)//g' | sed '/^$/d' | tr "#" "\n"
+}
+
+function svn_ignore_add() {
+    for FILE in "$@" ; do
+	if [ -n "`svn propget svn:ignore | egrep "^$FILE"`" ] ; then
+	    echo "svn-ignore: $FILE already in ignore list"
+	else
+	    LIST=$(echo "$LIST$FILE#")
+	    echo "svn-ignore: $FILE added to ignore list"
+	fi
+    done
+    svn propset svn:ignore "$(echo $LIST | sed -r 's/(^#|#$)//g' | sed '/^$/d' | tr "#" "\n")" . > /dev/null
+}
+
+function svn_ignore_rm() {
+    for FILE in "$@" ; do
+	if [ -z "`svn propget svn:ignore | egrep "^$FILE"`" ] ; then
+	    echo "svn-ignore: $FILE not in ignore list"
+	else
+	    LIST=$(echo $LIST | sed "s/#$FILE#/#/")
+	    echo "svn-ignore: $FILE removed from ignore list"
+	fi
+    done
+    svn propset svn:ignore "$(echo $LIST | sed -r 's/(^#|#$)//g' | sed '/^$/d' | tr "#" "\n")" . > /dev/null
+}
+
+function svn_ignore_clear() {
+    svn propdel svn:ignore . > /dev/null
+    echo "svn-ignore: ignore list is empty"
+}
+
+CMD="$1"
+shift
+
+case $CMD in
+    "list") svn_ignore_list ;;
+    "add") svn_ignore_add "$@" ;;
+    "rm") svn_ignore_rm "$@" ;;
+    "clear") svn_ignore_clear ;;
+    *) usage ;;
+esac
+
+# EOF
