@@ -1,0 +1,71 @@
+#!/bin/bash
+#
+# shk-linux-conf -- shk configuration files updater
+# Copyright (C) 2012  Alan "Shtark" SCHNEIDER
+#                     <shk.schneider[at]gmail.com>
+#
+# This program comes with ABSOLUTELY NO WARRANTY.
+# This is free software, and you are welcome to redistribute it
+# under certain conditions.
+#
+
+GITHUB_USER="leonnib4"
+GITHUB_REPO="linux_conf"
+FORCE="false"
+
+function usage() {
+    echo "Usage: shk-linux-conf [-u GITHUB_USER] [-r GITHUB_REPO] [-f]" >&2
+    exit 1
+}
+
+while getopts u:r:f OPT; do
+    case "$OPT" in
+	u) GITHUB_USER=$OPTARG ;;
+	r) GITHUB_REPO=$OPTARG ;;
+	f) FORCE="true" ;;
+	\?|*) usage ;;
+    esac
+done
+
+function update_conf_file() {
+    FILE="$1"
+    REMOTE_TAG=$(curl -s https://raw.github.com/$GITHUB_USER/$GITHUB_REPO/master/$REMOTE_FILE | egrep "^.+ .*$FILE r" | cut -d' ' -f2-)
+    if [ -n "$REMOTE_TAG" ] ; then
+	REMOTE_REV=$(echo $REMOTE_TAG | cut -d' ' -f2 | tr -d "[a-z]")
+	[ -z "$REMOTE_REV" ] && REMOTE_REV="0"
+	LOCAL_FILE=$(echo $REMOTE_TAG | cut -d' ' -f1)
+	ABS_LOCAL_FILE=$(echo $LOCAL_FILE | sed "s#~#$HOME#")
+	if [ -f "$ABS_LOCAL_FILE" ] ; then
+	    LOCAL_TAG=$(cat $ABS_LOCAL_FILE | egrep "^.+ .*$FILE r" | cut -d' ' -f2-)
+	    LOCAL_REV=$(echo $LOCAL_TAG | cut -d' ' -f2 | tr -d "[a-z]")
+	    [ -z "$LOCAL_REV" ] && LOCAL_REV="0"
+	    if [ -z "$LOCAL_REV" ] ; then
+		printf "$LOCAL_FILE: not tracked so no updated\n" >&2
+	    else
+		if [ $REMOTE_REV -gt $LOCAL_REV ] ; then
+		    printf "$LOCAL_FILE: update available (r$LOCAL_REV < r$REMOTE_REV)\n"
+		    printf "  downloading https://raw.github.com/$GITHUB_USER/$GITHUB_REPO/master/$REMOTE_FILE as $LOCAL_FILE...\n"
+		    curl -s https://raw.github.com/leonnib4/linux_conf/master/$REMOTE_FILE > $LOCAL_FILE
+		elif [ $REMOTE_REV -eq $LOCAL_REV ] ; then
+		    printf "$LOCAL_FILE: up to date (r$LOCAL_REV = r$REMOTE_REV)\n"
+		else
+		    printf "$LOCAL_FILE: out of sync (r$LOCAL_REV > r$REMOTE_REV)\n" >&2
+		fi
+	    fi
+	else
+	   printf "$LOCAL_FILE: not found so not checked\n" >&2
+	fi
+    fi
+}
+
+echo "Getting file list from $GITHUB_USER@github:$GITHUB_REPO..."
+REMOTE_FILES=$(curl -s https://github.com/$GITHUB_USER/$GITHUB_REPO | grep "href=\"/$GITHUB_USER/$GITHUB_REPO/blob" | sed -r 's/<[^>]*>//g' | sed -r 's/^\s+//g')
+if [ -n "$REMOTE_FILES" ] ; then
+    for REMOTE_FILE in $REMOTE_FILES ; do
+	update_conf_file $(echo $REMOTE_FILE | sed -r "s/^dot.//")
+    done
+else
+    echo "shk-linux-conf: nothing found" >&2 && exit 1
+fi
+
+# EOF
