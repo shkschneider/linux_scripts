@@ -1,6 +1,6 @@
-* apt
-* network
-* sdebpkg
+* apt -- wrapper for aptitude/apt-*/dpkg*
+* network -- manage ethernet and wireless connections easily from the command line
+* sdebpkg -- simple deb packager from scratch
 
 
 apt -- wrapper for aptitude/apt-*/dpkg*
@@ -43,7 +43,7 @@ Usage: network devices                        list devices
        network <wlan> connect <ssid> [key]    connect to SSID throught interface
 
 
-sdebpkge -- simple deb packager from scratch
+sdebpkg -- simple deb packager from scratch
 
 Depends:
        build-essential debhelper dpkg-dev fakeroot dh-make devcripts litian
