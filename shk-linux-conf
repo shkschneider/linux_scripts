@@ -12,22 +12,31 @@
 GITHUB_USER="leonnib4"
 GITHUB_REPO="linux_conf"
 FORCE="false"
+ALL="false"
 
 function usage() {
-    echo "Usage: shk-linux-conf [-u GITHUB_USER] [-r GITHUB_REPO] [-f]" >&2
+    echo "Usage: shk-linux-conf [-u GITHUB_USER] [-r GITHUB_REPO] [-f] [-a]" >&2
     exit 1
 }
 
-while getopts u:r:f OPT; do
+while getopts u:r:fa OPT; do
     case "$OPT" in
 	u) GITHUB_USER=$OPTARG ;;
 	r) GITHUB_REPO=$OPTARG ;;
 	f) FORCE="true" ;;
+	a) ALL="true" ;;
 	\?|*) usage ;;
     esac
 done
 
-function update_conf_file() {
+function download_conf_file() {
+    [ -n "$1" ] && TAG="[$1] "
+    printf "  %sdownloading https://raw.github.com/$GITHUB_USER/$GITHUB_REPO/master/$REMOTE_FILE as $LOCAL_FILE...\n" "$TAG"
+    curl -s https://raw.github.com/$GITHUB_USER/$GITHUB_REPO/master/$REMOTE_FILE > $ABS_LOCAL_FILE
+    [ $? -eq 0 ] && printf "  $LOCAL_FILE updated to r$REMOTE_REV\n"
+}
+
+function check_conf_file() {
     FILE="$1"
     REMOTE_TAG=$(curl -s https://raw.github.com/$GITHUB_USER/$GITHUB_REPO/master/$REMOTE_FILE | egrep "^.+ .*$FILE r" | cut -d' ' -f2-)
     if [ -n "$REMOTE_TAG" ] ; then
@@ -38,22 +47,24 @@ function update_conf_file() {
 	if [ -f "$ABS_LOCAL_FILE" ] ; then
 	    LOCAL_TAG=$(cat $ABS_LOCAL_FILE | egrep "^.+ .*$FILE r" | cut -d' ' -f2-)
 	    LOCAL_REV=$(echo $LOCAL_TAG | cut -d' ' -f2 | tr -d "[a-z]")
-	    [ -z "$LOCAL_REV" ] && LOCAL_REV="0"
+	    #[ -z "$LOCAL_REV" ] && LOCAL_REV="0"
 	    if [ -z "$LOCAL_REV" ] ; then
 		printf "$LOCAL_FILE: not tracked so no updated\n" >&2
+		[ $FORCE = "true" ] && download_conf_file "force" "$REMOTE_FILE" "$ABS_LOCAL_FILE"
 	    else
 		if [ $REMOTE_REV -gt $LOCAL_REV ] ; then
 		    printf "$LOCAL_FILE: update available (r$LOCAL_REV < r$REMOTE_REV)\n"
-		    printf "  downloading https://raw.github.com/$GITHUB_USER/$GITHUB_REPO/master/$REMOTE_FILE as $LOCAL_FILE...\n"
-		    curl -s https://raw.github.com/leonnib4/linux_conf/master/$REMOTE_FILE > $LOCAL_FILE
+		    download_conf_file "" "$REMOTE_FILE" "$ABS_LOCAL_FILE"
 		elif [ $REMOTE_REV -eq $LOCAL_REV ] ; then
 		    printf "$LOCAL_FILE: up to date (r$LOCAL_REV = r$REMOTE_REV)\n"
 		else
 		    printf "$LOCAL_FILE: out of sync (r$LOCAL_REV > r$REMOTE_REV)\n" >&2
+		    [ $FORCE = "true" ] && download_conf_file "force" "$REMOTE_FILE" "$ABS_LOCAL_FILE"
 		fi
 	    fi
 	else
 	   printf "$LOCAL_FILE: not found so not checked\n" >&2
+	   [ $ALL = "true" ] && download_conf_file "all" "$REMOTE_FILE" "$ABS_LOCAL_FILE"
 	fi
     fi
 }
@@ -62,7 +73,7 @@ echo "Getting file list from $GITHUB_USER@github:$GITHUB_REPO..."
 REMOTE_FILES=$(curl -s https://github.com/$GITHUB_USER/$GITHUB_REPO | grep "href=\"/$GITHUB_USER/$GITHUB_REPO/blob" | sed -r 's/<[^>]*>//g' | sed -r 's/^\s+//g')
 if [ -n "$REMOTE_FILES" ] ; then
     for REMOTE_FILE in $REMOTE_FILES ; do
-	update_conf_file $(echo $REMOTE_FILE | sed -r "s/^dot.//")
+	check_conf_file $(echo $REMOTE_FILE | sed -r "s/^dot.//")
     done
 else
     echo "shk-linux-conf: nothing found" >&2 && exit 1
