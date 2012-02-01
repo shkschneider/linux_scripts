@@ -9,13 +9,22 @@
 # under certain conditions.
 #
 
+CHECK_ONLY="false"
 GITHUB_USER="leonnib4"
 GITHUB_REPO="linux_conf"
 FORCE="false"
 ALL="false"
 
 function usage() {
-    echo "Usage: shk-linux-conf [-u GITHUB_USER] [-r GITHUB_REPO] [-f] [-a]" >&2
+    echo "Usage: shk-linux-conf [-c] [-u GITHUB_USER] [-r GITHUB_REPO] [-f] [-a]" >&2
+    echo "       Options:" >&2
+    echo "                -c  only checks and quits (safe)" >&2
+    echo "                -u  specify the github username" >&2
+    echo "                -r  specify the github repository name" >&2
+    echo "       Files must be on the root of master branch." >&2
+    echo "                -f  forces the download of untracked files (WARNING: overwrites)" >&2
+    echo "                -a  forces the download of all missing files (add files)" >&2
+    echo "       Without -f or -a options this script only updates the shk-linux-conf valid files already present." >&2
     exit 1
 }
 
