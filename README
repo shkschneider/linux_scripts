@@ -14,3 +14,79 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+
+* apt
+* network
+* sdebpkg
+
+
+apt -- wrapper for aptitude/apt-*/dpkg*
+
+Usage: apt [OPTION] COMMAND [PARAMS]
+     Options
+       -ap, --use-aptitude
+       -ag, --use-apt-get
+       -nr, --no-reverse
+     Commands
+       {--help|--version|--author}
+       update
+       upgrade
+       search <PACKAGE>
+       show <PACKAGE>
+       file <FILE>
+       install <PACKAGE ...>
+       reinstall <PACKAGE ...>
+       remove <PACKAGE ...>
+       purge <PACKAGE ...>
+       download <PACKAGE ...>
+       source <PACKAGE ...>
+       depends <PACKAGE ...>
+       policy [PACKAGE ...]
+       size [LINES]
+       architecture
+       repositories
+       available
+
+
+network -- manage ethernet and wireless connections easily from the command line
+
+Usage: network devices                        list devices
+       network [eth|wlan|usb] list [up|down]  list interfaces
+       network [eth|wlan|usb] status          interfaces status
+       network <interface> up                 enable interface
+       network <interface> down               disable interface
+       network <interface> status             interface status
+       network <wlan> ssid                    list SSID for interface
+       network <wlan> connect <ssid> [key]    connect to SSID throught interface
+
+
+sdebpkge -- simple deb packager from scratch
+
+Depends:
+       build-essential debhelper dpkg-dev fakeroot dh-make devcripts litian
+DIR format:
+       pkgname-pkgversion
+DEB format:
+       pkgname_pkgversion-debrelease_arch.deb
+Please read:
+       <http://www.debian.org/doc/debian-policy/>
+
+Usage: sdebpkg [OPTIONS] <DIR>
+       prepare:
+       {-c|--copyright}              license for debian/control [be careful]
+           --list-copyrights
+       {-r|--reset}                  removes debian directory [be careful]
+       {-x|--extras}                 keep examples files form dh_make
+       build:
+       {-v|--verify}                 check debian policy
+       {-t|--tarball}                 keep .tar.gz
+       {-k|--keep-all}               keep everything (implies --tar-gz)
+       {-q|--quiet}                  less verbose packaging [be careful]
+       any:
+       {-s|--summarize}              break after summary
+       {-a|--architecture} <ARCH>    target architecture
+           --list-architectures
+       {-i|--interactive}            prompt the user on each step and upon errors
+       {-f|--force}                  never get interactive even upon errors
+       {--help|--version|--author}
