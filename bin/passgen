@@ -10,7 +10,7 @@
 #
 
 if [ $# -eq 1 ] ; then
-    [ -z "`echo "$1" | egrep '^[0-9]+$'`" ] && echo "E: $1: Not a number" >&2 && exit 1
+    [ -z "`echo "$1" | egrep '^[0-9]+$'`" ] && echo "passgen: $1: not a number" >&2 && exit 1
     LENGTH=$1
 else
     # Default length
@@ -18,3 +18,5 @@ else
 fi
 
 tr -dc A-Za-z0-9_ < /dev/urandom | head -c ${LENGTH} | xargs
+
+# EOF

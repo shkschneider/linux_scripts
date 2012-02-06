@@ -9,7 +9,10 @@
 # under certain conditions.
 #
 
-[ ! -x `which file` ] && echo "E: file: Command not found" >&2 && exit 1
+[ -z "`which file`" ] && echo "64bits: command 'file' not found" >&2 && exit 1
 
 echo "System: "$(uname -o)" "$(file -b `which file` | awk '{print $2}')
 echo "Supports 64bits: "$(cat /proc/cpuinfo | grep flags | grep lm > /dev/null && echo "Yes" || echo "No")
+#echo "libc: v"$(dpkg -l | egrep '^ii  libc6 ' | awk '{print $3}')
+
+# EOF

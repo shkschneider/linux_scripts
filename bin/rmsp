@@ -1,4 +1,13 @@
 #!/bin/bash
+#
+# rmsp -- removes spaces in filenames
+# Copyright (C) 2010-2012  Alan "Shtark" SCHNEIDER
+#                          <shk.schneider[at]gmail.com>
+#
+# This program comes with ABSOLUTELY NO WARRANTY.
+# This is free software, and you are welcome to redistribute it
+# under certain conditions.
+#
 
 ls | while read -r FILE ; do
     NEW_FILE=$(echo $FILE | tr ' ' '_' | tr -d '[{}(),\!]' | tr -d "'\"" | tr '[A-Z]' '[a-z]' | sed 's/_-_/_/g')
@@ -7,3 +16,5 @@ ls | while read -r FILE ; do
 	mv "$FILE" "$NEW_FILE"
     fi
 done
+
+# EOF

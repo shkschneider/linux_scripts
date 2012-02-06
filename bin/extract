@@ -1,19 +1,8 @@
 #!/bin/bash
 #
 # extract -- one script to extract them all
-# Copyright (C) 2008-2010  Alan "Shtark" SCHNEIDER
+# Copyright (C) 2008-2012  Alan "Shtark" SCHNEIDER
 #                          <shk.schneider[at]gmail.com>
-# ChangeLog:
-#	v1.3	2010	added generic decompression if everything else failed using p7zip and tar
-#			added generic decompression: *.tar.* *.t*
-#			added support for lzma archives
-#	v1.2	2010	improved commands
-#       v1.1    2010	support for spaces in names
-#	v1.0	2010	rewritten
-#			now supports .tar.bz2 .tar.gz .tar.xz .bz2 .rar .gz .tar
-#			.tbz2 .tgz .zip .Z .7z .xz .exe .rpm .deb .iso .ace
-#	v0.2	2009	extended version with .rar .gz .tgz and better code
-#	v0.1	2008	basic version for .tar.gz .zip .tar.bz2
 #
 # This program comes with ABSOLUTELY NO WARRANTY.
 # This is free software, and you are welcome to redistribute it
@@ -22,7 +11,7 @@
 
 function cmd() {
     for BIN in "$1" ; do
-	[ -n `which $BIN` ] && echo "E: $BIN: Command not found" >&2 && return 1
+	[ -n "`which $BIN`" ] && echo "extract: command '$BIN' not found" >&2 && return 1
     done
     return 0
 }
@@ -68,12 +57,12 @@ function extract() {
     esac
 }
 
-[ $# -eq 0 ] && echo "Usage: `basename "$0"` <FILE> [...]" >&2 && exit 1
+[ $# -eq 0 ] && echo "Usage: extract <file [...]>" >&2 && exit 1
 
 for FILE in "$@" ; do
-    [ ! -e "$FILE" ] && echo "E: $FILE: No such file or directory" >&2 && exit 1
-    [ -d "$FILE" ] && echo "E: $FILE: Is a directory" >&2 && exit 1
-    [ ! -r "$FILE" ] && echo "E: $FILE: Permission denied" >&2 && exit 1
+    [ ! -e "$FILE" ] && echo "extract: $FILE: no such file or directory" >&2 && exit 1
+    [ -d "$FILE" ] && echo "extract: $FILE: is a directory" >&2 && exit 1
+    [ ! -r "$FILE" ] && echo "extract: $FILE: permission denied" >&2 && exit 1
     FILE=$(readlink -f "$FILE")
     NAME=$(basename "$FILE" | sed -r 's/(\.[a-zZ2]{2,3})?\.[a-zZ2]{1,4}$//')
     if [ -d "$NAME" ] ; then
@@ -86,3 +75,5 @@ for FILE in "$@" ; do
     mkdir "$NAME" && cd "$NAME"
     extract
 done
+
+# EOF

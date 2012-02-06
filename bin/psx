@@ -16,3 +16,5 @@ else
 	ps aux | grep "$ARGV" | grep -v "grep $ARGV" | grep -v "/bin/bash $0 $*"
     done
 fi
+
+# EOF

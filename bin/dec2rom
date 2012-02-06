@@ -12,13 +12,13 @@
 # M[x] indicates 1k times x
 #
 
-[ $# -ne 1 ] && echo "Usage: `basename "$0"` <NUMBER>" >&2 && exit 1
+[ $# -ne 1 ] && echo "Usage: dec2rom <number>" >&2 && exit 1
 N=$(echo "$1" | tr -d '[0-9]')
-[ -n "$N" ] && echo "E: $1: Not a number" >&2 && exit 1
+[ -n "$N" ] && echo "dec2rom: '$1' is not a number" >&2 && exit 1
 
 function print_arabic_to_roman()
 {
-    local S="
+    local S=""
     local N=$1
     while [ $N -ge $2 ] ; do
 	N=$(($N - $2))
@@ -29,7 +29,7 @@ function print_arabic_to_roman()
 
 function arabic_to_roman()
 {
-    local S="
+    local S=""
     local N=$1
     N=$(print_arabic_to_roman $N 1000 M)
     S=$(echo $N | cut -d'#' -f1) ; [ -n "$S" ] && echo -n $S
@@ -73,9 +73,9 @@ function arabic_to_roman()
 }
 
 N=$1
-[ $N -lt 1 ] && echo "E: $N: Number is too small (< 1)" >&2 && exit 1
+[ $N -lt 1 ] && echo "dec2rom: number '$N' is too small (< 1)" >&2 && exit 1
 if [ $N -ge 4000 ] ; then
-    [ $N -gt 4000000 ] && echo "E: $N: Number is too large (> 4000000)" >&2 && exit 1
+    [ $N -gt 4000000 ] && echo "dec2rom: number '$N' is too large (> 4000000)" >&2 && exit 1
     echo -n "M["
     N=$(print_arabic_to_roman `echo "$N/1000" | bc -q` 1000 M)
     S=$(echo -n $N | cut -d'#' -f1) ; [ -n "$S" ] && echo -n $S
@@ -87,3 +87,5 @@ fi
 
 arabic_to_roman $N
 echo
+
+# EOF

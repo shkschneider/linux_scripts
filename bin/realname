@@ -9,23 +9,24 @@
 # under certain conditions.
 #
 
-PASSWD="/etc/passwd"
-[ ! -f $PASSWD ] && echo "E: $PASSWD: No such file or directory" >&2 && exit 1
-[ ! -r $PASSWD ] && echo "E: $PASSWD: Permission denied" >&2 && exit 1
+[ ! -f $PASSWD ] && echo "realname: /etc/passwd: no such file or directory" >&2 && exit 1
+[ ! -r $PASSWD ] && echo "realname: /etc/passwd: permission denied" >&2 && exit 1
 
 if [ $# -eq 0 ] ; then
     LOGIN=$(whoami)
     REALNAME=$(egrep "^$LOGIN:" /etc/passwd)
-    [ -z "$REALNAME" ] && echo "E: $LOGIN: No such user" >&2 && exit 1
+    [ -z "$REALNAME" ] && echo "realname: no such user '$LOGIN'" >&2 && exit 1
     REALNAME=$(echo $REALNAME | cut -d':' -f5 | cut -d',' -f1)
     [ -z "$REALNAME" ] && REALNAME=$LOGIN
     echo "$LOGIN is $REALNAME"
 else
     for LOGIN in $@ ; do
 	REALNAME=$(egrep "^$LOGIN" /etc/passwd)
-	[ -z "$REALNAME" ] && echo "E: $LOGIN: No such user" >&2 && continue
+	[ -z "$REALNAME" ] && echo "realname: no such user '$LOGIN'" >&2 && continue
 	REALNAME=$(echo $REALNAME | cut -d':' -f5 | cut -d',' -f1)
 	[ -z "$REALNAME" ] && REALNAME=$LOGIN
 	echo "$LOGIN is $REALNAME"
     done
 fi
+
+# EOF

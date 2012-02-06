@@ -9,7 +9,7 @@
 # under certain conditions.
 #
 
-[ "_`cat /proc/net/arp | egrep '^[0-9]'`" = "_" ] && echo "E: `basename "$0"`: No network connection" >&2 && exit 1
+[ -z "`cat /proc/net/arp | egrep '^[0-9]'`" ] && echo "traffic: no network connection" >&2 && exit 1
 
 SCALE=$(echo "1024*1024" | bc -q)
 PREFERED="" # empty for auto (scale), B kB MB GB TB otherwise
@@ -38,3 +38,5 @@ for INTERFACE in $INTERFACES ; do
     [ $OUT -gt 0 ] && RATIO=$(echo "scale=2;$IN/$OUT" | bc -q) || RATIO="0.00"
     echo "$INTERFACE up $IN $IN_UNIT $OUT $OUT_UNIT $RATIO"
 done
+
+# EOF

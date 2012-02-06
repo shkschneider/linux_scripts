@@ -27,8 +27,8 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 
-[ -z `which git` ] && echo "E: git: Command not found" >&2 && exit 1
-[ -z `which curl` ] && echo "E: curl: Command not found" >&2 && exit 1
+[ -z "`which git`" ] && echo "git-apply-url: command 'git' not found" >&2 && exit 1
+[ -z "`which curl`" ] && echo "git-apply-url: command 'curl' not found" >&2 && exit 1
 
 function usage() {
     echo "Usage: git-apply-url <url>" >&2

@@ -1,8 +1,8 @@
 #!/bin/bash
 #
 # sdebpkg -- simple deb packager from scratch
-# Copyright (C) 2011  Alan "Shtark" SCHNEIDER
-#                     <shk.schneider[at]gmail.com>
+# Copyright (C) 2011-2012  Alan "Shtark" SCHNEIDER
+#                          <shk.schneider[at]gmail.com>
 #
 # This program comes with ABSOLUTELY NO WARRANTY.
 # This is free software, and you are welcome to redistribute it
@@ -15,29 +15,27 @@
 # Please read:	<http://www.debian.org/doc/debian-policy/>
 #
 
-# v3.18
-
 COPYRIGHTS=$(find /usr/share/debhelper/dh_make/licenses -maxdepth 1 -type f | rev | cut -d'/' -f1 | rev | tr "\n" " ")
 ARCHS=$(dpkg-architecture -L | grep -v '-' | tr "\n" " ")"all"
 function usage() {
-    echo "Usage: `basename "$0"` [OPTIONS] <DIR>" >&2
+    echo "Usage: sdebpkg [options] <dir>" >&2
     echo "       prepare:" >&2
-    echo "       {-c|--copyright}              license for debian/control [be careful]" >&2
-    echo "           --list-copyrights" >&2
-    echo "       {-r|--reset}                  removes debian directory [be careful]" >&2
-    echo "       {-x|--extras}                 keep examples files form dh_make" >&2
+    echo "         {-c|--copyright}              license for debian/control [be careful]" >&2
+    echo "             --list-copyrights" >&2
+    echo "         {-r|--reset}                  removes debian directory [be careful]" >&2
+    echo "         {-x|--extras}                 keep examples files form dh_make" >&2
     echo "       build:" >&2
-    echo "       {-v|--verify}                 check debian policy" >&2
-    echo "       {-t|--tarball}                 keep .tar.gz" >&2
-    echo "       {-k|--keep-all}               keep everything (implies --tar-gz)" >&2
-    echo "       {-q|--quiet}                  less verbose packaging [be careful]" >&2
+    echo "         {-v|--verify}                 check debian policy" >&2
+    echo "         {-t|--tarball}                 keep .tar.gz" >&2
+    echo "         {-k|--keep-all}               keep everything (implies --tar-gz)" >&2
+    echo "         {-q|--quiet}                  less verbose packaging [be careful]" >&2
     echo "       any:" >&2
-    echo "       {-s|--summarize}              break after summary" >&2
-    echo "       {-a|--architecture} <ARCH>    target architecture" >&2
-    echo "           --list-architectures" >&2
-    echo "       {-i|--interactive}            prompt the user on each step and upon errors" >&2
-    echo "       {-f|--force}                  never get interactive even upon errors" >&2
-    echo "       {--help|--version|--author}" >&2
+    echo "         {-s|--summarize}              break after summary" >&2
+    echo "         {-a|--architecture} <ARCH>    target architecture" >&2
+    echo "             --list-architectures" >&2
+    echo "         {-i|--interactive}            prompt the user on each step and upon errors" >&2
+    echo "         {-f|--force}                  never get interactive even upon errors" >&2
+    echo "         {--help|--version|--author}" >&2
 }
 
 function pause() {
@@ -83,7 +81,7 @@ if [ -f ~/.sdebpkg ] ; then
 		"Architecture")	DEBARCH="$VALUE" ;;
 		"Priority")	DEBPRIORITY="$VALUE" ;;
 		"Section")	DEBSECTION="$VALUE" ;;
-		*)		echo "E: ~/.sdebpkg l.$L: Unknown var \`$VAR'" >&2 && E=1 ;;
+		*)		echo "E: ~/.sdebpkg l.$L: Unknown var '$VAR'" >&2 && E=1 ;;
 	    esac
 	    fi
 	    L=$(($L + 1))
@@ -165,10 +163,10 @@ DIRDIR=$(dirname "$DIR")
 if [ -f "$DIR/Makefile" ] ; then
     MAKEFILE=1
     E=0
-    [ -z "`egrep '^all:' "$DIR/Makefile"`" ] && E=1 && echo "E: $DIR/Makefile: No target \`all'" >&2 && exit 1
-    [ -z "`egrep '^install:' "$DIR/Makefile"`" ] && E=1 && echo "E: $DIR/Makefile: No target \`install'" >&2
-    [ -z "`egrep '^clean:' "$DIR/Makefile"`" ] && E=1 && echo "W: $DIR/Makefile: No target \`clean'" >&2
-    [ -z "`egrep '^distclean:' "$DIR/Makefile"`" ] && E=1 && echo "W: $DIR/Makefile: No target \`distclean'" >&2
+    [ -z "`egrep '^all:' "$DIR/Makefile"`" ] && E=1 && echo "E: $DIR/Makefile: No target 'all'" >&2 && exit 1
+    [ -z "`egrep '^install:' "$DIR/Makefile"`" ] && E=1 && echo "E: $DIR/Makefile: No target 'install'" >&2
+    [ -z "`egrep '^clean:' "$DIR/Makefile"`" ] && E=1 && echo "W: $DIR/Makefile: No target 'clean'" >&2
+    [ -z "`egrep '^distclean:' "$DIR/Makefile"`" ] && E=1 && echo "W: $DIR/Makefile: No target 'distclean'" >&2
     [ $E -ne 0 ] && pause 0
 else
     MAKEFILE=0

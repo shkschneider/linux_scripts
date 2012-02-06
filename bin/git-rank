@@ -9,7 +9,7 @@
 # under certain conditions.
 #
 
-[ -z `which git` ] && echo "E: git: Command not found" >&2 && exit 1
+[ -z "`which git`" ] && echo "git-rank: command 'git' not found" >&2 && exit 1
 
 function usage() {
     echo "Usage: git-rank" >&2

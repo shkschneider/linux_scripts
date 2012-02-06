@@ -1,6 +1,14 @@
 #!/bin/bash
 #
+# raw -- makes bash reads in raw mode
+# Copyright (C) 2011-2012  Alan "Shtark" SCHNEIDER
+#                          <shk.schneider[at]gmail.com>
+#
 # From <http://tldp.org/LDP/abs/html/system.html#KEYPRESS>
+#
+# This program comes with ABSOLUTELY NO WARRANTY.
+# This is free software, and you are welcome to redistribute it
+# under certain conditions.
 #
 
 TTY=$(stty -g)
@@ -12,3 +20,5 @@ stty echo
 echo $KEY
 
 stty "$TTY"
+
+# EOF

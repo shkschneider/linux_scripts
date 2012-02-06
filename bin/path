@@ -1,8 +1,8 @@
 #!/bin/bash
 #
 # path -- print a formatted $PATH
-# Copyright (C) 2011  Alan "Shtark" SCHNEIDER
-#                     <shk.schneider[at]gmail.com>
+# Copyright (C) 20112  Alan "Shtark" SCHNEIDER
+#                      <shk.schneider[at]gmail.com>
 #
 # This program comes with ABSOLUTELY NO WARRANTY.
 # This is free software, and you are welcome to redistribute it
@@ -20,3 +20,5 @@ for P in $PP ; do
     N=$(($N + $NN))
 done
 printf "%5d %s\n" $N "\$PATH"
+
+# EOF

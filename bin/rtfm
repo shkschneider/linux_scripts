@@ -1,3 +1,14 @@
 #!/bin/bash
+#
+# rtfm -- i dare you
+# Copyright (C) 2007-2012  Alan "Shtark" SCHNEIDER
+#                          <shk.schneider[at]gmail.com>
+#
+# This program comes with ABSOLUTELY NO WARRANTY.
+# This is free software, and you are welcome to redistribute it
+# under certain conditions.
+#
 
 echo "16i[q]sa[ln0=aln100%Pln100/snlbx]sbA0D4D465452snlbxq" | dc
+
+# EOF

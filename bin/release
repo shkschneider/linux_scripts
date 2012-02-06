@@ -14,11 +14,13 @@ CPUINFO=$(cat /proc/cpuinfo | grep flags | grep ' lm ')
 [ -z "$CPUINFO" ] && CPU="x86" || CPU="x64"
 KERNEL=$(uname -sr | cut -d'-' -f1)
 
-if [ ! -x `which lsb_release` ] ; then
-    echo "W: lsb_release: Command not found" >&2
+if [ -z "`which lsb_release`" ] ; then
+    echo "release: command 'lsb_release' not found" >&2
     echo "GNU/Linux $CPU [$LANG] with $KERNEL"
 else
     DISTRIB=$(lsb_release -i | awk '{printf $NF}')
     VERSION=$(lsb_release -sr)" \"$(exec lsb_release -sc | sed 's/^[a-z]/\U&/')"\"
     echo "GNU/Linux $DISTRIB $VERSION $CPU [$LANG] with $KERNEL"
 fi
+
+# EOF

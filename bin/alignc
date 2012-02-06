@@ -9,7 +9,7 @@
 # under certain conditions.
 #
 
-[ $# -eq 0 ] && echo "Usage: `basename "$0"` <text> [...]" >&2 && exit 1
+[ $# -eq 0 ] && echo "Usage: alignc <text [...]>" >&2 && exit 1
 
 COLUMNS=$(echo `tput cols`"/2" | bc -q)
 for ARGV in "$@" ; do
@@ -17,3 +17,5 @@ for ARGV in "$@" ; do
     COLS=$(($COLUMNS + $OFFSET + 1))
     printf "%${COLS}s\n" "$ARGV"
 done
+
+# EOF

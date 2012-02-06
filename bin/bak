@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# bak -- backup files
+# bak -- backups files
 # Copyright (C) 2010-2011  Alan "Shtark" SCHNEIDER
 #                          <shk.schneider[at]gmail.com>
 #
@@ -9,11 +9,11 @@
 # under certain conditions.
 #
 
-[ $# -ne 1 ] && echo "Usage: `basename "$0"` <file> [..]" >&2 && exit 1
+[ $# -ne 1 ] && echo "Usage: bak <file> [..]" >&2 && exit 1
 
-[ ! -f "$1" -a ! -d "$1" ] && echo "E: $1: No such file or directory." >&2 && exit 1
-[ ! -e "$1" ] && echo "E: $1: Permission denied." >&2 && exit 1
-[ ! -w "`dirname "$1"`" ] && echo "E: `dirname "$1"`: Permission denied." >&2 && exit 1
+[ ! -f "$1" -a ! -d "$1" ] && echo "bak: $1: no such file or directory" >&2 && exit 1
+[ ! -e "$1" ] && echo "bak: $1: permission denied" >&2 && exit 1
+[ ! -w "`dirname "$1"`" ] && echo "bak: `dirname "$1"`: Permission denied" >&2 && exit 1
 
 for ARGV in $@ ; do
     FILE=$(readlink -f "$ARGV")
@@ -21,3 +21,5 @@ for ARGV in $@ ; do
     echo "`basename "$FILE"` -> `basename "$BACKUP_FILE"`"
     cp -rp "$FILE" "$BACKUP_FILE"
 done
+
+# EOF

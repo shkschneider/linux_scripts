@@ -15,3 +15,5 @@ find . -type f -name "*.orig" -exec rm -vf {} \;
 find . -type f -name "*.bak" -exec rm -vf {} \;
 
 [ `id -u` -eq 0 ] && find /var/cache/apt/archives -type f -name "*.deb" -exec rm -vf {} \;
+
+# EOF

@@ -1,5 +1,13 @@
 #!/bin/bash
 #
+# float -- makes bash handle float numbers
+# Copyright (C) 2011  Alan "Shtark" SCHNEIDER
+#                     <shk.schneider[at]gmail.com>
+#
+# This program comes with ABSOLUTELY NO WARRANTY.
+# This is free software, and you are welcome to redistribute it
+# under certain conditions.
+#
 # From LinuxJournal <http://www.linuxjournal.com/content/floating-point-math-bash>
 #
 
@@ -30,9 +38,11 @@ function float_cond()
     return $stat
 }
 
-[ $# -eq 0 ] && echo "Usage: `basename "$0"` <operation> [...]" >&2 && exit 1
+[ $# -eq 0 ] && echo "Usage: float <operation [...]>" >&2 && exit 1
 
 set -f
 for ARGV in $@ ; do
     echo $(float_eval $ARGV)
 done
+
+# EOF

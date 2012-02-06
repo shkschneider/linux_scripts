@@ -9,19 +9,19 @@
 # under certain conditions.
 #
 
-[ ! -x `which mencoder` ] && echo "E: mencoder: Command not found" >&2 && exit 1
-[ ! -x `which lame` ] && echo "E: lame: Command not found" >&2 && exit 1
-[ ! -x `which ffmpeg` ] && echo "E: ffmpeg: Command not found" >&2 && exit 1
-[ ! -x `which du` ] && echo "E: du: Command not found" >&2 && exit 1
+[ -z "`which mencoder`" ] && echo "mkv2avi: command 'mencoder' not found" >&2 && exit 1
+[ -z "`which lame`" ] && echo "mkv2avi: command 'lame' not found" >&2 && exit 1
+[ -z "`which ffmpeg`" ] && echo "mkv2avi: command 'ffmpeg' not found" >&2 && exit 1
+[ -z "`which du`" ] && echo "mkv2avi: command 'du' not found" >&2 && exit 1
 
-[ $# -eq 0 ] && echo "Usage: `basename "$0"` <FILE> [...]" >&2 && exit 1
+[ $# -eq 0 ] && echo "Usage: mkv2avi <file [...]>" >&2 && exit 1
 
 SIZE=0
 for FILE in "$@" ; do
     FILE=$(readlink -f "$FILE")
-    [ ! -e "$FILE" ] && echo "E: $FILE: No such file or directory" >&2 && exit 1
-    [ -d "$FILE" ] && echo "E: $FILE: Is a directory" >&2 && exit 1
-    [ ! -r "$FILE" ] && echo "E: $FILE: Permission denied" >&2 && exit 1
+    [ ! -e "$FILE" ] && echo "mkv2avi: $FILE: no such file or directory" >&2 && exit 1
+    [ -d "$FILE" ] && echo "mkv2avi: $FILE: is a directory" >&2 && exit 1
+    [ ! -r "$FILE" ] && echo "mkv2avi: $FILE: permission denied" >&2 && exit 1
     INPUT_SIZE=$(du -s "$FILE" | tr "\t" " " | cut -d' ' -f1)
     SIZE=$(($SIZE + $INPUT_SIZE))
 done
@@ -73,3 +73,5 @@ if [ $F -ne $I ] ; then
 	echo "$I files deleted"
     fi
 fi
+
+# EOF

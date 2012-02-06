@@ -27,3 +27,5 @@ done
 RATIO=$(echo "scale=2;$(cat /proc/uptime | sed 's# #/#')" | bc -q)
 
 echo "$BUSY$BUSY_UNIT $IDLE$IDLE_UNIT $RATIO"
+
+# EOF

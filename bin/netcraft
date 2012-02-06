@@ -9,11 +9,11 @@
 # under certain conditions.
 #
 
-[ -z "`cat /proc/net/arp | egrep '^[0-9]'`" ] && echo "E: `basename "$0"`: No network connection" >&2 && exit 1
-[ ! -x `which curl` ] && echo "E: curl: Command not found" && exit 1
+[ -z "`cat /proc/net/arp | egrep '^[0-9]'`" ] && echo "netcraft: no network connection" >&2 && exit 1
+[ -z "`which curl`" ] && echo "netcraft: command 'curl' not found" && exit 1
 
 if [ $# -eq 0 ] ; then
-    echo "Usage: `basename "$0"` <host> [...]" >&2
+    echo "Usage: netcraft <host [...]>" >&2
     echo "       host must be HTTP or HTTPS" >&2
     exit 1
 fi
@@ -45,8 +45,8 @@ for ARGV in $@ ; do
 	    continue
 	    ;;
 	*)
-	    if [ "_`echo "$ARGV" | egrep '^[a-z]*://'`" != "_" ] ; then
-		echo "E: Unsupported protocol: \`"$(echo "$ARGV" | cut -d':' -f1)"'" >&2
+	    if [ -n "`echo "$ARGV" | egrep '^[a-z]*://'`" ] ; then
+		echo "netcraft: unsupported protocol '"$(echo "$ARGV" | cut -d':' -f1)"'" >&2
 		continue
 	    fi
 	    get_server "http://$ARGV"
@@ -54,3 +54,5 @@ for ARGV in $@ ; do
 	    ;;
     esac
 done
+
+# EOF

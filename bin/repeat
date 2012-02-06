@@ -9,12 +9,14 @@
 # under certain conditions.
 #
 
-[ $# -lt 2 ] && echo "Usage: `basename "$0"` <time> <command [...]>" >&2 && exit 1
+[ $# -lt 2 ] && echo "Usage: repeat <time> <command [...]>" >&2 && exit 1
 N=$(echo "$1" | tr -d '[0-9]')
-[ -n "$N" ] && echo "E: $1: Not a number" >&2 && exit 1
+[ -n "$N" ] && echo "repeat: '$1' is not a number" >&2 && exit 1
 
 MAX=$1;
 shift
 for ((I=1; $I <= $MAX ; I++)); do
     eval "$@";
 done
+
+# EOF

@@ -1,15 +1,18 @@
 #!/bin/bash
 #
 # lastest_kernel -- outputs latest Linux kernel version
-# Copyright (C) 2010  Alan "Shtark" SCHNEIDER
-#                     <shk.schneider[at]gmail.com>
+# Copyright (C) 2010-2012  Alan "Shtark" SCHNEIDER
+#                          <shk.schneider[at]gmail.com>
 #
 # This program comes with ABSOLUTELY NO WARRANTY.
 # This is free software, and you are welcome to redistribute it
 # under certain conditions.
 #
 
-[ "_`cat /proc/net/arp | egrep '^[0-9]'`" = "_" ] && echo "E: `basename "$0"`: No network connection" >&2 && exit 1
-$regex = '[^\[]<a href="http://www\.kernel\.org/pub/linux/kernel/v[0-9]\.[0-9]/'
+[ -z "`cat /proc/net/arp | egrep '^[0-9]'`" ] && echo "latest_kernel: no network connection" >&2 && exit 1
+
+regex='[^\[]<a href="http://www\.kernel\.org/pub/linux/kernel/v[0-9]\.[0-9]/'
 LATEST=$(wget -q -O - http://www.kernel.org | grep -E "$regex" | grep '</a>' | sed -r 's/^.*>([^<]+)<\/a>.*$/\1/')
 echo $LATEST" http://www.kernel.org/pub/linux/kernel/v"$(echo $LATEST | cut -c1-3)"/linux-"$LATEST".tar.bz2"
+
+# EOF

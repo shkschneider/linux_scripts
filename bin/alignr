@@ -9,9 +9,11 @@
 # under certain conditions.
 #
 
-[ $# -eq 0 ] && echo "Usage: `basename "$0"` <text> [...]" >&2 && exit 1
+[ $# -eq 0 ] && echo "Usage: alignr <text [...]>" >&2 && exit 1
 
 COLUMNS=$(tput cols)
 for ARGV in "$@" ; do
     printf "%${COLUMNS}s\n" "$ARGV"
 done
+
+# EOF

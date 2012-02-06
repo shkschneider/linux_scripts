@@ -9,7 +9,7 @@
 # under certain conditions.
 #
 
-[ -z `which svn` ] && echo "E: svn: Command not found" >&2 && exit 1
+[ -z "`which svn`" ] && echo "svn-ignore: command 'svn' not found" >&2 && exit 1
 
 function usage() {
     echo "Usage: svn-ignore <list|clear>" >&2

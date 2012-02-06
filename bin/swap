@@ -11,10 +11,12 @@
 
 TMP=$(tempfile)
 
-[ $# -ne 2 ] && echo "Usage: `basename "$0"` <FILE1> <FILE2>" >&2 && exit 1
-[ ! -e "$1" ] && echo "E: $1: No such file or directory" >&2 && exit 1
-[ ! -e "$2" ] && echo "E: $2: No such file or directory" >&2 && exit 1
+[ $# -ne 2 ] && echo "Usage: swap <file1> <file2>" >&2 && exit 1
+[ ! -e "$1" ] && echo "swap: $1: no such file or directory" >&2 && exit 1
+[ ! -e "$2" ] && echo "swap: $2: no such file or directory" >&2 && exit 1
 
 mv "$1" $TMP
 mv "$2" "$1"
 mv $TMP "$2"
+
+# EOF

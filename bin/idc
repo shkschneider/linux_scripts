@@ -9,12 +9,12 @@
 # under certain conditions.
 #
 
-[ $# -eq 0 ] && echo "Usage: `basename \"$0\"` <UID/GID> [...]" >&2 && exit 1
+[ $# -eq 0 ] && echo "Usage: idc <uid/gid [...]>" >&2 && exit 1
 
 E=0
 for ID in $@ ; do
     if [ -n "`echo $ID | tr -d '[0-9]'`" ] ; then
-	echo "E: $ID: Not a number" >&2
+	echo "idc: '$ID' is not a number" >&2
 	E=1
 	continue
     fi
@@ -39,3 +39,5 @@ for ID in $@ ; do
 done
 
 exit $E
+
+# EOF

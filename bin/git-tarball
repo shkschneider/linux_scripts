@@ -9,10 +9,10 @@
 # under certain conditions.
 #
 
-[ -z `which git` ] && echo "E: git: Command not found" >&2 && exit 1
+[ -z "`which git`" ] && echo "git-tarball: command 'git' not found" >&2 && exit 1
 
 function usage() {
-    echo "Usage: git-tarball {tag|commit}" >&2
+    echo "Usage: git-tarball <tag|commit>" >&2
     exit 1
 }
 

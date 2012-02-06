@@ -11,15 +11,17 @@
 
 set -f
 
-[ $# -eq 0 ] && echo "Usage: `basename "$0"` <FILE> [...]" >&2 && exit 1
+[ $# -eq 0 ] && echo "Usage: unix2dos <file [...]>" >&2 && exit 1
 
 for ARGV in $@ ; do
     FILE=$(readlink -f "$ARGV")
-    [ ! -f "$FILE" ] && echo "E: $FILE: No such file or directory" >&2 && continue
-    [ ! -r "$FILE" -o ! -w "$FILE" ] && echo "E: $FILE: Permission denied" >&2 && continue
+    [ ! -f "$FILE" ] && echo "unix2dos: $FILE: no such file or directory" >&2 && continue
+    [ ! -r "$FILE" -o ! -w "$FILE" ] && echo "unix2dos: $FILE: permission denied" >&2 && continue
     TMP=$(tempfile)
     echo " * $FILE -> $TMP -> $FILE"
     sed 's/$'"/`echo \\\r`/" "$FILE" > "$TMP"
     cat "$TMP" > "$FILE"
     rm -f "$TMP"
 done
+
+# EOF

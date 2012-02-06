@@ -9,8 +9,10 @@
 # under certain conditions.
 #
 
-[ $# -eq 0 ] && echo "Usage: `basename "$0"` <FILE> [...]" >&2 && exit 1
+[ $# -eq 0 ] && echo "Usage: revcat <file [...]>" >&2 && exit 1
 
 for FILE in $@ ; do
     sed -n '1!G;h;$p' "$FILE"
 done
+
+# EOF

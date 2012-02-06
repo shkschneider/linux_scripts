@@ -9,10 +9,12 @@
 # under certain conditions.
 #
 
-[ -z `which curl` ] && echo "E: curl: Command not found" >&2 && exit 1
+[ -z "`which curl`" ] && echo "whatismyip: command 'curl' not found" >&2 && exit 1
 
-[ "_`cat /proc/net/arp | egrep '^[0-9]'`" = "_" ] && echo "W: `basename "$0"`: No network connection" >&2 && exit 1
+[ -z "`cat /proc/net/arp | egrep '^[0-9]'`" ] && echo "W: `basename "$0"`: No network connection" >&2 && exit 1
 
 INTERNAL=$(cat /proc/net/arp | egrep '^[0-9]' | cut -d' ' -f1 | tr "\n" " " | sed -r 's/ $//')
-EXTERNAL=$(curl ifconfig.me/ip)
+EXTERNAL=$(curl -s ifconfig.me/ip)
 echo "$INTERNAL $EXTERNAL"
+
+# EOF
