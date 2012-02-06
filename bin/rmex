@@ -1,0 +1,25 @@
+#!/bin/bash
+#
+# rmex -- removes except ...
+# Copyright (C) 2012  Alan "Shtark" SCHNEIDER
+#                     <shk.schneider[at]gmail.com>
+#
+# This program comes with ABSOLUTELY NO WARRANTY.
+# This is free software, and you are welcome to redistribute it
+# under certain conditions.
+#
+
+LIST="$1"
+shift
+
+IGNORE="#"
+for FILE in "$@" ; do
+    IGNORE="$IGNORE$FILE#"
+done
+
+for FILE in $LIST ; do
+    [ -n "`echo $IGNORE | egrep \#$FILE\#`" ] && echo "rmex: skipping '$FILE'" && continue
+    [ -f "$FILE" ] && rm -f "$FILE" || rm -rf "$FILE"
+done
+
+# EOF
