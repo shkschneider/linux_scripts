@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # network -- manage ethernet and wireless connections easily from the command line
-# Copyright (C) 2010-2011  Alan "Shtark" SCHNEIDER
+# Copyright (C) 2010-2012  Alan "Shtark" SCHNEIDER
 #                          <shk.schneider[at]gmail.com>
 #
 # This program comes with ABSOLUTELY NO WARRANTY.
@@ -9,26 +9,25 @@
 # under certain conditions.
 #
 
-[ `id -u` -ne 0 ] && echo "E: Permission denied. Are you root?" >&2 && exit 1
+[ `id -u` -ne 0 ] && echo "network: are you root, `id -un`?" >&2 && exit 1
 
-[ -z "`which ifconfig`" ] && echo "E: ifconfig: Command not found" >&2 && exit 1
-[ -z "`which iwlist`" ] && echo "E: iwlist: Command not found" >&2 && exit 1
-[ -z "`which iwconfig`" ] && echo "E: iwconfig: Command not found" >&2 && exit 1
-[ -z "`which dhclient`" ] && echo "E: dhclient: Command not found" >&2 && exit 1
-
-VERSION="3.2"
+[ -z "`which ifconfig`" ] && echo "network: command 'ifconfig' not found" >&2 && exit 1
+[ -z "`which iwlist`" ] && echo "network: command 'iwlist' not found" >&2 && exit 1
+[ -z "`which iwconfig`" ] && echo "network: command 'iwconfig' not found" >&2 && exit 1
+[ -z "`which dhclient`" ] && echo "network: command 'dhclient' not found" >&2 && exit 1
 
 # Usage
 
 function usage() {
-    echo "Usage: `basename "$0"` devices                        list devices" >&2
-    echo "       `basename "$0"` [eth|wlan|usb] list [up|down]  list interfaces" >&2
-    echo "       `basename "$0"` [eth|wlan|usb] status          interfaces status" >&2
-    echo "       `basename "$0"` <interface> up                 enable interface" >&2
-    echo "       `basename "$0"` <interface> down               disable interface" >&2
-    echo "       `basename "$0"` <interface> status             interface status" >&2
-    echo "       `basename "$0"` <wlan> ssid                    list SSID for interface" >&2
-    echo "       `basename "$0"` <wlan> connect <ssid> [key]    connect to SSID throught interface" >&2
+    echo "Usage: network devices                        list devices" >&2
+    echo "               [eth|wlan|usb] list [up|down]  list interfaces" >&2
+    echo "               [eth|wlan|usb] status          interfaces status" >&2
+    echo "               <interface> up                 enable interface" >&2
+    echo "               <interface> down               disable interface" >&2
+    echo "               <interface> status             interface status" >&2
+    echo "               <wlan> ssid                    list SSID for interface" >&2
+    echo "               <wlan> connect <ssid> [key]    connect to SSID throught interface" >&2
+    echo "               --help" >&2
     exit 1
 }
 
@@ -121,34 +120,34 @@ function type_status() {
 # Interface-specific
 
 function interface_up() {
-    [ `exists $1` = "no" ] && echo "$1: No such interface" >&2 && return
-    [ `getStatus $1` = "down" ] && echo "$1: Enabling..." && ifconfig $1 up || echo "$1: Interface is already UP"
+    [ `exists $1` = "no" ] && echo "$1: no such interface" >&2 && return
+    [ `getStatus $1` = "down" ] && echo "$1: enabling..." && ifconfig $1 up || echo "$1: interface is already UP"
 }
 
 function interface_down() {
-    [ `exists $1` = "no" ] && echo "$1: No such interface" >&2 && return
-    [ `getStatus $1` = "up" ] && echo "$1: Disabling..." && ifconfig $1 down || echo "$1: Interface is already DOWN"
+    [ `exists $1` = "no" ] && echo "$1: no such interface" >&2 && return
+    [ `getStatus $1` = "up" ] && echo "$1: disabling..." && ifconfig $1 down || echo "$1: interface is already DOWN"
 }
 
 function interface_status() {
-    [ `exists $1` = "no" ] && echo "$1: No such interface" >&2 && return
+    [ `exists $1` = "no" ] && echo "$1: no such interface" >&2 && return
     [ `getStatus $1` = "up" ] && echo "$1: UP "$(getIp $1) || echo "$1: DOWN"
 }
 
 # Wireless specific
 
 function wlan_ssid() {
-    [ `exists $1` = "no" ] && echo "$1: No such interface" >&2 && return
-    [ `getStatus $1` = "down" ] && echo "$1: Interface is DOWN" && return
+    [ `exists $1` = "no" ] && echo "$1: no such interface" >&2 && return
+    [ `getStatus $1` = "down" ] && echo "$1: interface is DOWN" && return
     iwlist $1 scan | egrep '^ *ESSID' | sed -r 's/^\s+//' | grep -v 'ESSID:"' | cut -d'"' -f2
 }
 
 function wlan_connect() {
-    [ `exists $1` = "no" ] && echo "$1: No such interface" >&2 && return
-    [ `getStatus $1` = "down" ] && echo "$1: Interface is DOWN" && return
-    echo "$1: Connecting to \`$2'..."
+    [ `exists $1` = "no" ] && echo "$1: no such interface" >&2 && return
+    [ `getStatus $1` = "down" ] && echo "$1: interface is DOWN" && return
+    echo "$1: connecting to '$2'..."
     iwconfig $1 essid "$2" key "s:$3"
-    echo "$1: Obtaining IP address from \`$2'..."
+    echo "$1: obtaining IP address from '$2'..."
     dhclient $1
     status_single $1
 }
@@ -158,13 +157,10 @@ function wlan_connect() {
 [ $# -eq 0 ] && usage
 case "$1" in
     --help)
-	[ $# -gt 1 ] && echo "E: Unexpected argument: \`$2'" >&2 && exit
+	[ $# -gt 1 ] && echo "network: unexpected argument '$2'" >&2 && exit
 	usage ;;
-    --version)
-	[ $# -gt 1 ] && echo "E: Unexpected argument: \`$2'" >&2 && exit
-	echo $(basename "$0")" v$VERSION ("$(uname -o)" "$(uname -r)")" ;;
     devices)
-	[ $# -gt 1 ] && echo "E: Unexpected argument: \`$2'" >&2 && exit
+	[ $# -gt 1 ] && echo "network: unexpected argument '$2'" >&2 && exit
 	devices ;;
     eth|wlan|usb)
 	case "$2" in
@@ -172,59 +168,59 @@ case "$1" in
 		if [ $# -eq 2 ] ; then
 		    type_list $1
 		else
-		    [ $# -gt 3 ] && echo "E: Unexpected argument: \`$4'" >&2 && exit
+		    [ $# -gt 3 ] && echo "network: unexpected argument '$4'" >&2 && exit
 		    case "$3" in
 			up) type_list_up $1 ;;
 			down) type_list_down $1 ;;
-			*) echo "E: Unrecognized argument: \`$3'" >&2 && exit 1 ;;
+			*) echo "network: unrecognized argument '$3'" >&2 && exit 1 ;;
 		    esac
 		fi
 		;;
 	    status)
-		[ $# -gt 2 ] && echo "E: Unexpected argument: \`$3'" >&2 && exit
+		[ $# -gt 2 ] && echo "network: unexpected argument '$3'" >&2 && exit
 		type_status $1 ;;
-	    *) echo "E: Unrecognized argument: \`$2'" >&2 && exit 1 ;;
+	    *) echo "network: unrecognized argument '$2'" >&2 && exit 1 ;;
 	esac ;;
     list)
 	if [ $# -eq 1 ] ; then
 	    interfaces_list
 	else
-	    [ $# -gt 2 ] && echo "E: Unexpected argument: \`$3'" >&2 && exit
+	    [ $# -gt 2 ] && echo "network: unexpected argument '$3'" >&2 && exit
 	    case "$2" in
 		up) interfaces_list_up ;;
 		down) interfaces_list_down ;;
-		*) echo "E: Unrecognized argument: \`$2'" >&2 && exit 1 ;;
+		*) echo "network: unrecognized argument '$2'" >&2 && exit 1 ;;
 	    esac
 	fi ;;
     status)
-	[ $# -gt 1 ] && echo "E: Unexpected argument: \`$2'" >&2 && exit
+	[ $# -gt 1 ] && echo "network: unexpected argument '$2'" >&2 && exit
 	interfaces_status ;;
     eth[0-9]|usb[0])
-	[ $# -gt 2 ] && echo "E: Unexpected argument: \`$3'" >&2 && exit
+	[ $# -gt 2 ] && echo "network: unexpected argument '$3'" >&2 && exit
 	case "$2" in
 	    up) interface_up "$1" ;;
 	    down) interface_down "$1" ;;
 	    status) interface_status "$1" ;;
-	    *) echo "E: Unrecognized argument: \`$2'" >&2 && exit 1 ;;
+	    *) echo "network: unrecognized argument '$2'" >&2 && exit 1 ;;
 	esac ;;
     wlan[0-9])
-	[ $# -gt 2 ] && echo "E: Unexpected argument: \`$3'" >&2 && exit
+	[ $# -gt 2 ] && echo "network: unexpected argument '$3'" >&2 && exit
 	case "$2" in
 	    up) interface_up "$1" ;;
 	    down)
-		[ $# -gt 2 ] && echo "E: Unexpected argument: \`$3'" >&2 && exit
+		[ $# -gt 2 ] && echo "network: unexpected argument '$3'" >&2 && exit
 		interface_down "$1" ;;
 	    status)
-		[ $# -gt 2 ] && echo "E: Unexpected argument: \`$3'" >&2 && exit
+		[ $# -gt 2 ] && echo "network: unexpected argument '$3'" >&2 && exit
 		interface_status "$1" ;;
 	    ssid)
-		[ $# -gt 2 ] && echo "E: Unexpected argument: \`$3'" >&2 && exit
+		[ $# -gt 2 ] && echo "network: unexpected argument '$3'" >&2 && exit
 		wlan_ssid "$1" ;;
 	    connect)
-		[ $# -eq 2 ] && echo "E: Missing argument: <ssid>" >&2 && exit 1
-		[ $# -gt 4 ] && echo "E: Unexpected argument: \`$5'" >&2 && exit
+		[ $# -eq 2 ] && echo "network: missing argument <ssid>" >&2 && exit 1
+		[ $# -gt 4 ] && echo "network: unexpected argument '$5'" >&2 && exit
 		wlan_connect "$1" "$2" "$3" ;;
-	    *) echo "E: Unrecognized argument: \`$2'" >&2 && exit 1 ;;
+	    *) echo "network: unrecognized argument '$2'" >&2 && exit 1 ;;
 	esac ;;
-    *) echo "E: Unrecognized argument: \`$1'" >&2 && exit 1 ;;
+    *) echo "network: unrecognized argument '$1'" >&2 && exit 1 ;;
 esac

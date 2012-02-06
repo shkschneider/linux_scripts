@@ -1,19 +1,19 @@
 #!/bin/bash
 #
 # whatismyip -- retrieve your internal/external IP from command line
-# Copyright (C) 2010  Alan "Shtark" SCHNEIDER
-#                     <shk.schneider[at]gmail.com>
+# Copyright (C) 2010-2012  Alan "Shtark" SCHNEIDER
+#                          <shk.schneider[at]gmail.com>
 #
 # This program comes with ABSOLUTELY NO WARRANTY.
 # This is free software, and you are welcome to redistribute it
 # under certain conditions.
 #
 
-[ "_`which ifconfig`" = "_" ] && echo "E: ifconfig: Command not found." >&2 && exit 1
-[ "_`which wget`" = "_" ] && echo "E: wget: Command not found." >&2 && exit 1
+[ -z "`which ifconfig`" ] && echo "whatismyip: command 'ifconfig' not found" >&2 && exit 1
+[ -z "`which curl`" ] && echo "whatismyip: command 'curl' not found" >&2 && exit 1
 
 INTERNAL=$(ifconfig  | grep "inet addr:" | grep Bcast | awk '{print $2}' | cut -d':' -f2)
-EXTERNAL=$(curl ifconfig.me/ip)
+EXTERNAL=$(curl -s ifconfig.me/ip)
 echo "$INTERNAL $EXTERNAL"
 
 # Todo: retrieve interface

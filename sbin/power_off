@@ -1,18 +1,18 @@
 #!/bin/bash
 #
 # power_off -- set a timer to shutdown
-# Copyright (C) 2011  Alan "Shtark" SCHNEIDER
-#                     <shk.schneider[at]gmail.com>
+# Copyright (C) 2011-2012  Alan "Shtark" SCHNEIDER
+#                          <shk.schneider[at]gmail.com>
 #
 # This program comes with ABSOLUTELY NO WARRANTY.
 # This is free software, and you are welcome to redistribute it
 # under certain conditions.
 #
 
-[ ! -x "`which shutdown`" ] && echo "E: shutdown: Command not found" >&2 && exit 1
+[ -z "`which shutdown`" ] && echo "power_off: command 'shutdown' not found" >&2 && exit 1
 
 function usage() {
-    echo "Usage: `basename "$0"` <TIME>" >&2
+    echo "Usage: power_off <TIME>" >&2
     echo "       TIME can have a format dd:hh:mm, hh:mm, mm" >&2
     exit 1
 }

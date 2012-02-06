@@ -1,8 +1,8 @@
 #!/bin/bash
 #
 # no-space-left-on-device -- cleanup some space
-# Copyright (C) 2011  Alan "Shtark" SCHNEIDER
-#                     <shk.schneider[at]gmail.com>
+# Copyright (C) 2011-2012  Alan "Shtark" SCHNEIDER
+#                          <shk.schneider[at]gmail.com>
 #
 # This program comes with ABSOLUTELY NO WARRANTY.
 # This is free software, and you are welcome to redistribute it
@@ -13,9 +13,9 @@ echo " * Actual situation"
 
 df -h /
 
-[ `id -u` -ne 0 ] && echo "E: Permission denied. Are you root?" >&2 && exit 1
-[ -z "`which dpkg`" ] && echo "E: dpkg: Command not found" >&2 && exit 1
-[ -z "`which aptitude`" ] && echo "E: aptitude: Command not found" >&2 && exit 1
+[ `id -u` -ne 0 ] && echo "no-space-left-on-device: are you root, `id -un`?" >&2 && exit 1
+[ -z "`which dpkg`" ] && echo "no-space-left-on-device: command 'dpkg' not found" >&2 && exit 1
+[ -z "`which aptitude`" ] && echo "no-space-left-on-device: command 'aptitude' not found" >&2 && exit 1
 
 echo " * Cleaning..."
 
@@ -40,4 +40,4 @@ find /home/*/.thumbnails -type f -atime +7 -exec rm {} \;
 echo "   localepurge"
 [ -z "`which localepurge`" ] && aptitude install localepurge || dpkg-reconfigure localepurge
 
-echo "Done."
+echo "Done"

@@ -1,8 +1,8 @@
 #!/bin/bash
 #
 # apt -- wrapper for aptitude/apt-*/dpkg*
-# Copyright (C) 2011  Alan "Shtark" SCHNEIDER
-#                     <shk.schneider[at]gmail.com>
+# Copyright (C) 2011-2012  Alan "Shtark" SCHNEIDER
+#                          <shk.schneider[at]gmail.com>
 #
 # This program comes with ABSOLUTELY NO WARRANTY.
 # This is free software, and you are welcome to redistribute it
@@ -11,8 +11,6 @@
 # bugs:
 #	wc -c counts special chars (with accents) twice
 #
-
-# v2.90
 
 set -f
 BINS="aptitude apt-get"
@@ -48,8 +46,7 @@ case $1 in
 esac
 
 # For full features, this script requiers:
-# dpkg + apt-cache + (aptitude | apt-get) + apt-show-versions + dpkg-query
-# Note that apt-get is mandatory for the source command
+# dpkg + apt-cache + apt-get + aptitude + apt-show-versions + dpkg-query
 [ -z "$APT" ] && for BIN in $BINS ; do [ -x "`which $BIN`" ] && APT=$BIN && break ; done
 
 #
@@ -57,33 +54,33 @@ esac
 #
 
 function usage() {
-    echo "Usage: `basename "$0"` [OPTION] COMMAND [PARAMS]" >&2
-    echo "     Options" >&2
-    echo "       -ap, --use-aptitude" >&2
-    echo "       -ag, --use-apt-get" >&2
-    echo "       -nr, --no-reverse" >&2
-    echo "     Commands" >&2
-    echo "       {--help|--version|--author}" >&2
-    echo "       update" >&2
-    echo "       upgrade" >&2
-    echo "       status <PACKAGE ...>" >&2
-    echo "       search <PACKAGE ...>" >&2
-    echo "       show <PACKAGE ...>" >&2
-    echo "       file <FILE>" >&2
-    echo "       install <PACKAGE ...>" >&2
-    echo "       reinstall <PACKAGE ...>" >&2
-    echo "       remove <PACKAGE ...>" >&2
-    echo "       purge <PACKAGE ...>" >&2
-    echo "       download <PACKAGE ...>" >&2
-    echo "       source <PACKAGE ...>" >&2
-    echo "       depends <PACKAGE ...>" >&2
-    echo "       hold [PACKAGE ...]" >&2
-    echo "       policy [PACKAGE ...]" >&2
-    echo "       size [LINES]" >&2
-    echo "       architecture" >&2
-    echo "       repositories" >&2
-    echo "       available" >&2
-    echo "       keep" >&2
+    echo "Usage: apt [OPTIONS] COMMAND [PARAMS]" >&2
+    echo "       Options" >&2
+    echo "         -ap, --use-aptitude" >&2
+    echo "         -ag, --use-apt-get" >&2
+    echo "         -nr, --no-reverse" >&2
+    echo "       Commands" >&2
+    echo "         {--help|--version|--author}" >&2
+    echo "         update" >&2
+    echo "         upgrade" >&2
+    echo "         status <PACKAGE ...>" >&2
+    echo "         search <PACKAGE ...>" >&2
+    echo "         show <PACKAGE ...>" >&2
+    echo "         file <FILE>" >&2
+    echo "         install <PACKAGE ...>" >&2
+    echo "         reinstall <PACKAGE ...>" >&2
+    echo "         remove <PACKAGE ...>" >&2
+    echo "         purge <PACKAGE ...>" >&2
+    echo "         download <PACKAGE ...>" >&2
+    echo "         source <PACKAGE ...>" >&2
+    echo "         depends <PACKAGE ...>" >&2
+    echo "         hold [PACKAGE ...]" >&2
+    echo "         policy [PACKAGE ...]" >&2
+    echo "         size [LINES]" >&2
+    echo "         architecture" >&2
+    echo "         repositories" >&2
+    echo "         available" >&2
+    echo "         keep" >&2
 }
 
 function do_status() {
@@ -157,7 +154,7 @@ function do_search() {
 function do_depends() {
     PACKAGE=$1
     check_package $PACKAGE
-    [ $? -ne 0 ] && echo "E: $PACKAGE: Package not found" >&2 && return
+    [ $? -ne 0 ] && echo "apt: package '$PACKAGE' not found" >&2 && return
     D=$(apt-cache depends -i $PACKAGE | sed '1d' | sed -r 's#\s+\w+: ##' | wc -l)
     case $REVERSE in
 	1)	echo -ne "\e[7m$PACKAGE\e[0m (\e[1m$D\e[0m) " ;;
@@ -190,7 +187,7 @@ function do_size() {
 
 function do_policy() {
     check_package $PACKAGE
-    [ $? -ne 0 ] && echo "E: $PACKAGE: Package not found" >&2 && return
+    [ $? -ne 0 ] && echo "apt: package '$PACKAGE' not found" >&2 && return
     while read LINE ; do
 	[ $REVERSE -eq 1 ] && echo -ne "\e[7m$PACKAGE\e[0m " || echo -n "$PACKAGE "
 	PRIOR=$(echo $LINE | cut -d' ' -f1)
@@ -244,7 +241,7 @@ function do_repositories() {
 
 function do_hold() {
     check_package $PACKAGE
-    [ $? -ne 0 ] && echo "E: $PACKAGE: Package not found" >&2 && return
+    [ $? -ne 0 ] && echo "apt: package '$PACKAGE' not found" >&2 && return
     IGNORE=$(dpkg --get-selections | grep hold)
     if [ -z "$IGNORE" ] ; then
 	echo "$PACKAGE hold" | dpkg --set-selections
@@ -284,66 +281,65 @@ function check_package() {
 
 case $1 in
     "update"|"upgrade")
-	[ `id -u` -ne 0 ] && echo "E: `id -un`: are you root?" >&2 && exit 1
-	[ $# -ne 1 ] && echo "E: Too many arguments" >&2 && usage && exit 1
+	[ `id -u` -ne 0 ] && echo "apt-$1: are you root, `id -un`?" >&2 && exit 1
+	[ $# -ne 1 ] && echo "apt-$1: too many arguments" >&2 && usage && exit 1
 	;;
     "install"|"reinstall"|"remove"|"purge"|"download"|"source")
-	[ `id -u` -ne 0 ] && echo "E: $1: Are you root, `id -un`?" >&2 && exit 1
-	[ $# -lt 2 ] && echo "E: $1: Too few arguments" >&2 && usage && exit 1
-	[ -z "$APT" ] && echo "E: $1: That command requiers `echo $BINS | sed 's/ / or /g'`" >&2 && exit 1
-	[ $1 = "source" -a $APT != "apt-get" ] && echo "E: $1: That Command requiers apt-get" >&2 && exit 1
+	[ `id -u` -ne 0 ] && echo "apt-$1: are you root, `id -un`?" >&2 && exit 1
+	[ $# -lt 2 ] && echo "apt-$1: too few arguments" >&2 && usage && exit 1
+	[ -z "$APT" ] && echo "apt-$1: that command requiers `echo $BINS | sed 's/ / or /g'`" >&2 && exit 1
+	[ $1 = "source" -a $APT != "apt-get" ] && echo "apt-$1: that command requiers apt-get" >&2 && exit 1
 	;;
     "status"|"search"|"show")
-	[ $1 != "status" -a ! -x "`which apt-cache`" ] && echo "E: $1: That command requiers apt-cache" >&2 && exit 1
-	[ $1 = "status" -a ! -x "`which apt-show-versions`" ] && echo "E: $1: That command requiers apt-show-versions" >&2 && exit 1
-	[ $# -lt 1 ] && echo "E: $1: Too few arguments" >&2 && usage && exit 1
+	[ $1 != "status" -a -z "`which apt-cache`" ] && echo "apt-$1: that command requiers apt-cache" >&2 && exit 1
+	[ $1 = "status" -a -z "`which apt-show-versions`" ] && echo "apt-$1: that command requiers apt-show-versions" >&2 && exit 1
+	[ $# -lt 1 ] && echo "apt-$1: too few arguments" >&2 && usage && exit 1
 	;;
     "file")
-	[ ! -x "`which apt-cache`" ] && echo "E: $1: That command requiers apt-cache" >&2 && exit 1
-	[ $# -lt 2 ] && echo "E: $1: Too few arguments" >&2 && usage && exit 1
-	[ $# -gt 2 ] && echo "E: $1: Too many arguments" >&2 && usage && exit 1
-	[ ! -x "`which dpkg`" ] && echo "E: $1: That command requiers dpkg" >&2 && exit 1
-	[ ! -x "`which apt-cache`" ] && echo "E: $1: That command requiers apt-cache" >&2 && exit 1
+	[ -z "`which apt-cache`" ] && echo "apt-$1: that command requiers apt-cache" >&2 && exit 1
+	[ $# -lt 2 ] && echo "apt-$1: too few arguments" >&2 && usage && exit 1
+	[ $# -gt 2 ] && echo "apt-$1: too many arguments" >&2 && usage && exit 1
+	[ -z "`which dpkg`" ] && echo "apt-$1: that command requiers dpkg" >&2 && exit 1
+	[ -z "`which apt-cache`" ] && echo "apt-$1: that command requiers apt-cache" >&2 && exit 1
 	;;
     "depends")
-	[ ! -x "`which apt-cache`" ] && echo "E: $1: That command requiers apt-cache" >&2 && exit 1
-	[ $# -lt 2 ] && echo "E: $1: Too few arguments" >&2 && usage && exit 1
-	[ $# -gt 2 ] && echo "E: $1: Too many arguments" >&2 && usage && exit 1
+	[ -z "`which apt-cache`" ] && echo "apt-$1: that command requiers apt-cache" >&2 && exit 1
+	[ $# -lt 2 ] && echo "apt-$1: too few arguments" >&2 && usage && exit 1
+	[ $# -gt 2 ] && echo "apt-$1: too many arguments" >&2 && usage && exit 1
 	;;
     "policy")
-	[ ! -x "`which apt-cache`" ] && echo "E: $1: That command requiers apt-cache" >&2 && exit 1
-	[ $# -lt 1 ] && echo "E: $1: Too few arguments" >&2 && usage && exit 1
+	[ -z "`which apt-cache`" ] && echo "apt-$1: that command requiers apt-cache" >&2 && exit 1
+	[ $# -lt 1 ] && echo "apt-$1: too few arguments" >&2 && usage && exit 1
 	;;
     "size")
-	[ ! -x "`which dpkg-query`" ] && echo "E: $1: That command requiers dpkg-query" >&2 && exit 1
-	[ $# -gt 2 ] && echo "E: $1: Too many arguments" >&2 && usage && exit 1
-	[ -n "`echo "$2" | tr -d '[0-9]'`" ] && echo "E: $1: Not a number" >&2 && usage && exit 1
+	[ -z "`which dpkg-query`" ] && echo "apt-$1: that command requiers dpkg-query" >&2 && exit 1
+	[ $# -gt 2 ] && echo "apt-$1: too many arguments" >&2 && usage && exit 1
+	[ -n "`echo "$2" | tr -d '[0-9]'`" ] && echo "apt-$1: '$2' is not a number" >&2 && usage && exit 1
 	;;
     "architecture")
-	[ ! -x "`which dpkg`" ] && echo "E: $1: That command requiers dpkg" >&2 && exit 1
-	[ $# -gt 1 ] && echo "E: $1: Too many arguments" >&2 && usage && exit 1
+	[ -z "`which dpkg`" ] && echo "apt-$1: that command requiers dpkg" >&2 && exit 1
+	[ $# -gt 1 ] && echo "apt-$1: too many arguments" >&2 && usage && exit 1
 	;;
     "available")
-	[ ! -x "`which apt-show-versions`" ] && echo "E: $1: That command requiers apt-show-versions" >&2 && exit 1
-	[ $# -gt 1 ] && echo "E: $1: Too many arguments" >&2 && usage && exit 1
+	[ -z "`which apt-show-versions`" ] && echo "apt-$1: that command requiers apt-show-versions" >&2 && exit 1
+	[ $# -gt 1 ] && echo "apt-$1: too many arguments" >&2 && usage && exit 1
 	;;
     "keep")
-	[ $APT != "aptitude" ] && echo "E: $1: That command requiers aptitude" >&2 && exit 1
-	[ $# -gt 1 ] && echo "E: $1: Too many arguments" >&2 && usage && exit 1
+	[ $APT != "aptitude" ] && echo "apt-$1: that command requiers aptitude" >&2 && exit 1
+	[ $# -gt 1 ] && echo "apt-$1: too many arguments" >&2 && usage && exit 1
 	;;
     "repositories")
-	[ ! -x "`which dpkg`" ] && echo "E: $1: That command requiers dpkg" >&2 && exit 1
-	[ -z "`find /etc/apt -type f -name "*.list"`" ] && echo "E: $1: No .list file found in /etc/apt/" >&2 && exit 1
-	[ ! -e /var/lib/apt/lists ] && echo "E: $1: /var/lib/apt/lists not found" >&2 && exit 1
-	[ ! -d /var/lib/apt/lists ] && echo "E: $1: /var/lib/apt/lists not found" >&2 && exit 1
+	[ -z "`which dpkg`" ] && echo "apt-$1: that command requiers dpkg" >&2 && exit 1
+	[ -z "`find /etc/apt -type f -name "*.list"`" ] && echo "apt-$1: no .list file found in /etc/apt/" >&2 && exit 1
+	[ ! -e /var/lib/apt/lists ] && echo "apt-$1: /var/lib/apt/lists not found" >&2 && exit 1
+	[ ! -d /var/lib/apt/lists ] && echo "apt-$1: /var/lib/apt/lists not found" >&2 && exit 1
 	;;
     "hold")
-	[ ! -x "`which dpkg`" ] && echo "E: $1: That command requiers dpkg" >&2 && exit 1
+	[ -z "`which dpkg`" ] && echo "apt-$1: that command requiers dpkg" >&2 && exit 1
 	;;
-    "--help"|"--version"|"--author")
-	[ -z "`readlink -f "$0" | egrep '^/'`" ] && exit 1
+    "--help")
 	;;
-    *)	echo "E: $1: Unknown argument" >&2 && usage && exit 1 ;;
+    *)	echo "apt: unknown argument -- '$1'" >&2 && usage && exit 1 ;;
 esac
 
 #
@@ -379,7 +375,7 @@ case $1 in
 	    [ $N -gt 0 ] && echo ""
 	    N=$(($N + 1))
 	    check_package $PACKAGE
-	    [ $? -eq 0 ] && apt-cache show $PACKAGE 2>/dev/null | sed '/^$/d' || echo "E: $PACKAGE: Package not found" >&2
+	    [ $? -eq 0 ] && apt-cache show $PACKAGE 2>/dev/null | sed '/^$/d' || echo "apt: package '$PACKAGE' not found" >&2
 	done
 	;;
     "file")
@@ -452,12 +448,6 @@ case $1 in
 	;;
     "keep")
 	aptitude keep-all
-	;;
-    "--author")
-	head -5 "`readlink -f "$0"`" | tail -2
-	;;
-    "--version")
-	cat "`readlink -f "$0"`" | egrep '^#\s+v[0-9]' | sed -r 's/^#\s+//'
 	;;
     "--help")
 	usage
