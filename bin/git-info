@@ -1,0 +1,51 @@
+#!/bin/bash
+#
+# git-info -- shorter log
+# Copyright (C) 2012  Alan "Shtark" SCHNEIDER
+#                     <shk.schneider[at]gmail.com>
+#
+# This program comes with ABSOLUTELY NO WARRANTY.
+# This is free software, and you are welcome to redistribute it
+# under certain conditions.
+#
+
+[ -z "`which git`" ] && echo "git-info: command 'git' not found" >&2 && exit 1
+
+function usage() {
+    echo "Usage: git-info" >&2
+    exit 1
+}
+
+DIR=$(git rev-parse --git-dir 2>/dev/null)
+[ -z "$DIR" ] && echo "git-info: not a git repository" >&2 && exit 1
+
+[ $# -ne 0 ] && usage
+
+echo "== Repo"
+REPO=$(dirname "$DIR")
+echo "   $REPO"
+while read LINE ; do
+    echo "   $LINE"
+done < <(git remote -v | sed -n '1~2p' | awk '{print $2}')
+
+echo "== Status"
+PROJECT=$(pwd | sed -r "s#^$(dirname `git rev-parse --show-toplevel`)/##")
+echo "   info path: $PROJECT"
+BRANCH=$(git branch --no-color | egrep '^\*' | cut -d' ' -f2)
+echo "   info branch: $BRANCH"
+COMMITS=$(git status | sed -n '2p' | sed -r "s/'.+'//g" | sed -r 's/[^0-9]//g')
+echo "   ahead by ${COMMITS:=0} commits"
+
+echo "== Branches"
+while read LINE ; do
+    echo "   $LINE"
+done < <(git branch ; git branch -r)
+
+echo "== Latest commit"
+COMMIT=$(git log -n 1 | egrep '^commit ' | awk '{print $2}' | cut -c1-7)
+COMMIT=$(git describe --always --tags $COMMIT)
+AUTHOR=$(git log -n 1 | egrep '^Author:' | cut -d' ' -f2- | sed -r 's/ <.+>$//')
+MSG=$(git log -n 1 | egrep '^\s+[a-z]' | sed -r 's/^\s+//')
+echo "   $COMMIT [$AUTHOR] $MSG"
+
+# EOF
