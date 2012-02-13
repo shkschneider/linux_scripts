@@ -1,0 +1,47 @@
+#!/bin/bash
+#
+# git-shortlog -- shorter log
+# Copyright (C) 2012  Alan "Shtark" SCHNEIDER
+#                     <shk.schneider[at]gmail.com>
+#
+# This program comes with ABSOLUTELY NO WARRANTY.
+# This is free software, and you are welcome to redistribute it
+# under certain conditions.
+#
+
+[ -z "`which git`" ] && echo "git-shortlog: command 'git' not found" >&2 && exit 1
+
+function usage() {
+    echo "Usage: git-shortlog [...]" >&2
+    exit 1
+}
+
+DIR=$(git rev-parse --git-dir 2>/dev/null)
+[ -z "$DIR" ] && echo "git-shortlog: not a git repository" >&2 && exit 1
+
+COMMIT=""
+AUTHOR=""
+MSG=""
+while read LINE ; do
+    KEY=$(echo $LINE | cut -d' ' -f1 | cut -d':' -f1)
+    case $KEY in
+        commit)
+            COMMIT=$(echo $LINE | awk '{print $2}' | cut -c1-7)
+            ;;
+        Author)
+            AUTHOR=$(echo $LINE | cut -d' ' -f2- | sed -E 's/ <.+>$//')
+            ;;
+        Date) ;;
+        *)
+            MSG="$LINE"
+            ;;
+    esac
+    if [ -n "$COMMIT" ] && [ -n "$AUTHOR" ] && [ -n "$MSG" ] ; then
+        echo "$COMMIT [$AUTHOR] $MSG"
+        COMMIT=""
+        AUTHOR=""
+        MSG=""
+    fi
+done < <(git log $@)
+
+# EOF
