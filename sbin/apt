@@ -86,7 +86,7 @@ function usage() {
 function do_status() {
     LINE=$(apt-show-versions --package=$PACKAGE)
     MSTATUS=$(dpkg -l $PACKAGE 2>/dev/null | tail -1 | cut -c1,2)
-    [ -z "$MSTATUS" ] && MSTATUS=" "
+    [ -z "$MSTATUS" ] && MSTATUS="  "
     check_package $PACKAGE
     if [ $? -ne 0 ] ; then
 	STATUS="not available"
@@ -135,7 +135,7 @@ function do_search() {
 	    SIZE="$SIZE kB"
 	fi
 	STATUS=$(dpkg -l $PACKAGE 2>/dev/null | tail -1 | cut -c1,2)
-	[ -z "$STATUS" ] && STATUS=" "
+	[ -z "$STATUS" ] && STATUS="  "
 	COLUMNS=$(echo "`tput cols`-`echo "$STATUS $PACKAGE - $DESCRIPTION" | wc -c`-`echo "$VERSION - $SIZE" | wc -c`+1" | bc -q)
 	case $REVERSE in
             1)	printf "%s \e[7m%s\e[0m - %s%${COLUMNS}sv%s - \e[1m%s\e[0m\n" "$STATUS" "$PACKAGE" "$DESCRIPTION" " " "$VERSION" "$SIZE" ;;

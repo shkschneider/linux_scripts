@@ -26,7 +26,7 @@ DIR=$(git rev-parse --git-dir 2>/dev/null)
 case $1 in
     "")
 	echo "I: This script will only affect the last commit"
-	echo "I: last author was: "$(git log -n 1 | sed -n '3p' | cut -d' ' -f2-)
+	echo "I: last author was: "$(git log -n 1 | sed -n '2p' | cut -d' ' -f2-)
 	echo -n "New Author Name: "
 	read NEW_NAME
 	[ -z "$NEW_NAME" ] && echo "Canceled" && exit 1
@@ -38,7 +38,7 @@ case $1 in
 	;;
     "-a"|"--all")
 	echo "W: this script will affect ALL commits"
-	echo "I: last author was: "$(git log -n 1 | sed -n '3p' | cut -d' ' -f2-)
+	echo "I: last author was: "$(git log -n 1 | sed -n '2p' | cut -d' ' -f2-)
 	echo -n "Old Author Name: "
 	read OLD_NAME
 	[ -z "$OLD_NAME" ] && echo "Canceled" && exit 1
