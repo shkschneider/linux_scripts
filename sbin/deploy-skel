@@ -38,6 +38,7 @@ function deploy_skel_for_user() {
 		    printf "$_USER: $_HOME/$FILENAME\n"
 		fi
 	        cp -r "$FILE" "$_HOME/" > /dev/null
+		chown -R "$_USER:$_USER" "$_HOME/$FILENAME"
 	    fi
 	done < <(find /etc/skel -maxdepth 1 | sed '1d')
     fi
