@@ -1,0 +1,52 @@
+#!/bin/bash
+
+NAME=$(basename "$0")
+LOCKFILE="/tmp/$NAME.pid"
+[ -f "$LOCKFILE" ] && LOCK=$(tail -n1 "$LOCKFILE") || LOCK=0
+
+function start() {
+    if [ "$LOCK" -eq 0 ] ; then
+        # No lock file found
+	[ -f "$LOCKFILE" ] && chmod 644 "$LOCKFILE"
+	echo "$NAME: $$ locked '$LOCKFILE'"
+	echo -n $$ > "$LOCKFILE"
+	chmod 444 "$LOCKFILE"
+	# ...
+    else
+	echo "$NAME: Locked by $LOCK" >&2 && exit 1
+    fi
+}
+
+function stop() {
+    if [ "$LOCK" -ne 0 ] ; then
+	# Lock file found
+	chmod 644 "$LOCKFILE"
+	echo -n 0 > "$LOCKFILE"
+	chmod 444 "$LOCKFILE"
+	# ...
+    else
+	echo "$NAME: Not locked, so not started" >&2 && exit 1
+    fi
+}
+
+function status() {
+    if [ "$LOCK" -ne 0 ] ; then
+	echo "$NAME is locked ($LOCK)"
+    else
+	echo "$NAME is unlocked"
+    fi
+}
+
+function usage() {
+    echo "Usage: $NAME <start|stop|status>" >&2
+    exit 1
+}
+
+[ $# -ne 1 ] && usage
+
+case "$1" in
+    start)  start ;;
+    stop)   stop ;;
+    status) status ;;
+    *)      usage ;;
+esac
