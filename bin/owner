@@ -1,0 +1,25 @@
+#!/bin/bash
+#
+# owner -- get the owner of a file/directory
+# Copyright (C) 2012  Alan "Shtark" SCHNEIDER
+#                     <shk.schneider[at]gmail.com>
+#
+# This program comes with ABSOLUTELY NO WARRANTY.
+# This is free software, and you are welcome to redistribute it
+# under certain conditions.
+#
+
+function usage() {
+    echo "Usage: owner <PATH ...>" >&2
+    exit 1
+}
+
+for ARGV in $@ ; do
+    [ ! -e "$ARGV" ] && echo "owner: no such file or directory '$ARGV'" >&2 && continue
+    ARGV=$(readlink -f "$ARGV")
+    BASENAME=$(basename "$ARGV")
+    DIRNAME=$(dirname "$ARGV")
+    find "$DIRNAME" -maxdepth 1 -name "$BASENAME" -printf "%f: %u:%g %U:%G\n"
+done
+
+# EOF
