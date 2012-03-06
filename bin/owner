@@ -16,10 +16,10 @@ function usage() {
 
 for ARGV in $@ ; do
     [ ! -e "$ARGV" ] && echo "owner: no such file or directory '$ARGV'" >&2 && continue
-    ARGV=$(readlink -f "$ARGV")
-    BASENAME=$(basename "$ARGV")
-    DIRNAME=$(dirname "$ARGV")
-    find "$DIRNAME" -maxdepth 1 -name "$BASENAME" -printf "%f: %u:%g %U:%G\n"
+    FULLPATH=$(readlink -f "$ARGV")
+    BASENAME=$(basename "$FULLPATH")
+    DIRNAME=$(dirname "$FULLPATH")
+    find "$DIRNAME" -maxdepth 1 -name "$BASENAME" -printf "$ARGV: %u:%g %U:%G\n"
 done
 
 # EOF
