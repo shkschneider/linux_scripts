@@ -81,6 +81,7 @@ function usage() {
     echo "         repositories" >&2
     echo "         available" >&2
     echo "         keep" >&2
+    exit 1
 }
 
 function do_status() {
@@ -284,51 +285,51 @@ function check_package() {
 case $1 in
     "update"|"upgrade")
 	[ `id -u` -ne 0 ] && echo "apt-$1: are you root, `id -un`?" >&2 && exit 1
-	[ $# -ne 1 ] && echo "apt-$1: too many arguments" >&2 && usage && exit 1
+	[ $# -ne 1 ] && echo "apt-$1: too many arguments" >&2 && usage
 	;;
     "install"|"reinstall"|"remove"|"purge"|"download"|"source")
 	[ `id -u` -ne 0 ] && echo "apt-$1: are you root, `id -un`?" >&2 && exit 1
-	[ $# -lt 2 ] && echo "apt-$1: too few arguments" >&2 && usage && exit 1
+	[ $# -lt 2 ] && echo "apt-$1: too few arguments" >&2 && usage
 	[ -z "$APT" ] && echo "apt-$1: that command requiers `echo $BINS | sed 's/ / or /g'`" >&2 && exit 1
 	[ $1 = "source" -a $APT != "apt-get" ] && echo "apt-$1: that command requiers apt-get" >&2 && exit 1
 	;;
     "status"|"search"|"show")
 	[ $1 != "status" -a -z "`which apt-cache`" ] && echo "apt-$1: that command requiers apt-cache" >&2 && exit 1
 	[ $1 = "status" -a -z "`which apt-show-versions`" ] && echo "apt-$1: that command requiers apt-show-versions" >&2 && exit 1
-	[ $# -lt 1 ] && echo "apt-$1: too few arguments" >&2 && usage && exit 1
+	[ $# -lt 1 ] && echo "apt-$1: too few arguments" >&2 && usage
 	;;
     "file")
 	[ -z "`which apt-cache`" ] && echo "apt-$1: that command requiers apt-cache" >&2 && exit 1
-	[ $# -lt 2 ] && echo "apt-$1: too few arguments" >&2 && usage && exit 1
-	[ $# -gt 2 ] && echo "apt-$1: too many arguments" >&2 && usage && exit 1
+	[ $# -lt 2 ] && echo "apt-$1: too few arguments" >&2 && usage
+	[ $# -gt 2 ] && echo "apt-$1: too many arguments" >&2 && usage
 	[ -z "`which dpkg`" ] && echo "apt-$1: that command requiers dpkg" >&2 && exit 1
 	[ -z "`which apt-cache`" ] && echo "apt-$1: that command requiers apt-cache" >&2 && exit 1
 	;;
     "depends")
 	[ -z "`which apt-cache`" ] && echo "apt-$1: that command requiers apt-cache" >&2 && exit 1
-	[ $# -lt 2 ] && echo "apt-$1: too few arguments" >&2 && usage && exit 1
-	[ $# -gt 2 ] && echo "apt-$1: too many arguments" >&2 && usage && exit 1
+	[ $# -lt 2 ] && echo "apt-$1: too few arguments" >&2 && usage
+	[ $# -gt 2 ] && echo "apt-$1: too many arguments" >&2 && usage
 	;;
     "policy")
 	[ -z "`which apt-cache`" ] && echo "apt-$1: that command requiers apt-cache" >&2 && exit 1
-	[ $# -lt 1 ] && echo "apt-$1: too few arguments" >&2 && usage && exit 1
+	[ $# -lt 1 ] && echo "apt-$1: too few arguments" >&2 && usage
 	;;
     "size")
 	[ -z "`which dpkg-query`" ] && echo "apt-$1: that command requiers dpkg-query" >&2 && exit 1
-	[ $# -gt 2 ] && echo "apt-$1: too many arguments" >&2 && usage && exit 1
-	[ -n "`echo "$2" | tr -d '[0-9]'`" ] && echo "apt-$1: '$2' is not a number" >&2 && usage && exit 1
+	[ $# -gt 2 ] && echo "apt-$1: too many arguments" >&2 && usage
+	[ -n "`echo "$2" | tr -d '[0-9]'`" ] && echo "apt-$1: '$2' is not a number" >&2 && usage
 	;;
     "architecture")
 	[ -z "`which dpkg`" ] && echo "apt-$1: that command requiers dpkg" >&2 && exit 1
-	[ $# -gt 1 ] && echo "apt-$1: too many arguments" >&2 && usage && exit 1
+	[ $# -gt 1 ] && echo "apt-$1: too many arguments" >&2 && usage
 	;;
     "available")
 	[ -z "`which apt-show-versions`" ] && echo "apt-$1: that command requiers apt-show-versions" >&2 && exit 1
-	[ $# -gt 1 ] && echo "apt-$1: too many arguments" >&2 && usage && exit 1
+	[ $# -gt 1 ] && echo "apt-$1: too many arguments" >&2 && usage
 	;;
     "keep")
 	[ $APT != "aptitude" ] && echo "apt-$1: that command requiers aptitude" >&2 && exit 1
-	[ $# -gt 1 ] && echo "apt-$1: too many arguments" >&2 && usage && exit 1
+	[ $# -gt 1 ] && echo "apt-$1: too many arguments" >&2 && usage
 	;;
     "repositories")
 	[ -z "`which dpkg`" ] && echo "apt-$1: that command requiers dpkg" >&2 && exit 1
@@ -341,7 +342,10 @@ case $1 in
 	;;
     "--help")
 	;;
-    *)	echo "apt: unknown argument -- '$1'" >&2 && usage && exit 1 ;;
+    *)
+	echo "apt: unknown argument -- '$1'" >&2
+	usage
+	;;
 esac
 
 #
