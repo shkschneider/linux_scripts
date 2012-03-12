@@ -119,9 +119,11 @@ function do_status() {
 function do_search() {
     N=0
     PACKAGE=$1
+    #LAST_PACKAGE=""
     while read LINE ; do
 	N=$(($N + 1))
 	PACKAGE=$(echo $LINE | cut -d' ' -f1)
+	#[ "$PACKAGE" = "$LAST_PACKAGE" ] && continue || LAST_PACKAGE="$PACKAGE"
 	VERSION=$(echo $LINE | cut -d' ' -f2)
 	SIZE=$(echo $LINE | awk '{print $NF}')
 	[ -z "`echo $SIZE | egrep '^[0-9]+$'`" ] && SIZE=$(echo $LINE | cut -d' ' -f3)
@@ -147,7 +149,7 @@ function do_search() {
 	| sed "s#Version: ##g" \
 	| sed "s#Description: ##g" \
 	| sed "s#Size: ##g" \
-	| sed '1d' | tr "\n" "@" | sed "s#@@#\n#g" | tr '@' ' ' | sed -r "s#\s\$#\n#")
+	| sed '1d' | tr "\n" "@" | sed "s#@@#\n#g" | tr '@' ' ' | sed -r "s#\s\$#\n#" | sort | uniq -u)
     [ $N -eq 0 ] && echo "No package found for \`$PACKAGE'" >&2
 }
 
