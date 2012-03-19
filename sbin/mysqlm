@@ -1,0 +1,109 @@
+#!/bin/bash
+#
+# mysqlm - mysql manager
+# Copyright (C) 2012  Alan "Shtark" SCHNEIDER
+#                     <shk.schneider[at]gmail.com>
+#
+# This program comes with ABSOLUTELY NO WARRANTY.
+# This is free software, and you are welcome to redistribute it
+# under certain conditions.
+#
+
+[ -z "`which mysql`" ] && echo "E: mysql: command not found" >&2 && exit 1
+#[ -z "`which mysqladmin`" ] && echo "E: mysqladmin: command not found" >&2 && exit 1
+
+function usage() {
+    echo "Usage: mm db-{add|mod|del|backup} <db[...]>" >&2
+    echo "          user-{add|mod|del} <user[...]>" >&2
+    echo "       Set root password:" >&2
+    echo "          mysqladmin -u root password <new_passwd>" >&2
+    echo "       change root password:" >&2
+    echo "          mysqladmin -u root -p'old_passwd' password 'new_passwd'" >&2
+    exit 1
+}
+
+[ $# -lt 2 ] && usage
+
+function user_add() {
+    echo -n "Password for '$USERNAME' [$USERNAME]: "
+    read USERPASSWD
+    [ -z "$USERPASSWD" ] && USERPASSWD="$USERNAME"
+    echo -n "Database for '$USERNAME' [$USERNAME]: "
+    read USERDB
+    [ -z "$USERDB" ] && USERDB="$USERNAME"
+    echo CREATE USER \'$USERNAME\'@\'localhost\' IDENTIFIED BY \'$USERPASSWD\'\;
+    echo GRANT ALL PRIVILEGES ON $USERDB.* TO \'$USERNAME\'@\'localhost\'\;
+    echo FLUSH PRIVILEGES\;
+}
+
+function user_mod() {
+    echo -n "New password for '$USERNAME' [$USERNAME]: "
+    read USERNEWPASSWD
+    [ -z "$USERNEWPASSWD" ] && USERNEWPASSWD="$USERNAME"
+    echo USE mysql;
+    echo UPDATE user SET password=PASSWORD\("$USERNEWPASSWD"\) WHERE User=\'$USERNAME\'\;
+    echo FLUSH PRIVILEGES\;
+}
+
+function user_del() {
+    echo DROP USER \'$USERNAME@\'localhost\'\;
+    echo DELETE FROM mysql.user WHERE user=\'$USERNAME\'\;
+    echo DELETE FROM mysql.db WHERE user=\'$USERNAME\'\;
+    echo FLUSH PRIVILEGES\;
+}
+
+function db_add() {
+    echo CREATE DATABASE IF NOT EXISTS $DBNAME\;
+}
+
+function db_mod() {
+    echo -n "New database name: "
+    read DBNEWNAME
+    [ -z "$DBNEWNAME" ] && echo "mysqlm: database name cannot be blank" >&2 && return
+    echo RENAME DATABASE $DBNAME TO $DBNEWNAME\;
+    echo -or-
+    echo RENAME $DBNAME.table TO $DBNEWNAME.table\;
+}
+
+function db_del() {
+    echo DROP DATABASE $DBNAME\;
+}
+
+function db_backup() {
+    echo -n "Database charset [latin1]: "
+    read DBCHARSET
+    [ -z "$DBCHARSET" ] && DBCHARSET="latin1"
+    echo -n "Database name [all]: "
+    read DBNAME
+    [ -z "$DBNAME" ] && DBNAME="all"
+    if [ -z "$DBNAME" ] || [ "$DBNAME" = "all" ] ; then
+	echo mysqldump --compact --add-drop-table --create-options --all-database --default-character-set=$DBCHARSET \> `date '+all_%Y%m%d-%H%M%S.sql'`
+    else
+	echo mysqldump --compact --add-drop-table --create-options db_name $DBNAME --default-character-set=$DBCHARSET \> `date "+$DBNAME_%Y%m%d-%H%M%S.sql"`
+    fi
+}
+
+TYPE=$(echo $1 | cut -d'-' -f1)
+CMD=$(echo $1 | cut -d'-' -f2)
+case $TYPE in
+    "user")
+	case $CMD in
+	    "add") shift ; for USERNAME in $@ ; do user_add $USERNAME ; done ;;
+	    "mod") shift ; for USERNAME in $@ ; do user_mod $USERNAME ; done ;;
+	    "del") shift ; for USERNAME in $@ ; do user_del $USERNAME ; done ;;
+	    *) usage ;;
+	esac
+	;;
+    "db")
+	case $CMD in
+	    "add") shift ; for DBNAME in $@ ; do db_add $DBNAME ; done ;;
+	    "mod") shift ; for DBNAME in $@ ; do db_mod $DBNAME ; done ;;
+	    "del") shift ; for DBNAME in $@ ; do db_del $DBNAME ; done ;;
+	    "backup") shift ; for DBNAME in $@ ; do db_backup $DBNAME ; done ;;
+	    *) usage ;;
+	esac
+	;;
+    *) usage ;;
+esac
+
+# EOF
