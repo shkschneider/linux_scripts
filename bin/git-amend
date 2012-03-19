@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # git-ammend -- change an author on git commits
-# Copyright (C) 2012  Alan "Shtark" SCHNEIDER
+# Copyright (C) 2012  Alan SCHNEIDER
 #                     <shk.schneider[at]gmail.com>
 #
 # From <http://stackoverflow.com/questions/750172/how-do-i-change-the-author-of-a-commit-in-git>

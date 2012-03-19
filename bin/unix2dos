@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # unix2dos - change Unix/LF to Dos/CRLF
-# Copyright (C) 2011  Alan "Shtark" SCHNEIDER
+# Copyright (C) 2011  Alan SCHNEIDER
 #                     <shk.schneider[at]gmail.com>
 #
 # This program comes with ABSOLUTELY NO WARRANTY.

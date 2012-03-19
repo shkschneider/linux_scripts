@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # supercopier -- cp with progress bar (with pv)
-# Copyright (C) 2010-211  Alan "Shtark" SCHNEIDER
+# Copyright (C) 2010-211  Alan SCHNEIDER
 #                         <shk.schneider[at]gmail.com>
 #
 # This program comes with ABSOLUTELY NO WARRANTY.

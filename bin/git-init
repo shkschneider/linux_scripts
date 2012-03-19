@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # git-init -- git branch manager init
-# Copyright (C) 2012  Alan "Shtark" SCHNEIDER
+# Copyright (C) 2012  Alan SCHNEIDER
 #                     <shk.schneider[at]gmail.com>
 #
 # Based on the model from Vincent Driessen

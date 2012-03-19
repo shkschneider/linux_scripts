@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # connections -- list incoming connections
-# Copyright (C) 2011-2012  Alan "Shtark" SCHNEIDER
+# Copyright (C) 2011-2012  Alan SCHNEIDER
 #                          <shk.schneider[at]gmail.com>
 #
 # This program comes with ABSOLUTELY NO WARRANTY.
