@@ -1,0 +1,29 @@
+#!/bin/bash
+#
+# mine -- get the mine type of a file
+# Copyright (C) 2012  Alan SCHNEIDER
+#                     <shk.schneider[at]gmail.com>
+#
+# This program comes with ABSOLUTELY NO WARRANTY.
+# This is free software, and you are welcome to redistribute it
+# under certain conditions.
+#
+
+function usage() {
+    echo "Usage: mime <PATH ...>" >&2
+    exit 1
+}
+
+for ARGV in $@ ; do
+    [ ! -e "$ARGV" ] && echo "mime: no such file or directory '$ARGV'" >&2 && continue
+    [ ! -r "$ARGV" ] && echo "mime: permission denied '$ARGV'" >&2 && continue
+    if [ -d "$ARGV" ] ; then
+	echo "directory"
+    elif [ ! -f "$ARGV" ] ; then
+	file -b "$ARGV"
+    else
+	file -i "$ARGV" | cut -d';' -f1 | cut -d' ' -f2
+    fi
+done
+
+# EOF
