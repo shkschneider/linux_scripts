@@ -21,7 +21,7 @@ function usage() {
     echo "       -l, --list   -- relative statuses of all branches (graph)" >&2
     echo "       -s, --status -- relative status of the current branch (checklist)" >&2
     echo "" >&2
-    echo "       init                  -- init a repository compliant with tis workflow" >&2
+    echo "       init                  -- init a repository compliant with this workflow" >&2
     echo "       up[date]              -- get updates from upstream branches" >&2
     echo "       pu[blish] [TAG ...]   -- publish updates in upstream branches" >&2
     echo "       new-hotfix <ID-DESC>  -- create a new private branch (from master)" >&2
