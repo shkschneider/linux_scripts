@@ -98,12 +98,12 @@ function gw_publish_devel() {
 function gw_status_branch() {
     AHEAD=$(git log --oneline HEAD...$1 | wc -l)
     if [ $AHEAD -gt 0 ] ; then
-	echo "[ KO ] Ahead of '$1' (by $AHEAD commit)"
-	for COMMIT in $(git log --oneline HEAD...$1 | cut -c1-7) ; do
-	    HASH=$(echo $COMMIT | cut -d'_' -f1)
-	    MSG=$(git show --oneline $COMMIT | head -1 | cut -d' ' -f2-)
-	    echo "       * [$HASH] $MSG"
-	done
+	echo "[ KO ] Ahead of '$1' (by $AHEAD commits)"
+	#for COMMIT in $(git log --oneline HEAD...$1 | cut -c1-7) ; do
+	#    HASH=$(echo $COMMIT | cut -d'_' -f1)
+	#    MSG=$(git show --oneline $COMMIT | head -1 | cut -d' ' -f2-)
+	#    echo "       * [$HASH] $MSG"
+	#done
     else
 	echo "[ OK ] In synch with '$1'"
     fi
