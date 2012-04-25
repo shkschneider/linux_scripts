@@ -136,17 +136,27 @@ function gw_branch() {
 
 DIR=$(git rev-parse --git-dir 2>/dev/null)
 [ -z "$DIR" ] && echo "gw: not a git repository" >&2 && exit 1
+[ -z "$(git remote)" ] && echo "gw: remote 'origin' does not exists" >&2 && exit 1
 CURRENT=$(git symbolic-ref HEAD 2> /dev/null | cut -b 12-)
 TYPE=$(echo $CURRENT | cut -d'-' -f1)
 TAG_HASH=$(git rev-list --tags --max-count=1 2>/dev/null)
-TAG=$(git describe --tags $TAG_HASH)
+[ -n "$TAG_HASH" ] && TAG=$(git describe --tags $TAG_HASH) || TAG=""
 case $1 in
     "init"|"-w"|"--what")
 	[ -n "$(git status --porcelain)" ] && echo "gw: they are some things left to commit" >&2 && exit 1 ;;
-    "-l"|"--list"|"-s"|"--status"|"up"|"update"|"pu"|"publish"|"nf"|"new-hotfix"|"nr"|"new-release"|"nf"|"new-feature"|"nb"|"new-bugfix")
+    "-l"|"--list"|)
 	gw_branch master
 	gw_branch devel
-	gw_branch $CURRENT
+	;;
+    "-s"|"--status")
+	gw_branch master
+	gw_branch devel
+	[ "$CURRENT" != "master" ] && [ "$CURRENT" != "devel" ] && gw_branch $CURRENT
+	;;
+    "up"|"update"|"pu"|"publish"|"nh"|"new-hotfix"|"nr"|"new-release"|"nf"|"new-feature"|"nb"|"new-bugfix")
+	gw_branch master
+	gw_branch devel
+	[ "$CURRENT" != "master" ] && [ "$CURRENT" != "devel" ] && gw_branch $CURRENT
 	[ -n "$(git status --porcelain)" ] && echo "gw: they are some things left to commit" >&2 && exit 1
 	;;
 esac
@@ -199,7 +209,7 @@ case $1 in
 	done
 	;;
     "-s"|"--status")
-	git fetch origin
+	git fetch -q origin
 	case $TYPE in
 	    "master")
 		echo "Public branch: $CURRENT (latest tag is '$TAG')"
@@ -229,29 +239,32 @@ case $1 in
 	gw_status_index
 	;;
     "init")
-	COMMITS=$(git log --oneline | wc -l)
-	[ $COMMITS -ne 0 ] && echo "gw: repository already has history ($COMMITS commits)" >&2 && exit 1
-	touch README.master
-	git add README.master
-	git commit -m "[#0] init master"
-	echo "== gw == publishing 'master' to 'origin/master'"
-	git push origin master
-	gw_branch master
-	git checkout --track -b devel master
-	touch README.devel
-	git add README.devel
-	git commit -m "[#0] init devel"
-	git tag 0
-	echo "== gw == publishing 'devel' to 'origin/master'"
-	git push --tags origin devel
+	if [ -n "$(git branch)" ] ; then
+	    COMMITS=$(git log --oneline | wc -l | awk '{print $1}')
+            [ $COMMITS -ne 0 ] && echo "gw: repository already has history ($COMMITS commits)" >&2 && exit 1
+        fi
+	echo master > README
+        git add README
+        git commit -m "* first master commit"
+        echo "== gw == publishing 'master' to 'origin/master'"
+        git push origin master
+        gw_branch master
+        git checkout --track -b devel master
+        echo devel >> README
+        git add README
+	git commit -m "* first devel commit"
+        git tag --force 0
+        echo "== gw == publishing 'devel' to 'origin/master'"
+        git push --tags origin devel
 	echo "== gw == updating 'master' from 'origin/devel'"
-	git checkout master
-	git merge devel
-	git push --tags origin master
-	git checkout devel
-	echo "== gw == you are now on 'devel' branch"
+        git checkout master
+        git merge devel
+        git push --tags origin master
+        git checkout devel
+        echo "== gw == you are now on 'devel' branch"
 	;;
     "up"|"update")
+	git fetch -q origin
 	case $TYPE in
 	    "master"|"devel")             PARENT="origin $CURRENT" ;;
 	    "hotfix")                     PARENT="origin master" ;;
@@ -261,6 +274,7 @@ case $1 in
 	git pull --rebase $PARENT
 	;;
     "pu"|"publish")
+	git fetch -q origin
 	case $TYPE in
 	    "master")
 		shift
