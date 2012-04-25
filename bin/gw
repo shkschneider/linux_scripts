@@ -146,7 +146,7 @@ TAG_HASH=$(git rev-list --tags --max-count=1 2>/dev/null)
 case $1 in
     "init"|"-w"|"--what")
 	[ -n "$(git status --porcelain)" ] && echo "gw: they are some things left to commit" >&2 && exit 1 ;;
-    "-l"|"--list"|)
+    "-l"|"--list")
 	gw_branch master
 	gw_branch devel
 	;;
@@ -211,7 +211,7 @@ case $1 in
 	done
 	;;
     "-s"|"--status")
-	git fetch -q origin
+	git fetch --tags origin
 	case $TYPE in
 	    "master")
 		echo "Public branch: $CURRENT (latest tag is '$TAG')"
@@ -266,7 +266,7 @@ case $1 in
         echo "== gw == you are now on 'devel' branch"
 	;;
     "up"|"update")
-	git fetch -q origin
+	git fetch --tags origin
 	case $TYPE in
 	    "master"|"devel")             PARENT="origin $CURRENT" ;;
 	    "hotfix")                     PARENT="origin master" ;;
@@ -276,7 +276,7 @@ case $1 in
 	git pull --rebase $PARENT
 	;;
     "pu"|"publish")
-	git fetch -q origin
+	git fetch --tags origin
 	case $TYPE in
 	    "master")
 		shift
