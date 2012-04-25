@@ -14,6 +14,7 @@ URL="http://www.shkschneider.me/blog/1815/git-workflow-my-rebase-model/"
 
 function usage() {
     echo "Usage: gw COMMAND [OPTION]" >&2
+    # commands starting with '-' make no changes on repository
     echo "" >&2
     echo "       -h, --help   -- this help" >&2
     echo "       -m, --model  -- this workflow's model" >&2
@@ -21,13 +22,14 @@ function usage() {
     echo "       -l, --list   -- relative statuses of all branches (graph)" >&2
     echo "       -s, --status -- relative status of the current branch (checklist)" >&2
     echo "" >&2
-    echo "       init                  -- init a repository compliant with this workflow" >&2
-    echo "       up[date]              -- get updates from upstream branches" >&2
-    echo "       pu[blish] [TAG ...]   -- publish updates in upstream branches" >&2
-    echo "       new-hotfix <ID-DESC>  -- create a new private branch (from master)" >&2
-    echo "       new-release <TAG>     -- create a new private branch (from devel)" >&2
-    echo "       new-feature <ID-DESC> -- create a new private branch (from devel)" >&2
-    echo "       new-bugfix <ID-DESC>  -- create a new private branch (from devel)" >&2
+    # those commands can make changes on local and/or remote
+    echo "       init                      -- init a repository compliant with this workflow" >&2
+    echo "       up[date]                  -- get updates from upstream branches" >&2
+    echo "       pu[blish] [TAG ...]       -- publish updates in upstream branches" >&2
+    echo "       n[ew-]h[otfix] <ID-DESC>  -- create a new private branch (from master)" >&2
+    echo "       n[ew-]r[elease] <TAG>     -- create a new private branch (from devel)" >&2
+    echo "       n[ew-]f[eature] <ID-DESC> -- create a new private branch (from devel)" >&2
+    echo "       n[ew-]b[ugfix] <ID-DESC>  -- create a new private branch (from devel)" >&2
 }
 
 function gw_list() {
