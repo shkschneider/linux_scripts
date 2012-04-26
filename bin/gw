@@ -37,11 +37,11 @@ function gw_list() {
     COMMIT_HASH=$(git rev-list --max-count=1 $BRANCH 2>/dev/null | cut -c1-7)
     case $TYPE in
 	"master")
-	    AHEAD=$(git log --oneline $BRANCH...origin/master | wc -l) ;;
+	    AHEAD=$(git log --oneline $BRANCH...origin/master | wc -l | awk '{print $1}') ;;
 	"devel"|"hotfix"|"release")
-	    AHEAD=$(git log --oneline $BRANCH...master | wc -l) ;;
+	    AHEAD=$(git log --oneline $BRANCH...master | wc -l | awk '{print $1}') ;;
 	"feature"|"bugfix")
-	    AHEAD=$(git log --oneline $BRANCH...devel | wc -l) ;;
+	    AHEAD=$(git log --oneline $BRANCH...devel | wc -l | awk '{print $1}') ;;
 	*)
 	    AHEAD="?" ;;
     esac
@@ -81,7 +81,7 @@ function gw_publish_devel() {
     git fetch origin devel
     git rebase origin/devel || exit 1
     # squash commits
-    N=$(git log --oneline HEAD...origin/devel | wc -l)
+    N=$(git log --oneline HEAD...origin/devel | wc -l | awk '{print $1}')
     [ $N -eq 0 ] && echo "gg: nothing changed from 'origin/devel'" >&2 && exit 1
     [ $N -eq 1 ] && git commit --amend
     [ $N -ge 2 ] && git rebase -i HEAD~$N
@@ -96,7 +96,7 @@ function gw_publish_devel() {
 }
 
 function gw_status_branch() {
-    AHEAD=$(git log --oneline HEAD...$1 | wc -l)
+    AHEAD=$(git log --oneline HEAD...$1 | wc -l | awk '{print $1}')
     if [ $AHEAD -gt 0 ] ; then
 	echo "[ KO ] Ahead of '$1' (by $AHEAD commits)"
 	#for COMMIT in $(git log --oneline HEAD...$1 | cut -c1-7) ; do
@@ -120,7 +120,7 @@ function gw_status_index() {
 function gw_branch() {
     if [ -z "$1" ] ; then
 	CONFLICT=$(git status --short | egrep '^(.U|U.)')
-	COMMITS=$(git log --oneline | wc -l)
+	COMMITS=$(git log --oneline | wc -l | awk '{print $1}')
 	echo "gw: no branch selected" >&2
 	[ -n "$CONFLICT" ] && echo "    you are in the middle of a conflict: fix it" >&2
 	[ $COMMITS -eq 0 ] && echo "    repository is naked: try 'gw update' or 'gw init'" >&2
