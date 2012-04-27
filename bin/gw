@@ -110,7 +110,7 @@ function gw_status_branch() {
 }
 
 function gw_status_index() {
-    if [ -n "$(git status --porcelain)" ] ; then
+    if [ -n "$(git status --porcelain | egrep -v '^??')" ] ; then
 	echo "[ KO ] Index NOT clean"
     else
 	echo "[ OK ] Index clean"
@@ -144,8 +144,8 @@ TYPE=$(echo $CURRENT | cut -d'-' -f1)
 TAG_HASH=$(git rev-list --tags --max-count=1 2>/dev/null)
 [ -n "$TAG_HASH" ] && TAG=$(git describe --tags $TAG_HASH) || TAG=""
 case $1 in
-    "init"|"-w"|"--what")
-	[ -n "$(git status --porcelain)" ] && echo "gw: they are some things left to commit" >&2 && exit 1 ;;
+    "init")
+	[ -n "$(git status --porcelain | egrep -v '^??')" ] && echo "gw: they are some things left to commit" >&2 && exit 1 ;;
     "-l"|"--list")
 	gw_branch master
 	gw_branch devel
@@ -159,7 +159,7 @@ case $1 in
 	gw_branch master
 	gw_branch devel
 	[ "$CURRENT" != "master" ] && [ "$CURRENT" != "devel" ] && gw_branch $CURRENT
-	[ -n "$(git status --porcelain)" ] && echo "gw: they are some things left to commit" >&2 && exit 1
+	[ -n "$(git status --porcelain | egrep -v '^??')" ] && echo "gw: they are some things left to commit" >&2 && exit 1
 	;;
 esac
 case $1 in
