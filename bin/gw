@@ -13,7 +13,7 @@
 URL="http://www.shkschneider.me/blog/1815/git-workflow-my-rebase-model/"
 
 function usage() {
-    echo "Usage: gw COMMAND [OPTION]" >&2
+    echo "Usage: gw <COMMAND [...]>" >&2
     # commands starting with '-' make no changes on repository
     echo "" >&2
     echo "       -h, --help   -- this help" >&2
