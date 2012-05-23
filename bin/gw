@@ -13,7 +13,7 @@
 URL="http://www.shkschneider.me/blog/1815/git-workflow-my-rebase-model/"
 
 function usage() {
-    echo "Usage: gw COMMAND [OPTION]" >&2
+    echo "Usage: gw <COMMAND [...]>" >&2
     # commands starting with '-' make no changes on repository
     echo "" >&2
     echo "       -h, --help   -- this help" >&2
@@ -105,7 +105,7 @@ function gw_status_index() {
     fi
 }
 
-function gw_branch() {
+function gw_check_branch() {
     if [ -z "$1" ] ; then
 	CONFLICT=$(git status --short | egrep '^(.U|U.)')
 	COMMITS=$(git log --oneline | wc -l | awk '{print $1}')
@@ -122,32 +122,42 @@ function gw_branch() {
     [ -z "$(git branch | cut -c3- | egrep "^$1\$")" ] && echo "gw: '$1' branch does not exists" >&2 && exit 1
 }
 
+function gw_check_repository() {
+    [ -z "$DIR" ] && echo "gw: not a git repository" >&2 && exit 1
+    [ -z "$(git remote)" ] && echo "gw: remote 'origin' does not exists" >&2 && exit 1
+    git fetch --tags origin
+    CURRENT=$(git symbolic-ref HEAD 2> /dev/null | cut -b 12-)
+    TYPE=$(echo $CURRENT | cut -d'-' -f1)
+    TAG_HASH=$(git rev-list --tags --max-count=1 2>/dev/null)
+    [ -n "$TAG_HASH" ] && TAG=$(git describe --tags $TAG_HASH) || TAG=""
+}
+
 [ $# -eq 0 ] && usage && exit 1
 
 DIR=$(git rev-parse --git-dir 2>/dev/null)
-[ -z "$DIR" ] && echo "gw: not a git repository" >&2 && exit 1
-[ -z "$(git remote)" ] && echo "gw: remote 'origin' does not exists" >&2 && exit 1
-git fetch --tags origin
-CURRENT=$(git symbolic-ref HEAD 2> /dev/null | cut -b 12-)
-TYPE=$(echo $CURRENT | cut -d'-' -f1)
-TAG_HASH=$(git rev-list --tags --max-count=1 2>/dev/null)
-[ -n "$TAG_HASH" ] && TAG=$(git describe --tags $TAG_HASH) || TAG=""
+
 case $1 in
     "init")
 	[ -n "$(git status --porcelain | egrep -v '^\?\?')" ] && echo "gw: they are some things left to commit" >&2 && exit 1 ;;
     "-l"|"--list")
-	gw_branch master
-	gw_branch devel
+	gw_check_repository
+	gw_check_branch master
+	gw_check_branch devel
 	;;
     "-s"|"--status")
-	gw_branch master
-	gw_branch devel
-	[ "$CURRENT" != "master" ] && [ "$CURRENT" != "devel" ] && gw_branch $CURRENT
+	gw_check_repository
+	gw_check_branch master
+	gw_check_branch devel
+	[ "$CURRENT" != "master" ] && [ "$CURRENT" != "devel" ] && gw_check_branch $CURRENT
 	;;
+    "-w"|"--what")
+        [ -n "$DIR" ] && gw_check_repository
+        ;;
     "up"|"update"|"pu"|"publish"|"nh"|"new-hotfix"|"nr"|"new-release"|"nf"|"new-feature"|"nb"|"new-bugfix")
-	gw_branch master
-	gw_branch devel
-	[ "$CURRENT" != "master" ] && [ "$CURRENT" != "devel" ] && gw_branch $CURRENT
+	gw_check_repository
+	gw_check_branch master
+	gw_check_branch devel
+	[ "$CURRENT" != "master" ] && [ "$CURRENT" != "devel" ] && gw_check_branch $CURRENT
 	[ -n "$(git status --porcelain | egrep -v '^\?\?')" ] && echo "gw: they are some things left to commit" >&2 && exit 1
 	;;
 esac
@@ -165,26 +175,30 @@ case $1 in
 	echo "Feel free to visit <$URL>"
 	;;
     "-w"|"--what")
-	case $TYPE in
-	    "master")
-		echo "gw update        -- pull from origin"
-		echo "gw publish [TAG] -- push to origin (latest tag is '$TAG')"
-		;;
-	    "hotfix"|"release")
-		echo "gw publish <TAG> -- merge into master and devel (latest tag is '$TAG')"
-		;;
-	    "devel")
-		echo "gw update        -- pull from origin"
-		echo "gw publish       -- push to origin"
-		;;
-	    "feature"|"bugfix")
-		echo "gw publish       -- merge into devel (interactive rebase)"
-		;;
-	esac
-	echo "gw new-hotfix    -- fix a bug on 'master' branch"
-	echo "gw new-release   -- freeze 'devel' branch into a new release"
-	echo "gw new-feature   -- clone 'devel' branch to add a new feature"
-	echo "gw new-bugfix    -- fix a bug on 'devel' branch"
+	if [ -z "$DIR" ] ; then
+	    echo "gw init            -- init a repository"
+	else
+	    case $TYPE in
+		"master")
+		    echo "gw up[date]        -- pull from origin"
+		    echo "gw pu[blish] [TAG] -- push to origin (latest tag is '$TAG')"
+		    ;;
+		"hotfix"|"release")
+		    echo "gw pu[blish] <TAG> -- merge into master and devel (latest tag is '$TAG')"
+		    ;;
+		"devel")
+		    echo "gw up[date]      -- pull from origin"
+		    echo "gw pu[blish]     -- push to origin"
+		    ;;
+		"feature"|"bugfix")
+		    echo "gw pu[blish]     -- merge into devel (interactive rebase)"
+		    ;;
+	    esac
+	    echo "gw n[ew-]h[otfix]  -- fix a bug on 'master' branch"
+	    echo "gw n[ew-]r[elease] -- freeze 'devel' branch into a new release"
+	    echo "gw n[ew-]f[eature] -- clone 'devel' branch to add a new feature"
+	    echo "gw n[ew-]b[ugfix]  -- fix a bug on 'devel' branch"
+	fi
 	;;
     "-l"|"--list")
 	# known types
@@ -239,7 +253,7 @@ case $1 in
         git commit -m "* first master commit"
         echo "== gw == publishing 'master' to 'origin/master'"
         git push --force origin master
-        gw_branch master
+        gw_check_branch master
         git checkout --track -b devel master
         echo devel >> README
         git add README
@@ -326,6 +340,6 @@ case $1 in
 	exit 1
 	;;
 esac
-git fetch --tags origin
+#[ -n "$DIR" ] && git fetch --tags origin
 
 # EOF
