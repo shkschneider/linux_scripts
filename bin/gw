@@ -130,7 +130,7 @@ function gw_check_repository() {
     local type tag_hash
     [ -z "$dir" ] && echo "gw: not a git repository" >&2 && exit 1
     [ -z "$(git remote)" ] && echo "gw: remote 'origin' does not exists" >&2 && exit 1
-    git fetch --tags origin
+    #git fetch --tags origin
     current=$(git symbolic-ref HEAD 2> /dev/null | cut -b 12-)
     type=$(echo $Current | cut -d'-' -f1)
     tag_hash=$(git rev-list --tags --max-count=1 2>/dev/null)
@@ -271,25 +271,49 @@ case $1 in
             fi
             unset commits
         fi
-	echo master > README
-        git add README
+        tmp=$(mktemp -p .)
+        git add "$tmp"
         git commit -m "* Init master"
+        git rm "$tmp"
+        git commit -m "* Cleanup master"
         echo "== gw == publishing 'master' to 'origin/master'"
-        git push --force origin master
+        [ "$force" = "true" ] && git push --force origin master || git push origin master
+        [ $? -ne 0 ] && exit 1
         gw_check_branch master
         git checkout --track -b devel master
-        echo devel >> README
-        git add README
+        tmp=$(mktemp -p .)
+        git add "$tmp"
 	git commit -m "* Init devel"
-        git tag --force 0
-        echo "== gw == publishing 'devel' to 'origin/master'"
-        git push --tags --force origin devel
+        git rm "$tmp"
+        git commit -m "* Cleanup devel"
+        echo "== gw == publishing 'devel' to 'origin/devel'"
+        [ "$force" = "true" ] && git push --force origin devel || git push origin devel
+        [ $? -ne 0 ] && exit 1
 	echo "== gw == updating 'master' from 'origin/devel'"
         git checkout master
         git merge devel
-        git push --tags --force origin master
+        echo "== gw == tagging '$(git rev-parse HEAD | cut -c1-7)' as '0'"
+        git tag --force 0
+        git push --tags origin master
+        [ $? -ne 0 ] && exit 1
         git checkout devel
         echo "== gw == you are now on 'devel' branch"
+        unset tmp
+        rtags=$(git ls-remote --tags origin | egrep -v "refs/tags/0$" | rev | cut -d'/' -f1 | rev)
+        if [ -n "$rtags" ] ; then
+            tags=""
+            refs=""
+            for tag in $rtags ; do
+                tags="$tags$tag "
+                refs="$refs:refs/tags/$tag "
+                unset tag
+            done
+            echo "gw: you can remove all old remote tags with:"
+            echo "    git tag -d $tags"
+            echo "    git push origin $refs"
+            unset tags refs
+        fi
+        unset rtags
 	;;
     "up"|"update")
 	case $type in
