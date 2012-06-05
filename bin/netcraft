@@ -23,14 +23,15 @@ function get_server() {
     DUMP=$(curl -I "$1" 2>/dev/null | cat -e | sed -r 's/...$//g' | sed 's/: /:/g')
     for LINE in $DUMP ; do
 	case "$LINE" in
+	    Location*)
+		LOCATION=$(echo "$LINE" | cut -d':' -f2- | sed -r 's#/$##')
+                [ -n "$(echo $LOCATION | egrep '^/')" ] && LOCATION="$1$LOCATION"
+		get_server "$LOCATION"
+		return
+		;;
 	    Server*)
 		SERVER=$(echo "$LINE" | cut -d':' -f2-)
 		echo "$1 $SERVER"
-		return
-		;;
-	    Location*)
-		LOCATION=$(echo "$LINE" | cut -d':' -f2- | sed -r 's#/$##')
-		get_server "$LOCATION"
 		return
 		;;
 	esac
