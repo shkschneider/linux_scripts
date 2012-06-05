@@ -33,6 +33,7 @@ function usage() {
 }
 
 function gw_list() {
+    local type commit_hash ahead remote local
     type=$(echo $branch | cut -d'-' -f1)
     commit_hash=$(git rev-list --max-count=1 $branch 2>/dev/null | cut -c1-7)
     case $type in
@@ -55,7 +56,7 @@ function gw_list() {
     remote=$(git ls-remote 2>/dev/null | egrep "refs/remotes/origin/$branch\$" | cut -c1-7)
     local=$(git rev-parse $branch | cut -c1-7)
     [ -n "$remote" ] && branch="origin/$branch"
-    echo "$branch [$commit_HASH] +$ahead"
+    echo "$branch [$commit_hash] +$ahead"
 }
 
 function gw_publish_master() {
@@ -70,6 +71,7 @@ function gw_publish_master() {
 }
 
 function gw_publish_devel() {
+    local n
     echo "== gw == preparing '$current' to be published to 'origin/devel'"
     git checkout $current
     git rebase origin/devel || exit 1
@@ -84,6 +86,7 @@ function gw_publish_devel() {
 }
 
 function gw_status_branch() {
+    local ahead
     ahead=$(git log --oneline HEAD...$1 | wc -l | awk '{print $1}')
     if [ $ahead -gt 0 ] ; then
 	echo "[ KO ] Ahead of '$1' (by $ahead commits)"
@@ -106,6 +109,7 @@ function gw_status_index() {
 }
 
 function gw_check_branch() {
+    local conflict commits type
     if [ -z "$1" ] ; then
 	conflict=$(git status --short | egrep '^(.U|U.)')
 	commits=$(git log --oneline | wc -l | awk '{print $1}')
@@ -114,7 +118,7 @@ function gw_check_branch() {
 	[ $commits -eq 0 ] && echo "    repository is naked: try 'gw update' or 'gw init'" >&2
 	exit 1
     fi
-    local type=$(echo $1 | cut -d'-' -f1)
+    type=$(echo $1 | cut -d'-' -f1)
     case $type in
         "master"|"hotfix"|"release"|"devel"|"feature"|"bugfix") ;;
         *) echo "gw: '$1' branch not recognized" >&2 && exit 1 ;;
@@ -123,6 +127,7 @@ function gw_check_branch() {
 }
 
 function gw_check_repository() {
+    local type tag_hash
     [ -z "$dir" ] && echo "gw: not a git repository" >&2 && exit 1
     [ -z "$(git remote)" ] && echo "gw: remote 'origin' does not exists" >&2 && exit 1
     git fetch --tags origin
@@ -176,8 +181,16 @@ case $1 in
 	;;
     "-w"|"--what")
 	if [ -z "$dir" ] ; then
-	    echo "gw init            -- init a repository"
+	    echo "gw init            -- init a compliant repository"
 	else
+            if [ -z "$(git branch | egrep "^..devel$")" ] ; then
+	        commits=$(git log --oneline | wc -l | awk '{print $1}')
+                if [ $commits -eq 0 ] ; then
+                    echo "gw init             -- init a compliant repository"
+                else
+                    echo "gw init --force     -- init a compliant repository"
+                fi
+            fi
 	    case $type in
 		"master")
 		    echo "gw up[date]        -- pull from origin"
@@ -206,11 +219,15 @@ case $1 in
 	    branches=$(git branch -a | cut -c3- | cut -d'/' -f3 | egrep "^$type" | sort -u)
 	    for branch in $branches ; do
 		gw_list $branch
+                unset branch
 	    done
+            unset branches
 	done
+        unset type
 	# unknown types
 	for branch in $(git branch -a | cut -c3- | rev | cut -d'/' -f1 | rev | sort -u | egrep -v '^(master$|devel$|hotfix-|release-|feature-|bugfix-)') ; do
 	    gw_list $branch
+            unset branch
 	done
 	;;
     "-s"|"--status")
@@ -225,6 +242,7 @@ case $1 in
 		else
 		    echo "[ OK ] Latest commit is tagged '$tag'"
 		fi
+                unset commit_hash
 		;;
 	    "devel")
 		echo "Public branch: $current (latest tag is '$tag')"
@@ -246,18 +264,23 @@ case $1 in
 	[ -n "$2" ] && [ "$2" = "--force" ] && force="true" || force="false"
 	if [ -n "$(git branch)" ] ; then
 	    commits=$(git log --oneline | wc -l | awk '{print $1}')
-            [ $commits -ne 0 ] && [ "$force" = "false" ] && echo "gw: repository already has history ($commits commits)" >&2 && exit 1
+            if [ $commits -ne 0 ] && [ "$force" = "false" ] ; then
+                echo "gw: repository already has history ($commits commits)" >&2
+                echo "gw: please use the '--force' option" >&2
+                exit 1
+            fi
+            unset commits
         fi
 	echo master > README
         git add README
-        git commit -m "* first master commit"
+        git commit -m "* Init master"
         echo "== gw == publishing 'master' to 'origin/master'"
         git push --force origin master
         gw_check_branch master
         git checkout --track -b devel master
         echo devel >> README
         git add README
-	git commit -m "* first devel commit"
+	git commit -m "* Init devel"
         git tag --force 0
         echo "== gw == publishing 'devel' to 'origin/master'"
         git push --tags --force origin devel
@@ -276,6 +299,7 @@ case $1 in
 	esac
 	echo "== gw == updating '$current' from 'origin/$parent'"
 	git pull --rebase origin $parent
+        unset parent
         git pull
 	;;
     "pu"|"publish")
@@ -330,6 +354,7 @@ case $1 in
 	echo "== gw == creating $type branch '$type-$desc' from '$parent'"
 	git checkout --track -b $type-$desc $parent
 	echo "== gw == you are on '$type-$desc' branch"
+        unset desc parent
 	;;
     "-h"|"--help")
 	usage
