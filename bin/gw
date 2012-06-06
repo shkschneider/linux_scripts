@@ -109,7 +109,7 @@ function gw_status_index() {
 }
 
 function gw_check_branch() {
-    local conflict commits type
+    local conflict commits
     if [ -z "$1" ] ; then
 	conflict=$(git status --short | egrep '^(.U|U.)')
 	commits=$(git log --oneline | wc -l | awk '{print $1}')
@@ -132,7 +132,7 @@ function gw_check_repository() {
     [ -z "$(git remote)" ] && echo "gw: remote 'origin' does not exists" >&2 && exit 1
     #git fetch --tags origin
     current=$(git symbolic-ref HEAD 2> /dev/null | cut -b 12-)
-    type=$(echo $Current | cut -d'-' -f1)
+    type=$(echo $current | cut -d'-' -f1)
     tag_hash=$(git rev-list --tags --max-count=1 2>/dev/null)
     [ -n "$tag_hash" ] && tag=$(git describe --tags $tag_hash) || tag=""
 }
