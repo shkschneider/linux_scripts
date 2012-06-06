@@ -65,24 +65,25 @@ function gw_publish_master() {
     git rebase origin/master || exit 1
     git checkout master
     echo "== gw == publishing '$current' to 'master'"
-    git rebase $current
+    git rebase $current || exit 1
     echo "== gw == tagging 'master' with 'git tag $@'"
-    git tag $@ HEAD || exit 1
+    git tag --force $@ HEAD || exit 1
 }
 
 function gw_publish_devel() {
-    local n
+    local commits
+    commits=$(git log --oneline HEAD...origin/devel | wc -l | awk '{print $1}')
+    [ $commits -eq 0 ] && echo "gw: nothing changed from 'origin/devel'" >&2
     echo "== gw == preparing '$current' to be published to 'origin/devel'"
     git checkout $current
     git rebase origin/devel || exit 1
     # squash commits
-    n=$(git log --oneline HEAD...origin/devel | wc -l | awk '{print $1}')
-    [ $n -eq 0 ] && echo "gw: nothing changed from 'origin/devel'" >&2
-    [ $n -eq 1 ] && git commit --amend
-    [ $n -ge 2 ] && git rebase -i HEAD~$n
+    [ $commits -eq 1 ] && git commit --amend
+    [ $commits -ge 2 ] && git rebase -i HEAD~$commits
     git checkout devel
+    #git pull --rebase origin devel || exit 1
     echo "== gw == publishing '$current' to 'devel'"
-    git rebase $current
+    git rebase $current || exit 1
 }
 
 function gw_status_branch() {
@@ -109,7 +110,7 @@ function gw_status_index() {
 }
 
 function gw_check_branch() {
-    local conflict commits
+    local conflict commits type
     if [ -z "$1" ] ; then
 	conflict=$(git status --short | egrep '^(.U|U.)')
 	commits=$(git log --oneline | wc -l | awk '{print $1}')
@@ -127,10 +128,10 @@ function gw_check_branch() {
 }
 
 function gw_check_repository() {
-    local type tag_hash
+    local tag_hash
     [ -z "$dir" ] && echo "gw: not a git repository" >&2 && exit 1
     [ -z "$(git remote)" ] && echo "gw: remote 'origin' does not exists" >&2 && exit 1
-    #git fetch --tags origin
+    [ -z "$(git tag -l 0)" ] && echo "gw: not a compliant repository" >&2 && exit 1
     current=$(git symbolic-ref HEAD 2> /dev/null | cut -b 12-)
     type=$(echo $current | cut -d'-' -f1)
     tag_hash=$(git rev-list --tags --max-count=1 2>/dev/null)
@@ -143,7 +144,9 @@ dir=$(git rev-parse --git-dir 2>/dev/null)
 
 case $1 in
     "init")
-	[ -n "$(git status --porcelain | egrep -v '^\?\?')" ] && echo "gw: they are some things left to commit" >&2 && exit 1 ;;
+        [ -z "$dir" ] && echo "gw: not a git repository" >&2 && exit 1
+	[ -n "$(git status --porcelain | egrep -v '^\?\?')" ] && echo "gw: they are some things left to commit" >&2 && exit 1
+        ;;
     "-l"|"--list")
 	gw_check_repository
 	gw_check_branch master
@@ -156,7 +159,8 @@ case $1 in
 	[ "$current" != "master" ] && [ "$current" != "devel" ] && gw_check_branch $current
 	;;
     "-w"|"--what")
-        [ -n "$dir" ] && gw_check_repository
+        [ -z "$dir" ] && echo "gw: not a git repository" >&2 && exit 1
+        gw_check_repository
         ;;
     "up"|"update"|"pu"|"publish"|"nh"|"new-hotfix"|"nr"|"new-release"|"nf"|"new-feature"|"nb"|"new-bugfix")
 	gw_check_repository
@@ -180,38 +184,34 @@ case $1 in
 	echo "Feel free to visit <$URL>"
 	;;
     "-w"|"--what")
-	if [ -z "$dir" ] ; then
-	    echo "gw init            -- init a compliant repository"
-	else
-            if [ -z "$(git branch | egrep "^..devel$")" ] ; then
-	        commits=$(git log --oneline | wc -l | awk '{print $1}')
-                if [ $commits -eq 0 ] ; then
-                    echo "gw init             -- init a compliant repository"
-                else
-                    echo "gw init --force     -- init a compliant repository"
-                fi
+        if [ -z "$(git branch | egrep "^..devel$")" ] ; then
+	    commits=$(git log --oneline 2>/dev/null | wc -l | awk '{print $1}')
+            if [ $commits -eq 0 ] ; then
+                echo "gw init            -- init a compliant repository"
+            else
+                echo "gw init --force    -- init a compliant repository"
             fi
-	    case $type in
-		"master")
-		    echo "gw up[date]        -- pull from origin"
-		    echo "gw pu[blish] [TAG] -- push to origin (latest tag is '$tag')"
-		    ;;
-		"hotfix"|"release")
-		    echo "gw pu[blish] <TAG> -- merge into master and devel (latest tag is '$tag')"
-		    ;;
-		"devel")
-		    echo "gw up[date]      -- pull from origin"
-		    echo "gw pu[blish]     -- push to origin"
-		    ;;
-		"feature"|"bugfix")
-		    echo "gw pu[blish]     -- merge into devel (interactive rebase)"
-		    ;;
-	    esac
-	    echo "gw n[ew-]h[otfix]  -- fix a bug on 'master' branch"
-	    echo "gw n[ew-]r[elease] -- freeze 'devel' branch into a new release"
-	    echo "gw n[ew-]f[eature] -- clone 'devel' branch to add a new feature"
-	    echo "gw n[ew-]b[ugfix]  -- fix a bug on 'devel' branch"
-	fi
+        fi
+	case $type in
+	    "master")
+		echo "gw up[date]        -- pull from origin"
+		echo "gw pu[blish] [TAG] -- push to origin (latest tag is '$tag')"
+		;;
+	    "hotfix"|"release")
+		echo "gw pu[blish] <TAG> -- merge into master and devel (latest tag is '$tag')"
+		;;
+	    "devel")
+		echo "gw up[date]      -- pull from origin"
+		echo "gw pu[blish]     -- push to origin"
+		;;
+	    "feature"|"bugfix")
+		echo "gw pu[blish]     -- merge into devel (interactive rebase)"
+		;;
+	esac
+	echo "gw n[ew-]h[otfix]  -- fix a bug on 'master' branch"
+	echo "gw n[ew-]r[elease] -- freeze 'devel' branch into a new release"
+	echo "gw n[ew-]f[eature] -- clone 'devel' branch to add a new feature"
+	echo "gw n[ew-]b[ugfix]  -- fix a bug on 'devel' branch"
 	;;
     "-l"|"--list")
 	# known types
@@ -245,7 +245,7 @@ case $1 in
                 unset commit_hash
 		;;
 	    "devel")
-		echo "Public branch: $current (latest tag is '$tag')"
+		echo "Public branch: $current"
 		gw_status_branch origin/devel
 		gw_status_branch origin/master
 		;;
@@ -291,7 +291,7 @@ case $1 in
         [ $? -ne 0 ] && exit 1
 	echo "== gw == updating 'master' from 'origin/devel'"
         git checkout master
-        git merge devel
+        git merge devel || exit 1
         echo "== gw == tagging '$(git rev-parse HEAD | cut -c1-7)' as '0'"
         git tag --force 0
         git push --tags origin master
@@ -322,27 +322,42 @@ case $1 in
 	    "release"|"feature"|"bugfix") parent="devel" ;;
 	esac
 	echo "== gw == updating '$current' from 'origin/$parent'"
-	git pull --rebase origin $parent
+	git pull --rebase origin $parent || exit 1
         unset parent
-        git pull
 	;;
     "pu"|"publish")
 	case $type in
+	    "master"|"devel")             parent="$current" ;;
+	    "hotfix")                     parent="master" ;;
+	    "release"|"feature"|"bugfix") parent="devel" ;;
+	esac
+        commits=$(git log --oneline HEAD...origin/$parent | wc -l | awk '{print $1}')
+	case $type in
 	    "master")
 		shift
+                [ $commits -eq 0 ] && echo "gw: nothing to publish to 'origin/$parent'" >&2 && exit 0
 		echo "== gw == publishing 'master' to 'origin/master'"
 		if [ $# -gt 0 ] ; then
 		    echo "== gw == tagging 'master' with 'git tag $@'"
 		    git tag --force $@ HEAD || exit 1
 		fi
-		git push --tags origin master
+		git push --tags origin master || exit 1
+                git checkout devel
+                echo "== gw == updating 'devel' from '$current'"
+                git pull --rebase origin master || exit 1
+                git pull || exit 1
+                echo "== gw == publishing 'devel' to 'origin/devel'"
+                git push origin devel || exit 1
+                echo "== gw == you are on 'devel' branch"
 		;;
 	    "devel")
+                [ $commits -eq 0 ] && echo "gw: nothing to publish to 'origin/$parent'" >&2 && exit 0
 		echo "== gw == publishing 'devel' to 'origin/devel'"
-		git push --tags origin devel
+		git push origin devel || exit 1
 		;;
 	    "hotfix"|"release")
 		shift
+                [ $commits -eq 0 ] && echo "gw: nothing to publish to '$parent'" >&2 && exit 0
 		[ $# -lt 1 ] && echo "gw: missing TAG parameter" >&2 && exit 1
 		gw_publish_devel
 		gw_publish_master $@
@@ -351,6 +366,7 @@ case $1 in
 		echo "== gw == you are on 'master' branch"
 		;;
 	    "feature"|"bugfix")
+                [ $commits -eq 0 ] && echo "gw: nothing to publish to '$parent'" >&2 && exit 0
 		gw_publish_devel
 		echo "== gw == removing '$current' branch"
 		git branch -d $current
@@ -373,8 +389,10 @@ case $1 in
 	esac
 	git checkout $parent
 	echo "== gw == updating '$parent' from 'origin/$parent'"
-	git fetch origin #$parent
-	git rebase origin/$parent || exit 1
+	#git fetch origin #$parent
+	#git rebase origin/$parent || exit 1
+        git pull --rebase origin $parent || exit 1
+        git pull || exit 1
 	echo "== gw == creating $type branch '$type-$desc' from '$parent'"
 	git checkout --track -b $type-$desc $parent
 	echo "== gw == you are on '$type-$desc' branch"
