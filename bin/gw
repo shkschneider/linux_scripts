@@ -72,14 +72,14 @@ function gw_publish_master() {
 
 function gw_publish_devel() {
     local commits
-    commits=$(git log --oneline HEAD...origin/devel | wc -l | awk '{print $1}')
-    [ $commits -eq 0 ] && echo "gw: nothing changed from 'origin/devel'" >&2
     echo "== gw == preparing '$current' to be published to 'origin/devel'"
     git checkout $current
     git rebase origin/devel || exit 1
     # squash commits
+    commits=$(git log --oneline HEAD...origin/devel | wc -l | awk '{print $1}')
+    [ $commits -eq 0 ] && echo "gw: nothing changed from 'origin/devel'" >&2 && exit 1
     [ $commits -eq 1 ] && git commit --amend
-    [ $commits -ge 2 ] && git rebase -i HEAD~$commits
+    [ $commits -ge 2 ] && git rebase --interactive HEAD~$commits
     git checkout devel
     #git pull --rebase origin devel || exit 1
     echo "== gw == publishing '$current' to 'devel'"
