@@ -64,6 +64,7 @@ function gw_publish_master() {
     git checkout $current
     git rebase origin/master || exit 1
     git checkout master
+    #git pull --rebase origin master || exit 1
     echo "== gw == publishing '$current' to 'master'"
     git rebase $current || exit 1
     echo "== gw == tagging 'master' with 'git tag $@'"
