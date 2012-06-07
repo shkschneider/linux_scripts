@@ -16,11 +16,11 @@ function usage() {
     echo "Usage: gw <COMMAND [...]>" >&2
     # commands starting with '-' make no changes on repository
     echo "" >&2
-    echo "       -h, --help   -- this help" >&2
-    echo "       -m, --model  -- this workflow's model" >&2
-    echo "       -w, --what   -- what to do now (branch-specific help)" >&2
-    echo "       -l, --list   -- relative statuses of all branches (graph)" >&2
-    echo "       -s, --status -- relative status of the current branch (checklist)" >&2
+    echo "       -h, --help            -- this help" >&2
+    echo "       -m, --model           -- this workflow's model" >&2
+    echo "       -w, --what            -- what to do now (branch-specific help)" >&2
+    echo "       -l, --list            -- relative statuses of all branches (graph)" >&2
+    echo "       -s, --status [BRANCH] -- relative status of a branch (default is current)" >&2
     echo "" >&2
     # those commands can make changes on local and/or remote
     echo "       init [--force]            -- init a repository compliant with this workflow" >&2
@@ -155,6 +155,7 @@ case $1 in
 	;;
     "-s"|"--status")
 	gw_check_repository
+        [ -n "$2" ] && current="$2"
 	gw_check_branch master
 	gw_check_branch devel
 	[ "$current" != "master" ] && [ "$current" != "devel" ] && gw_check_branch $current
