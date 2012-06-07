@@ -30,6 +30,7 @@ function usage() {
     echo "       n[ew-]r[elease] <TAG>     -- create a new private branch (from devel)" >&2
     echo "       n[ew-]f[eature] <ID-DESC> -- create a new private branch (from devel)" >&2
     echo "       n[ew-]b[ugfix] <ID-DESC>  -- create a new private branch (from devel)" >&2
+    # if squash or rebase failed, run 'rm -rf .git/rebase-*'
 }
 
 function gw_list() {
@@ -129,7 +130,6 @@ function gw_check_branch() {
 }
 
 function gw_check_repository() {
-    local tag_hash
     [ -z "$dir" ] && echo "gw: not a git repository" >&2 && exit 1
     [ -z "$(git remote)" ] && echo "gw: remote 'origin' does not exists" >&2 && exit 1
     [ -z "$(git tag -l 0)" ] && echo "gw: not a compliant repository" >&2 && exit 1
@@ -248,7 +248,7 @@ case $1 in
 	    "devel")
 		echo "Public branch: $current"
 		gw_status_branch origin/devel
-		gw_status_branch origin/master
+                gw_status_branch master
 		;;
 	    "hotfix"|"release")
 		echo "Private branch: $current (latest tag is '$tag')"
