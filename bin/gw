@@ -388,16 +388,18 @@ case $1 in
 	    "hotfix")                     parent="master" ;;
 	    "release"|"feature"|"bugfix") parent="devel" ;;
 	esac
+        branch="$type-$desc"
+        [ -n "$(git show-ref $branch)" ] && echo "gw: branch '$branch' already exists" >&2 && exit 1
+        [ "$type" = "release" ] && [ "$desc" = "$tag" ] && echo "gw: release '$desc' already exists as tag '$tag' [$(echo $tag_hash | cut -c1-7)]" >&2 && exit 1
 	git checkout $parent
 	echo "== gw == updating '$parent' from 'origin/$parent'"
-	#git fetch origin #$parent
 	#git rebase origin/$parent || exit 1
         git pull --rebase origin $parent || exit 1
         git pull || exit 1
-	echo "== gw == creating $type branch '$type-$desc' from '$parent'"
-	git checkout --track -b $type-$desc $parent
-	echo "== gw == you are on '$type-$desc' branch"
-        unset desc parent
+	echo "== gw == creating $type branch '$branch' from '$parent'"
+	git checkout --track -b $branch $parent
+	echo "== gw == you are on '$branch' branch"
+        unset desc parent branch
 	;;
     "-h"|"--help")
 	usage
