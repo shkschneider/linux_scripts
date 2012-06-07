@@ -161,7 +161,6 @@ case $1 in
 	[ "$current" != "master" ] && [ "$current" != "devel" ] && gw_check_branch $current
 	;;
     "-w"|"--what")
-        [ -z "$dir" ] && echo "gw: not a git repository" >&2 && exit 1
         gw_check_repository
         ;;
     "up"|"update"|"pu"|"publish"|"nh"|"new-hotfix"|"nr"|"new-release"|"nf"|"new-feature"|"nb"|"new-bugfix")
