@@ -1,8 +1,8 @@
 #!/bin/bash
 #
 # traffic -- mesures traffic on interfaces
-# Copyright (C) 2011  Alan SCHNEIDER
-#                     <shk.schneider[at]gmail.com>
+# Copyright (C) 2011-2012  Alan SCHNEIDER
+#                          <shk.schneider[at]gmail.com>
 #
 # This program comes with ABSOLUTELY NO WARRANTY.
 # This is free software, and you are welcome to redistribute it
@@ -11,32 +11,42 @@
 
 [ -z "`cat /proc/net/arp | egrep '^[0-9]'`" ] && echo "traffic: no network connection" >&2 && exit 1
 
-SCALE=$(echo "1024*1024" | bc -q)
-PREFERED="" # empty for auto (scale), B kB MB GB TB otherwise
+scale=$(echo "1024*1024" | bc -q)
+prefered="" # empty for auto (scale), B KB MB GB TB otherwise
 
 if [ $# -eq 0 ] ; then
-    INTERFACES=$(cat /proc/net/arp | sed -e '1d' | awk '{print $NF}' | uniq)
+    interfaces=$(cat /proc/net/arp | sed -e '1d' | awk '{print $NF}' | uniq)
 else
-    INTERFACES=$@
+    interfaces=$@
 fi
 
-for INTERFACE in $INTERFACES ; do
-    STREAM=$(cat /proc/net/dev | egrep "^ *$INTERFACE" | cut -d':' -f2-)
-    [ -z "$STREAM" ] && echo "$INTERFACE down" >&2 && continue
-    IN=$(echo $STREAM | cut -d' ' -f1)
-    OUT=$(echo $STREAM | cut -d' ' -f9)
-    IN_UNIT="B"
-    OUT_UNIT="B"
-    while [ $IN -gt $SCALE -a -z "$PREFERED" ] || [ -n "$PREFERED" -a $IN_UNIT != "$PREFERED" -a $IN -gt 0 ] ; do
-	IN=$(($IN / 1024))
-	case $IN_UNIT in B) IN_UNIT="kB" ;; kB) IN_UNIT="MB" ;; MB) IN_UNIT="GB" ;; GB) IN_UNIT="TB" ;; TB) IN_UNIT="*B" ;; esac
+for interface in $interfaces ; do
+    stream=$(cat /proc/net/dev | egrep "^ *$interface" | cut -d':' -f2-)
+    [ -z "$stream" ] && echo "$interface down" >&2 && continue
+    in=$(echo $stream | cut -d' ' -f1)
+    out=$(echo $stream | cut -d' ' -f9)
+    in_unit="B"
+    out_unit="B"
+    while [ $in -gt $scale -a -z "$prefered" ] || [ -n "$prefered" -a $in_unit != "$prefered" -a $in -gt 0 ] ; do
+	in=$(($in / 1024))
+	case $in_unit in
+            B) in_unit="KB" ;;
+            KB) in_unit="MB" ;;
+            MB) in_unit="GB" ;;
+            GB) in_unit="TB" ;;
+            TB) in_unit="*B" ;; esac
     done
-    while [ $OUT -gt $SCALE -a -z "$PREFERED" ] || [ -n "$PREFERED" -a $OUT_UNIT != "$PREFERED" -a $OUT -gt 0 ] ; do
-	OUT=$(($OUT / 1024))
-	case $OUT_UNIT in B) OUT_UNIT="kB" ;; kB) OUT_UNIT="MB" ;; MB) OUT_UNIT="GB" ;; GB) OUT_UNIT="TB" ;; TB) OUT_UNIT="*B" ;; esac
+    while [ $out -gt $scale -a -z "$prefered" ] || [ -n "$prefered" -a $out_unit != "$prefered" -a $out -gt 0 ] ; do
+	out=$(($out / 1024))
+	case $out_unit in
+            B) out_unit="KB" ;;
+            KB) out_unit="MB" ;;
+            MB) out_unit="GB" ;;
+            GB) out_unit="TB" ;;
+            TB) out_unit="*B" ;; esac
     done
-    [ $OUT -gt 0 ] && RATIO=$(echo "scale=2;$IN/$OUT" | bc -q) || RATIO="0.00"
-    echo "$INTERFACE up $IN $IN_UNIT $OUT $OUT_UNIT $RATIO"
+    [ $out -gt 0 ] && ratio=$(echo "scale=2;$in/$out" | bc -q) || ratio="0.00"
+    echo "$interface up $in $in_unit $out $out_unit $ratio"
 done
 
 # EOF

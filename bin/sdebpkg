@@ -15,8 +15,8 @@
 # Please read:	<http://www.debian.org/doc/debian-policy/>
 #
 
-COPYRIGHTS=$(find /usr/share/debhelper/dh_make/licenses -maxdepth 1 -type f | rev | cut -d'/' -f1 | rev | tr "\n" " ")
-ARCHS=$(dpkg-architecture -L | grep -v '-' | tr "\n" " ")"all"
+copyrights=$(find /usr/share/debhelper/dh_make/licenses -maxdepth 1 -type f | rev | cut -d'/' -f1 | rev | tr "\n" " ")
+archs=$(dpkg-architecture -L | grep -v '-' | tr "\n" " ")"all"
 function usage() {
     echo "Usage: sdebpkg [options] <dir>" >&2
     echo "       prepare:" >&2
@@ -26,7 +26,7 @@ function usage() {
     echo "         {-x|--extras}                 keep examples files form dh_make" >&2
     echo "       build:" >&2
     echo "         {-v|--verify}                 check debian policy" >&2
-    echo "         {-t|--tarball}                 keep .tar.gz" >&2
+    echo "         {-t|--tarball}                keep .tar.gz" >&2
     echo "         {-k|--keep-all}               keep everything (implies --tar-gz)" >&2
     echo "         {-q|--quiet}                  less verbose packaging [be careful]" >&2
     echo "       any:" >&2
@@ -39,166 +39,166 @@ function usage() {
 }
 
 function pause() {
-    [ $FORCE -eq 1 ] && return
-    if [ $INTERACTIVE -eq 1 ] || [ -n "$2" -a "_$2" = "_force" ] ; then
+    [ $force -eq 1 ] && return
+    if [ $interactive -eq 1 ] || [ -n "$2" -a "_$2" = "_force" ] ; then
 	[ -n "$1" -a "$1" = "3" ] && echo -n "   "
 	echo -n "Hit [Enter] to continue, anything to exit: "
-	TTY=$(stty -g)
+	tty=$(stty -g)
 	stty -icanon -echo
-	KEY=$(head -c1)
+	key=$(head -c1)
 	stty icanon echo
-	echo $KEY
-	[ -n "$KEY" ] && exit 0
+	echo $key
+	[ -n "$key" ] && exit 0
     fi
 }
 
 # Options (1/4): Defaults
-DEBFULLNAME=${DEBFULLNAME:-`whoami`}
-DEBEMAIL=${DEBEMAIL:-`whoami`@`hostname -f`}
-DEBCOPYRIGHT="gpl3"
-DEBARCH=$(dpkg --print-architecture)
+debfullname=${debfullname:-`whoami`}
+debemail=${debemail:-`whoami`@`hostname -f`}
+debcopyright="gpl3"
+debarch=$(dpkg --print-architecture)
 # Default is semi-interactive (prompt on big errors)
-INTERACTIVE=0 ; FORCE=0 ; RESET=0 ; SUMMARIZE=0 ; EXTRAS=0 ; VERIFY=0 ; CHANGE=0 ; TARBALL=0 ; KEEP=0 ; QUIET=0
+interactive=0 ; force=0 ; reset=0 ; summarize=0 ; extras=0 ; verify=0 ; change=0 ; tarball=0 ; keep=0 ; quiet=0
 
 # Options (2/4): Configuration file
 if [ -f ~/.sdebpkg ] ; then
-    E=0
+    e=0
     if [ ! -r ~/.sdebpkg ] ; then
 	echo "E: ~/.sdebpkg: Permission denied" >&2
     else
-	L=1
-	while read LINE ; do
-	    if [ -n "`echo $LINE | egrep -v '^\s*#'`" ] ; then
-		LINE=$(echo $LINE | sed -r 's/^\s+//g' | sed -r 's/\s+$//g')
-	    LINE=$(echo $LINE | cut -d'#' -f1)
-	    VAR=$(echo $LINE | cut -d':' -f1)
-	    VALUE=$(echo $LINE | cut -d':' -f2- | sed -r 's/^\s+//g')
-	    [ -z "$VAR" -o -z "$VALUE" ] && echo "E: ~/.sdebpkg l.$L: Bad format (expected: Var: Value)" >&2
-	    case $VAR in
-		"Fullname")	DEBFULLNAME="$VALUE" ;;
-		"Email")	DEBEMAIL="$VALUE" ;;
-		"Copyright")	DEBCOPYRIGHT="$VALUE" ;;
-		"Architecture")	DEBARCH="$VALUE" ;;
-		"Priority")	DEBPRIORITY="$VALUE" ;;
-		"Section")	DEBSECTION="$VALUE" ;;
-		*)		echo "E: ~/.sdebpkg l.$L: Unknown var '$VAR'" >&2 && E=1 ;;
-	    esac
+	l=1
+	while read line ; do
+	    if [ -n "`echo $line | egrep -v '^\s*#'`" ] ; then
+		line=$(echo $line | sed -r 's/^\s+//g' | sed -r 's/\s+$//g')
+	        line=$(echo $line | cut -d'#' -f1)
+	        var=$(echo $line | cut -d':' -f1)
+	        value=$(echo $line | cut -d':' -f2- | sed -r 's/^\s+//g')
+	        [ -z "$var" -o -z "$value" ] && echo "E: ~/.sdebpkg l.$l: Bad format (expected: Var: Value)" >&2
+	        case $var in
+		    "Fullname")	     debfullname="$value" ;;
+		    "Email")	     debemail="$value" ;;
+		    "Copyright")     debcopyright="$value" ;;
+		    "Architecture")  debarch="$value" ;;
+		    "Priority")      debpriority="$value" ;;
+		    "Section")       debsection="$value" ;;
+		    *)		echo "E: ~/.sdebpkg l.$l: Unknown var '$var'" >&2 && E=1 ;;
+	        esac
 	    fi
-	    L=$(($L + 1))
+	    l=$(($l + 1))
 	done < ~/.sdebpkg
     fi
-    if [ $E -ne 0 ] ; then
+    if [ $e -ne 0 ] ; then
 	echo "W: Unrecognized options in configuration file"
     fi
 fi
 
 # Options (3/4): Command line parameters
 if [ $# -gt 0 ] ; then
-    ARGC=0
-    while [ $ARGC -lt $# ] ; do
-	for ARGV in $@ ; do
+    argc=0
+    while [ $argc -lt $# ] ; do
+	for argv in $@ ; do
 	    case $1 in
-		"-c"|"--copyright")	[ -z "$2" ] && usage && exit 1 ; DEBCOPYRIGHT=$2 ; shift ; shift ;;
-		"-a"|"--architecture")	[ -z "$2" ] && usage && exit 1 ; DEBARCH=$2 ; shift ; shift ;;
-		"-r"|"--reset")		RESET=1 ; shift ;;
-		"-s"|"--summarize")	SUMMARIZE=1 ; shift ;;
-		"-x"|"--extras")	EXTRAS=1 ; shift ;;
-		"-v"|"--verify")	VERIFY=1 ; shift ;;
-		"-t"|"--tarball")	TARBALL=1 ; shift ;;
-		"-k"|"--keep-all")	KEEP=1 ; TARBALL=1 ; shift ;;
-		"-q"|"--quiet")		QUIET=1 ; shift ;;
-		"-i"|"--interactive")	INTERACTIVE=1 ; shift ;;
-		"-f"|"--force")		FORCE=1 ; shift ;;
-		"--list-copyrights")	echo "$COPYRIGHTS" && exit 0 ;;
-		"--list-architectures")	echo "$ARCHS" && exit 0 ;;
+		"-c"|"--copyright")	[ -z "$2" ] && usage && exit 1 ; debcopyright=$2 ; shift ; shift ;;
+		"-a"|"--architecture")	[ -z "$2" ] && usage && exit 1 ; debarch=$2 ; shift ; shift ;;
+		"-r"|"--reset")		reset=1 ; shift ;;
+		"-s"|"--summarize")	summarize=1 ; shift ;;
+		"-x"|"--extras")	extras=1 ; shift ;;
+		"-v"|"--verify")	verify=1 ; shift ;;
+		"-t"|"--tarball")	tarball=1 ; shift ;;
+		"-k"|"--keep-all")	keep=1 ; tarball=1 ; shift ;;
+		"-q"|"--quiet")		quiet=1 ; shift ;;
+		"-i"|"--interactive")	interactive=1 ; shift ;;
+		"-f"|"--force")		force=1 ; shift ;;
+		"--list-copyrights")	echo "$copyrights" && exit 0 ;;
+		"--list-architectures")	echo "$archs" && exit 0 ;;
 		"--help")		usage && exit 0 ;;
 		"--version")		cat "`readlink -f "$0"`" | egrep '^#\s+v[0-9]' | sed -r 's/^#\s+//' && exit 0 ;;
 		"--author")		head -5 "`readlink -f "$0"`" | tail -2 && exit 0 ;;
 		*)			break ;;
 	    esac
 	done
-	ARGC=$(($ARGC + 1))
+	argc=$(($argc + 1))
     done
 fi
 
 # Options (4/4)
-export DEBFULLNAME DEBEMAIL
-OPTS="#"
-[ $INTERACTIVE -eq 1 ] && OPTS="${OPTS}interactive#"
-[ $RESET -eq 1 ] && OPTS="${OPTS}reset#"
-[ $SUMMARIZE -eq 1 ] && OPTS="${OPTS}summarize#"
-[ $EXTRAS -eq 1 ] && OPTS="${OPTS}extras#"
-[ $VERIFY -eq 1 ] && OPTS="${OPTS}verify#"
-[ $TARBALL -eq 1 ] && OPTS="${OPTS}tarball#"
-[ $KEEP -eq 1 ] && OPTS="${OPTS}keep#"
-[ $QUIET -eq 1 ] && OPTS="${OPTS}quiet#"
+export debfullname debemail
+opts="#"
+[ $interactive -eq 1 ] && opts="${opts}interactive#"
+[ $reset -eq 1 ] && opts="${opts}reset#"
+[ $summarize -eq 1 ] && opts="${opts}summarize#"
+[ $extras -eq 1 ] && opts="${opts}extras#"
+[ $verify -eq 1 ] && opts="${opts}verify#"
+[ $tarball -eq 1 ] && opts="${opts}tarball#"
+[ $keep -eq 1 ] && opts="${opts}keep#"
+[ $quiet -eq 1 ] && opts="${opts}quiet#"
 
 # Usage
 [ $# -lt 1 ] && echo "E: Too few arguments" >&2 && usage && exit 1
 [ $# -gt 1 ] && echo "E: Too many arguments" >&2 && usage && exit 1
 
 # Checks (1/3): Options
-F=0 ; for ARCH in $ARCHS ; do [ $ARCH = "$DEBARCH" ] && F=1 && break ; done
-[ $F -eq 0 ] && echo "E: $DEBARCH: Invalid architecture" >&2 && exit 1
-F=0 ; for COPYRIGHT in $COPYRIGHTS ; do [ $COPYRIGHT = "$DEBCOPYRIGHT" ] && F=1 && break ; done
-if [ $F -eq 0 ] ; then
-    echo "W: Unknown copyright to dh_make ($DEBCOPYRIGHT)" >&2
+f=0 ; for arch in $archs ; do [ $arch = "$debarch" ] && f=1 && break ; done
+[ $f -eq 0 ] && echo "E: $debarch: Invalid architecture" >&2 && exit 1
+f=0 ; for copyright in $copyrights ; do [ $copyright = "$debcopyright" ] && F=1 && break ; done
+if [ $f -eq 0 ] ; then
+    echo "W: Unknown copyright to dh_make ($debcopyright)" >&2
     echo "   Will use the default 'gpl' license instead" >&2
     echo "   So MAKE SURE to edit debian/copyright with your copyrights" >&2
-    DEBCOPYRIGHT="gpl"
+    debcopyright="gpl"
     pause 3 force
 fi
 
 # Checks (2/3): Dir
-DIR=$(echo $1 | sed -r 's#/$##')
-[ -n "`echo $DIR | grep ' '`" ] && echo "E: $DIR: Cannot have spaces in path nor name" >&2 && exit 1
-[ ! -e "$DIR" ] && echo "E: $DIR: No such file or directory" >&2 && exit 1
-[ ! -d "$DIR" ] && echo "E: $DIR: Not a directory" >&2 && exit 1
-[ ! -r "$DIR" -o ! -w "$DIR" ] && echo "E: $DIR: Permission denied" >&2 && exit 1
-BASEDIR=$(basename "$DIR")
-DIRDIR=$(dirname "$DIR")
-[ -z "`echo $BASEDIR | egrep '^[a-z0-9\-]+\-[0-9\.]+$'`" ] && echo "E: $BASEDIR: Bad format (expected: pkgename-pkgversion)" >&2 && exit 1
+dir=$(echo $1 | sed -r 's#/$##')
+[ -n "`echo $dir | grep ' '`" ] && echo "E: $dir: Cannot have spaces in path nor name" >&2 && exit 1
+[ ! -e "$dir" ] && echo "E: $dir: No such file or directory" >&2 && exit 1
+[ ! -d "$dir" ] && echo "E: $dir: Not a directory" >&2 && exit 1
+[ ! -r "$dir" -o ! -w "$dir" ] && echo "E: $dir: Permission denied" >&2 && exit 1
+basedir=$(basename "$dir")
+dirdir=$(dirname "$dir")
+[ -z "`echo $basedir | egrep '^[a-z0-9\-]+\-[0-9\.]+$'`" ] && echo "E: $basedir: Bad format (expected: pkgename-pkgversion)" >&2 && exit 1
 
 # Checks (3/3): Makefile
-if [ -f "$DIR/Makefile" ] ; then
-    MAKEFILE=1
-    E=0
-    [ -z "`egrep '^all:' "$DIR/Makefile"`" ] && E=1 && echo "E: $DIR/Makefile: No target 'all'" >&2 && exit 1
-    [ -z "`egrep '^install:' "$DIR/Makefile"`" ] && E=1 && echo "E: $DIR/Makefile: No target 'install'" >&2
-    [ -z "`egrep '^clean:' "$DIR/Makefile"`" ] && E=1 && echo "W: $DIR/Makefile: No target 'clean'" >&2
-    [ -z "`egrep '^distclean:' "$DIR/Makefile"`" ] && E=1 && echo "W: $DIR/Makefile: No target 'distclean'" >&2
-    [ $E -ne 0 ] && pause 0
+if [ -f "$dir/Makefile" ] ; then
+    makefile=1
+    e=0
+    [ -z "`egrep '^all:' "$dir/Makefile"`" ] && e=1 && echo "E: $dir/Makefile: No target 'all'" >&2 && exit 1
+    [ -z "`egrep '^install:' "$dir/Makefile"`" ] && e=1 && echo "E: $dir/Makefile: No target 'install'" >&2
+    [ -z "`egrep '^clean:' "$dir/Makefile"`" ] && e=1 && echo "W: $dir/Makefile: No target 'clean'" >&2
+    [ -z "`egrep '^distclean:' "$dir/Makefile"`" ] && e=1 && echo "W: $dir/Makefile: No target 'distclean'" >&2
+    [ $e -ne 0 ] && pause 0
 else
-    MAKEFILE=0
-    [ -z "`find \"$DIR\" -maxdepth 1 -executable`" ] && echo "W: No Makefile nor any executable file found" >&2
+    makefile=0
+    [ -z "`find \"$dir\" -maxdepth 1 -executable`" ] && echo "W: No Makefile nor any executable file found" >&2
     pause 0
 fi
 
 # Summary
-PKG=$(basename "$DIR" | rev | cut -d'-' -f2- | rev)
-VER=$(basename "$DIR" | rev | cut -d'-' -f1 | rev)
-[ -f "$DIR/debian/changelog" ] && REL=$(head -1 "$DIR/debian/changelog" | awk '{print $2}' | tr -d "[\(\)]" | cut -d'-' -f2) || REL=1
-DEB="${PKG}_${VER}-${REL}_${DEBARCH}.deb"
-[ -f "$DEB" ] && rm -f "$DEB"
+pkg=$(basename "$dir" | rev | cut -d'-' -f2- | rev)
+ver=$(basename "$dir" | rev | cut -d'-' -f1 | rev)
+[ -f "$dir/debian/changelog" ] && rel=$(head -1 "$dir/debian/changelog" | awk '{print $2}' | tr -d "[\(\)]" | cut -d'-' -f2) || rel=1
+deb="${pkg}_${ver}-${rel}_${debarch}.deb"
+[ -f "$deb" ] && rm -f "$deb"
 echo " * Working directory: `readlink -f .`"
-echo " * Source directory: `readlink -f \"$DIR\"`"
-echo " * Package: $PKG v$VER-$REL [$DEBARCH] under License $DEBCOPYRIGHT"
-echo " * Maintainer: $DEBFULLNAME <$DEBEMAIL>"
-echo " * Options:"$(echo $OPTS | tr "#" " ")
+echo " * Source directory: `readlink -f \"$dir\"`"
+echo " * Package: $pkg v$ver-$rel [$debarch] under License $debcopyright"
+echo " * Maintainer: $debfullname <$debemail>"
+echo " * Options:"$(echo $opts | tr "#" " ")
 
-[ $SUMMARIZE -eq 1 ] && exit 0
-[ $INTERACTIVE -eq 1 ] && pause 3
-for FILE in $DIRDIR/${PKG}_${VERSION}* ; do rm -f $FILE ; done
-WPWD=$(pwd)
-cd "$DIR"
+[ $summarize -eq 1 ] && exit 0
+[ $interactive -eq 1 ] && pause 3
+for file in $dirdir/${pkg}_${version}* ; do rm -f $file ; done
+wpwd=$(pwd)
+cd "$dir"
 echo
 
 # Reset
 # sdeb [--reset] ...
-if [ $RESET -eq 1 ] ; then
+if [ $reset -eq 1 ] ; then
     echo " * Reset"
     if [ -d "debian" ] ; then
-	while read FILE ; do echo "   $FILE" ; done < <(find "debian" -maxdepth 1)
+	while read file ; do echo "   $file" ; done < <(find "debian" -maxdepth 1)
 	rm -rf "debian"
     else
 	echo "W: debian directory not found" >&2
@@ -212,46 +212,46 @@ fi
 # sdeb [--reset] [-c|-a|-x] <DIR>
 if [ ! -d "debian" ] ; then
     echo " * Prepare"
-    case $DEBARCH in
-	"all")	echo | dh_make --copyright "$DEBCOPYRIGHT" --createorig -i > /dev/null ;;
-	*)	echo | dh_make --copyright "$DEBCOPYRIGHT" --createorig -s > /dev/null
-	        sed -i "s/^Architecture: any/Architecture: $DEBARCH/" debian/control ;;
+    case $debarch in
+	"all")	echo | dh_make --copyright "$debcopyright" --createorig -i > /dev/null ;;
+	*)	echo | dh_make --copyright "$debcopyright" --createorig -s > /dev/null
+	        sed -i "s/^Architecture: any/Architecture: $debarch/" debian/control ;;
     esac
     [ ! -d debian ] && echo "E: dh_make failed" >&2 && exit 1
     echo "   Cleanup..."
-    [ -d "../$PKG-$VER.orig" ] && rm -rf "../$PKG-$VER.orig"
+    [ -d "../$pkg-$ver.orig" ] && rm -rf "../$pkg-$ver.orig"
     mkdir essentials
     mv debian/{changelog,compat,rules,control,copyright} essentials
     mv debian/postinst.ex essentials/postinst
     mv debian/prerm.ex essentials/premrm
-    if [ $EXTRAS -eq 1 ] ; then
+    if [ $extras -eq 1 ] ; then
 	echo "   Extras..."
 	mv debian/{manpage.1.ex,README} essentials 2>/dev/null
-	mv debian/{$PKG.cron.d.ex,init.d.ex} essentials 2>/dev/null
+	mv debian/{$pkg.cron.d.ex,init.d.ex} essentials 2>/dev/null
 	mv debian/{postrm.ex,preinst.ex} essentials 2>/dev/null
     fi
     rm -rf debian
     mv essentials debian
     echo "   Fixes..."
-    echo "./$PKG.d/* /" > debian/$PKG.install
-    mkdir -p $PKG.d
-    mkdir -p $PKG.d/usr/share/doc/$PKG/
-    touch $PKG.d/usr/share/doc/$PKG/copyright
-    while read FILE ; do echo "   $FILE" ; done < <(find debian -maxdepth 1)
+    echo "./$pkg.d/* /" > debian/$pkg.install
+    mkdir -p $pkg.d
+    mkdir -p $pkg.d/usr/share/doc/$pkg/
+    touch $pkg.d/usr/share/doc/$pkg/copyright
+    while read file ; do echo "   $file" ; done < <(find debian -maxdepth 1)
     sed -r -i '/^\s*#/d' debian/control
     sed -i 's/Priority: extra/Priority: optional/' debian/control
     chmod a+x debian/{rules,post,pre}* 2>/dev/null
     mkdir -p debian/source
     [ ! -f "debian/source/format" ] && echo "1.0" > debian/source/format
-    STDV=$(apt-cache show debian-policy | grep Version | cut -d' ' -f2)
-    sed -r -i "s/Standards-Version: [0-9\.]+/Standards-Version: $STDV/g" debian/control
+    stdv=$(apt-cache show debian-policy | grep Version | cut -d' ' -f2)
+    sed -r -i "s/Standards-Version: [0-9\.]+/Standards-Version: $stdv/g" debian/control
     touch debian/.nochanges
     # Comments
-    if [ $QUIET -eq 0 ] ; then
+    if [ $quiet -eq 0 ] ; then
 	echo
-	echo "I: To install files on the system, put them in ./$PKG.d" >&2
-	echo "   Think about it when writing a Makefile: use \$DESTDIR ?= ./$PKG.d" >&2
-	echo "   Use ./$PKG.d as the root directory \`/'" >&2
+	echo "I: To install files on the system, put them in ./$pkg.d" >&2
+	echo "   Think about it when writing a Makefile: use \$destdir ?= ./$pkg.d" >&2
+	echo "   Use ./$pkg.d as the root directory \`/'" >&2
 	echo "W: Do not forget to edit:" >&2
 	echo "   debian/copyright" >&2
 	echo "   debian/watch" >&2
@@ -261,10 +261,10 @@ if [ ! -d "debian" ] ; then
 	echo "   debian/prerm" >&2
 	echo "   debian/rules" >&2
 	echo "   debian/changelog" >&2
-	echo "W: Put content copyrights in debian/$PKG/usr/share/doc/$PKG/copyright" >&2
+	echo "W: Put content copyrights in debian/$pkg/usr/share/doc/$pkg/copyright" >&2
     fi
-    [ $EXTRAS -eq 1 ] && echo "W: You should edit and rename debian/*.ex or remove them" >&2
-    [ $F -eq 0 ] && echo "W: REMEMBER to edit debian/copyright with your copyrights" >&2
+    [ $extras -eq 1 ] && echo "W: You should edit and rename debian/*.ex or remove them" >&2
+    [ $f -eq 0 ] && echo "W: REMEMBER to edit debian/copyright with your copyrights" >&2
     exit 0
 fi
 
@@ -272,56 +272,56 @@ fi
 # sdeb [-v|-t|-k] <DIR>
 if [ -d "debian" ] ; then
     echo " * Build"
-    [ ! -f "debian/control" ] && echo "E: $DIR/debian/control: No such file or directory" >&2 && exit 1
-    DEBARCH=$(egrep '^Architecture:' debian/control | cut -d' ' -f2-)
+    [ ! -f "debian/control" ] && echo "E: $dir/debian/control: No such file or directory" >&2 && exit 1
+    debarch=$(egrep '^Architecture:' debian/control | cut -d' ' -f2-)
     if [ -f "debian/.nochanges" ] ; then
 	rm -f debian/.nochanges
 	/etc/alternatives/editor debian/changelog || pause 3
     else
 	debchange -i
     fi
-    NEW_VER=$(head -1 debian/changelog | awk '{print $2}' | tr -d "[\(\)]" | cut -d'-' -f1)
-    NEW_REL=$(head -1 debian/changelog | awk '{print $2}' | tr -d "[\(\)]" | cut -d'-' -f2)
-    DEB="${PKG}_${NEW_VER}-${NEW_REL}_${DEBARCH}.deb"
-    echo "   DEB: `readlink -f . `/$DEB"
-    DIR=$(echo $DIR | sed "s/${PKG}-${VER}/${PKG}-${NEW_VER}/")
-    cd "$DIR"
-    #rm -f $DIR/debian/*.ex
-    [ $VERIFY -eq 1 -a -f "./configure" ] && echo "   Verifying..." && dpkg-depcheck -d ./configure
-    if [ $QUIET -eq 1 ] ; then
-	case $DEBARCH in
+    new_ver=$(head -1 debian/changelog | awk '{print $2}' | tr -d "[\(\)]" | cut -d'-' -f1)
+    new_rel=$(head -1 debian/changelog | awk '{print $2}' | tr -d "[\(\)]" | cut -d'-' -f2)
+    deb="${pkg}_${new_ver}-${new_rel}_${debarch}.deb"
+    echo "   DEB: `readlink -f . `/$deb"
+    dir=$(echo $dir | sed "s/${pkg}-${ver}/${pkg}-${new_ver}/")
+    cd "$dir"
+    #rm -f $dir/debian/*.ex
+    [ $verify -eq 1 -a -f "./configure" ] && echo "   Verifying..." && dpkg-depcheck -d ./configure
+    if [ $quiet -eq 1 ] ; then
+	case $debarch in
 	    "all")	dpkg-buildpackage -uc -us -rfakeroot -sd | egrep -v '^(dpkg-|\s*dh_)' ;;
-	    *)		dpkg-buildpackage -uc -us -rfakeroot -sd -a$DEBARCH | egrep -v '^(dpkg-|\s*dh_)' ;;
+	    *)		dpkg-buildpackage -uc -us -rfakeroot -sd -a$debarch | egrep -v '^(dpkg-|\s*dh_)' ;;
 	esac
     else
-	case $DEBARCH in
+	case $debarch in
 	    "all")	dpkg-buildpackage -uc -us -rfakeroot -sd ;;
-	    *)		dpkg-buildpackage -uc -us -rfakeroot -sd -a$DEBARCH ;;
+	    *)		dpkg-buildpackage -uc -us -rfakeroot -sd -a$debarch ;;
 	esac
     fi
-    rm -f $DIR/debian/$PKG.* 2>/dev/null
-    cd "$WPWD"
-    [ ! -f "$DIRDIR/$DEB" ] && echo "W: $DEB: File could not be found..." >&2 && exit 1
-    [ $VERIFY -eq 1 ] && echo "   Verifying..." && lintian -vi "$DIRDIR/$DEB" | egrep -v '^N:'
-    MKTEMP=$(mktemp -d)
-    while read FILE ; do
-	case $FILE in
-	    *deb)	mv $FILE $MKTEMP ;;
-	    *tar.gz)	[ $TARBALL -eq 1 ] && mv $FILE $MKTEMP ;;
-	    *)		[ $KEEP -eq 1 ] && mv $FILE $MKTEMP ;;
+    rm -f $dir/debian/$pkg.* 2>/dev/null
+    cd "$wpwd"
+    [ ! -f "$dirdir/$deb" ] && echo "W: $deb: File could not be found..." >&2 && exit 1
+    [ $verify -eq 1 ] && echo "   Verifying..." && lintian -vi "$dirdir/$deb" | egrep -v '^N:'
+    mktemp=$(mktemp -d)
+    while read file ; do
+	case $file in
+	    *deb)	mv $file $mktemp ;;
+	    *tar.gz)	[ $tarball -eq 1 ] && mv $file $mktemp ;;
+	    *)		[ $keep -eq 1 ] && mv $file $mktemp ;;
 	esac
-    done < <(find "$DIRDIR" -maxdepth 1 -name "${PKG}_${VER}*")
-    for FILE in $DIRDIR/${PKG}_${VERSION}* ; do rm -f $FILE ; done
-    mv $MKTEMP/* .
-    rmdir $MKTEMP
+    done < <(find "$dirdir" -maxdepth 1 -name "${pkg}_${ver}*")
+    for file in $dirdir/${pkg}_${version}* ; do rm -f $file ; done
+    mv $mktemp/* .
+    rmdir $mktemp
     echo
-    while read FILE ; do echo "   $FILE" ; done < <(find $DIR/$PKG.d -type f | sed -r "s#^$DIR/$PKG.d##g")
+    while read file ; do echo "   $file" ; done < <(find $dir/$pkg.d -type f | sed -r "s#^$dir/$pkg.d##g")
     echo
     echo -n "Package: "
-    dpkg-deb --show "$DEB" | sed -r 's/\s+/ v/g'
-    while read FILE ; do echo "   $FILE" ; done < <(find . -maxdepth 1 -name "${PKG}_${VER}-${REL}[_.]*")
-    readlink -f "$DEB"
-    dpkg-deb --contents "$DEB"
+    dpkg-deb --show "$deb" | sed -r 's/\s+/ v/g'
+    while read file ; do echo "   $file" ; done < <(find . -maxdepth 1 -name "${pkg}_${ver}-${rel}[_.]*")
+    readlink -f "$deb"
+    dpkg-deb --contents "$deb"
 fi
 
 # EOF

@@ -17,20 +17,20 @@ function usage() {
 [ $# -ne 1 ] && usage
 
 # version
-VER="$1"
-[ -z "$VER" ] && VER="0.0"
-[ ${#VER} -eq 1 ] && VER="$VER.0"
+ver="$1"
+[ -z "$ver" ] && ver="0.0"
+[ ${#ver} -eq 1 ] && ver="$ver.0"
 
 # separator
-SEP=$(echo $VER | sed -r 's/^.+(.)[0-9\.]+$/\1/')
-CHECK=$(echo $VER | tr -d "[0-9]")
-[ ${#VER} -eq ${#CHECK} ] && echo "bump: no version number recognized" >&2 && usage
+sep=$(echo $ver | sed -r 's/^.+(.)[0-9\.]+$/\1/')
+check=$(echo $ver | tr -d "[0-9]")
+[ ${#ver} -eq ${#check} ] && echo "bump: no version number recognized" >&2 && usage
 
 # bump
-if [ ${#SEP} -eq 0 ] ; then
-    echo "$((${VER}+1))"
-elif [ ${#SEP} -eq 1 ] ; then
-    echo "${VER%${SEP}*}${SEP}$((${VER##*${SEP}}+1))"
+if [ ${#sep} -eq 0 ] ; then
+    echo "$((${ver}+1))"
+elif [ ${#sep} -eq 1 ] ; then
+    echo "${ver%${sep}*}${sep}$((${ver##*${sep}}+1))"
 else
     echo "bump: unrecognized format" >&2 && usage
 fi

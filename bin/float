@@ -1,8 +1,8 @@
 #!/bin/bash
 #
 # float -- makes bash handle float numbers
-# Copyright (C) 2011  Alan SCHNEIDER
-#                     <shk.schneider[at]gmail.com>
+# Copyright (C) 2011-2012  Alan SCHNEIDER
+#                          <shk.schneider[at]gmail.com>
 #
 # This program comes with ABSOLUTELY NO WARRANTY.
 # This is free software, and you are welcome to redistribute it
@@ -41,8 +41,8 @@ function float_cond()
 [ $# -eq 0 ] && echo "Usage: float <operation [...]>" >&2 && exit 1
 
 set -f
-for ARGV in $@ ; do
-    echo $(float_eval $ARGV)
+for argv in $@ ; do
+    echo $(float_eval $argv)
 done
 
 # EOF

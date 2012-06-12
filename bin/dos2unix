@@ -1,8 +1,8 @@
 #!/bin/bash
 #
 # dos2unix - change Dos/CRLF to Unix/LF
-# Copyright (C) 2011  Alan SCHNEIDER
-#                     <shk.schneider[at]gmail.com>
+# Copyright (C) 2011-2012  Alan SCHNEIDER
+#                          <shk.schneider[at]gmail.com>
 #
 # This program comes with ABSOLUTELY NO WARRANTY.
 # This is free software, and you are welcome to redistribute it
@@ -13,15 +13,15 @@ set -f
 
 [ $# -eq 0 ] && echo "Usage: dos2unix <file [...]>" >&2 && exit 1
 
-for ARGV in $@ ; do
-    FILE=$(readlink -f "$ARGV")
-    [ ! -f "$FILE" ] && echo "dos2unix: $FILE: no such file or directory" >&2 && continue
-    [ ! -r "$FILE" -o ! -w "$FILE" ] && echo "dos2unix: $FILE: permission denied" >&2 && continue
-    TMP=$(tempfile)
-    echo " * $FILE -> $TMP -> $FILE"
-    tr -d '\r' < "$FILE" > "$TMP"
-    cat "$TMP" > "$FILE"
-    rm -f "$TMP"
+for argv in $@ ; do
+    file=$(readlink -f "$argv")
+    [ ! -f "$file" ] && echo "dos2unix: $file: no such file or directory" >&2 && continue
+    [ ! -r "$file" ] || [ ! -w "$file" ] && echo "dos2unix: $file: permission denied" >&2 && continue
+    tmp=$(tempfile)
+    echo " * $file -> $tmp -> $file"
+    tr -d '\r' < "$file" > "$tmp"
+    cat "$tmp" > "$file"
+    rm -f "$tmp"
 done
 
 # EOF

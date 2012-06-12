@@ -1,31 +1,32 @@
 #!/bin/bash
 #
 # realname -- realname of a user
-# Copyright (C) 2011  Alan SCHNEIDER
-#                     <shk.schneider[at]gmail.com>
+# Copyright (C) 2011-2012  Alan SCHNEIDER
+#                          <shk.schneider[at]gmail.com>
 #
 # This program comes with ABSOLUTELY NO WARRANTY.
 # This is free software, and you are welcome to redistribute it
 # under certain conditions.
 #
 
-[ ! -f $PASSWD ] && echo "realname: /etc/passwd: no such file or directory" >&2 && exit 1
-[ ! -r $PASSWD ] && echo "realname: /etc/passwd: permission denied" >&2 && exit 1
+passwd="/etc/passwd"
+[ ! -f $passwd ] && echo "realname: $passwd: no such file or directory" >&2 && exit 1
+[ ! -r $passwd ] && echo "realname: $passwd: permission denied" >&2 && exit 1
 
 if [ $# -eq 0 ] ; then
-    LOGIN=$(whoami)
-    REALNAME=$(egrep "^$LOGIN:" /etc/passwd)
-    [ -z "$REALNAME" ] && echo "realname: no such user '$LOGIN'" >&2 && exit 1
-    REALNAME=$(echo $REALNAME | cut -d':' -f5 | cut -d',' -f1)
-    [ -z "$REALNAME" ] && REALNAME=$LOGIN
-    echo "$LOGIN is $REALNAME"
+    login=$(whoami)
+    realname=$(egrep "^$login:" /etc/passwd)
+    [ -z "$realname" ] && echo "realname: no such user '$login'" >&2 && exit 1
+    realname=$(echo $realname | cut -d':' -f5 | cut -d',' -f1)
+    [ -z "$realname" ] && realname=$login
+    echo "$login is $realname"
 else
-    for LOGIN in $@ ; do
-	REALNAME=$(egrep "^$LOGIN" /etc/passwd)
-	[ -z "$REALNAME" ] && echo "realname: no such user '$LOGIN'" >&2 && continue
-	REALNAME=$(echo $REALNAME | cut -d':' -f5 | cut -d',' -f1)
-	[ -z "$REALNAME" ] && REALNAME=$LOGIN
-	echo "$LOGIN is $REALNAME"
+    for login in $@ ; do
+	realname=$(egrep "^$login" /etc/passwd)
+	[ -z "$realname" ] && echo "realname: no such user '$login'" >&2 && continue
+	realname=$(echo $realname | cut -d':' -f5 | cut -d',' -f1)
+	[ -z "$realname" ] && realname=$login
+	echo "$login is $realname"
     done
 fi
 

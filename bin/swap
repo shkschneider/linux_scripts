@@ -1,22 +1,22 @@
 #!/bin/bash
 #
 # swap -- swap two files
-# Copyright (C) 2011  Alan SCHNEIDER
-#                     <shk.schneider[at]gmail.com>
+# Copyright (C) 2011-2012  Alan SCHNEIDER
+#                          <shk.schneider[at]gmail.com>
 #
 # This program comes with ABSOLUTELY NO WARRANTY.
 # This is free software, and you are welcome to redistribute it
 # under certain conditions.
 #
 
-TMP=$(tempfile)
+tmp=$(tempfile)
 
-[ $# -ne 2 ] && echo "Usage: swap <file1> <file2>" >&2 && exit 1
+[ $# -ne 2 ] && echo "Usage: swap <FILE> <FILE>" >&2 && exit 1
 [ ! -e "$1" ] && echo "swap: $1: no such file or directory" >&2 && exit 1
 [ ! -e "$2" ] && echo "swap: $2: no such file or directory" >&2 && exit 1
 
-mv "$1" $TMP
+mv "$1" $tmp
 mv "$2" "$1"
-mv $TMP "$2"
+mv $tmp "$2"
 
 # EOF

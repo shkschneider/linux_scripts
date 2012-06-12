@@ -1,8 +1,8 @@
 #!/bin/bash
 #
 # alignr -- output text on the right in a terminal
-# Copyright (C) 2010  Alan SCHNEIDER
-#                     <shk.schneider[at]gmail.com>
+# Copyright (C) 2010-2012  Alan SCHNEIDER
+#                          <shk.schneider[at]gmail.com>
 #
 # This program comes with ABSOLUTELY NO WARRANTY.
 # This is free software, and you are welcome to redistribute it
@@ -11,9 +11,9 @@
 
 [ $# -eq 0 ] && echo "Usage: alignr <text [...]>" >&2 && exit 1
 
-COLUMNS=$(tput cols)
-for ARGV in "$@" ; do
-    printf "%${COLUMNS}s\n" "$ARGV"
+columns=$(tput cols)
+for argv in "$@" ; do
+    printf "%${columns}s\n" "$argv"
 done
 
 # EOF

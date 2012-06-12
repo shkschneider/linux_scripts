@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # lastlogin -- retrieve last login
-# Copyright (C) 2010-2011  Alan SCHNEIDER
+# Copyright (C) 2010-2012  Alan SCHNEIDER
 #                          <shk.schneider[at]gmail.com>
 #
 # This program comes with ABSOLUTELY NO WARRANTY.
@@ -24,8 +24,8 @@ if [ $# -eq 0 ] ; then
     # else?
     fi
 else
-    for USER in $@ ; do
-	lastlogin_user $USER
+    for user in $@ ; do
+	lastlogin_user $user
     done
 fi
 

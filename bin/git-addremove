@@ -18,8 +18,8 @@ function usage() {
     exit 1
 }
 
-DIR=$(git rev-parse --git-dir 2>/dev/null)
-[ -z "$DIR" ] && echo "git-addremove: not a git repository" >&2 && exit 1
+dir=$(git rev-parse --git-dir 2>/dev/null)
+[ -z "$dir" ] && echo "git-addremove: not a git repository" >&2 && exit 1
 
 [ $# -ne 0 ] && usage
 

@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # clean -- delete annoying tmp files
-# Copyright (C) 2009-2011  Alan SCHNEIDER
+# Copyright (C) 2009-2012  Alan SCHNEIDER
 #                          <shk.schneider[at]gmail.com>
 #
 # This program comes with ABSOLUTELY NO WARRANTY.
@@ -13,7 +13,5 @@ find . -type f -name "*~" -exec rm -vf {} \;
 find . -type f -name "#*#" -exec rm -vf {} \;
 find . -type f -name "*.orig" -exec rm -vf {} \;
 find . -type f -name "*.bak" -exec rm -vf {} \;
-
-[ `id -u` -eq 0 ] && find /var/cache/apt/archives -type f -name "*.deb" -exec rm -vf {} \;
 
 # EOF

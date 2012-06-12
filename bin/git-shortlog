@@ -16,31 +16,31 @@ function usage() {
     exit 1
 }
 
-DIR=$(git rev-parse --git-dir 2>/dev/null)
-[ -z "$DIR" ] && echo "git-shortlog: not a git repository" >&2 && exit 1
+dir=$(git rev-parse --git-dir 2>/dev/null)
+[ -z "$dir" ] && echo "git-shortlog: not a git repository" >&2 && exit 1
 
-COMMIT=""
-AUTHOR=""
-MSG=""
-while read LINE ; do
-    KEY=$(echo $LINE | cut -d' ' -f1 | cut -d':' -f1)
-    case $KEY in
+commit=""
+author=""
+msg=""
+while read line ; do
+    key=$(echo $line | cut -d' ' -f1 | cut -d':' -f1)
+    case $key in
         commit)
-            COMMIT=$(echo $LINE | awk '{print $2}' | cut -c1-7)
+            commit=$(echo $line | awk '{print $2}' | cut -c1-7)
             ;;
         Author)
-            AUTHOR=$(echo $LINE | cut -d' ' -f2- | sed -E 's/ <.+>$//')
+            author=$(echo $line | cut -d' ' -f2- | sed -E 's/ <.+>$//')
             ;;
         Date) ;;
         *)
-            MSG="$LINE"
+            msg="$line"
             ;;
     esac
-    if [ -n "$COMMIT" ] && [ -n "$AUTHOR" ] && [ -n "$MSG" ] ; then
-        echo "$COMMIT [$AUTHOR] $MSG"
-        COMMIT=""
-        AUTHOR=""
-        MSG=""
+    if [ -n "$commit" ] && [ -n "$author" ] && [ -n "$msg" ] ; then
+        echo "$commit [$author] $msg"
+        commit=""
+        author=""
+        msg=""
     fi
 done < <(git log $@)
 

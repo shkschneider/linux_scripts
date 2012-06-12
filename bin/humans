@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # humans -- retrieve the Human population on Earth from command line
-# Copyright (C) 2010-2011  Alan SCHNEIDER
+# Copyright (C) 2010-2012  Alan SCHNEIDER
 #                          <shk.schneider[at]gmail.com>
 #
 # This program comes with ABSOLUTELY NO WARRANTY.
@@ -10,7 +10,7 @@
 #
 
 [ -z "`cat /proc/net/arp | egrep '^[0-9]'`" ] && echo "humans: no network connection" >&2 && exit 1
-HUMANS=$(wget -q -O - http://www.census.gov/population/international/ | grep wclocknum | sed -r 's#^.*>([0-9,]+)<.*$#\1#')
-echo "$HUMANS humans on earth"
+humans=$(wget -q -O - http://www.census.gov/population/international/ | grep wclocknum | sed -r 's#^.*>([0-9,]+)<.*$#\1#')
+echo "$humans humans on earth"
 
 # EOF

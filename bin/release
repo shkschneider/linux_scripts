@@ -1,26 +1,27 @@
 #!/bin/bash
 #
-# release -- outputs Debian-based OS release informations
-# Copyright (C) 2009  Alan SCHNEIDER
-#                     <shk.schneider[at]gmail.com>
+# release -- outputs LSB-compliant OS release informations
+# Copyright (C) 2009-2012  Alan SCHNEIDER
+#                          <shk.schneider[at]gmail.com>
 #
 # This program comes with ABSOLUTELY NO WARRANTY.
 # This is free software, and you are welcome to redistribute it
 # under certain conditions.
 #
 
-LANG=$(bash -c set | grep -E '^(LANG|LC_)' | cut -d'=' -f2 | cut -d'.' -f1)
-CPUINFO=$(cat /proc/cpuinfo | grep flags | grep ' lm ')
-[ -z "$CPUINFO" ] && CPU="x86" || CPU="x64"
-KERNEL=$(uname -sr | cut -d'-' -f1)
+os=$(uname -o)
+lang=$(bash -c set | grep -E '^(LANG|LC_)' | cut -d'=' -f2 | cut -d'.' -f1)
+cpuinfo=$(cat /proc/cpuinfo | grep flags | grep ' lm ')
+[ -z "$cpuinfo" ] && cpu="x86" || cpu="x64"
+kernel=$(uname -sr | cut -d'-' -f1)
 
 if [ -z "`which lsb_release`" ] ; then
     echo "release: command 'lsb_release' not found" >&2
-    echo "GNU/Linux $CPU [$LANG] with $KERNEL"
+    echo "$os $cpu [$lang] with $kernel"
 else
-    DISTRIB=$(lsb_release -i | awk '{printf $NF}')
-    VERSION=$(lsb_release -sr)" \"$(exec lsb_release -sc | sed 's/^[a-z]/\U&/')"\"
-    echo "GNU/Linux $DISTRIB $VERSION $CPU [$LANG] with $KERNEL"
+    distrib=$(lsb_release -i | awk '{printf $NF}')
+    version=$(lsb_release -sr)" \"$(exec lsb_release -sc | sed 's/^[a-z]/\U&/')"\"
+    echo "$os $distrib $version $cpu [$lang] with $kernel"
 fi
 
 # EOF

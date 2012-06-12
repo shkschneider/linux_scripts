@@ -9,17 +9,17 @@
 # under certain conditions.
 #
 
-LIST="$1"
+list="$1"
 shift
 
-IGNORE="#"
-for FILE in "$@" ; do
-    IGNORE="$IGNORE$FILE#"
+ignore="#"
+for file in "$@" ; do
+    ignore="$ignore$file#"
 done
 
-for FILE in $LIST ; do
-    [ -n "`echo $IGNORE | egrep \#$FILE\#`" ] && echo "rmex: skipping '$FILE'" && continue
-    [ -f "$FILE" ] && rm -f "$FILE" || rm -rf "$FILE"
+for file in $list ; do
+    [ -n "`echo $ignore | egrep \#$file\#`" ] && echo "rmex: skipping '$file'" && continue
+    [ -d "$file" ] && rm -rf "$file" || rm -f "$file"
 done
 
 # EOF

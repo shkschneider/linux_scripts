@@ -22,15 +22,15 @@ function usage() {
     exit 1
 }
 
-DIR=$(git rev-parse --git-dir 2>/dev/null)
-[ -z "$DIR" ] && echo "git-undo: not a git repository" >&2 && exit 1
+dir=$(git rev-parse --git-dir 2>/dev/null)
+[ -z "$dir" ] && echo "git-undo: not a git repository" >&2 && exit 1
 
 [ $# -eq 0 ] && usage
 
-CMD="$1"
+cmd="$1"
 shift
 
-case $CMD in
+case $cmd in
     "commit")
         if [ $# -eq 0 ]; then
             git reset --soft HEAD^

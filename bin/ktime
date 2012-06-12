@@ -1,31 +1,40 @@
 #!/bin/bash
 #
-# ktime - kernel's up/idle time with radio
-# Copyright (C) 2011  Alan SCHNEIDER
-#                     <shk.schneider[at]gmail.com>
+# ktime - kernel's up/idle time with ratio
+# Copyright (C) 2011-2012  Alan SCHNEIDER
+#                          <shk.schneider[at]gmail.com>
 #
 # This program comes with ABSOLUTELY NO WARRANTY.
 # This is free software, and you are welcome to redistribute it
 # under certain conditions.
 #
 
-PREFERED="h" # s m h d
+prefered="h" # s m h d
 
-BUSY=$(cat /proc/uptime | cut -d' ' -f1 | cut -d'.' -f1)
-BUSY_UNIT="s"
-while [ $BUSY_UNIT != $PREFERED ] ; do
-    BUSY=$(($BUSY / 60))
-    case $BUSY_UNIT in s) BUSY_UNIT="m" ;; m) BUSY_UNIT="h" ;; h) BUSY_UNIT="d" ;; d) BUSY_UNIT="*" ;; esac
+busy=$(cat /proc/uptime | cut -d' ' -f1 | cut -d'.' -f1)
+busy_unit="s"
+while [ $busy_unit != $prefered ] ; do
+    busy=$(($busy / 60))
+    case $busy_unit in
+        s) busy_unit="m" ;;
+        m) busy_unit="h" ;;
+        h) busy_unit="d" ;;
+        d) busy_unit="*" ;;
+    esac
 done
-IDLE=$(cat /proc/uptime | cut -d' ' -f2 | cut -d'.' -f1)
-IDLE_UNIT="s"
-while [ $IDLE_UNIT != $PREFERED ] ; do
-    IDLE=$(($IDLE / 60))
-    case $IDLE_UNIT in s) IDLE_UNIT="m" ;; m) IDLE_UNIT="h" ;; h) IDLE_UNIT="d" ;; d) IDLE_UNIT="*" ;; esac
+idle=$(cat /proc/uptime | cut -d' ' -f2 | cut -d'.' -f1)
+idle_unit="s"
+while [ $idle_unit != $prefered ] ; do
+    idle=$(($idle / 60))
+    case $idle_unit in
+        s) idle_unit="m" ;;
+        m) idle_unit="h" ;;
+        h) idle_unit="d" ;;
+        d) idle_unit="*" ;; esac
 done
 
-RATIO=$(echo "scale=2;$(cat /proc/uptime | sed 's# #/#')" | bc -q)
+ratio=$(echo "scale=2;$(cat /proc/uptime | sed 's# #/#')" | bc -q)
 
-echo "$BUSY$BUSY_UNIT $IDLE$IDLE_UNIT $RATIO"
+echo "$busy$busy_unit $idle$idle_unit $ratio"
 
 # EOF

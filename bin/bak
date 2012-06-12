@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # bak -- backups files
-# Copyright (C) 2010-2011  Alan SCHNEIDER
+# Copyright (C) 2010-2012  Alan SCHNEIDER
 #                          <shk.schneider[at]gmail.com>
 #
 # This program comes with ABSOLUTELY NO WARRANTY.
@@ -15,11 +15,11 @@
 [ ! -e "$1" ] && echo "bak: $1: permission denied" >&2 && exit 1
 [ ! -w "`dirname "$1"`" ] && echo "bak: `dirname "$1"`: Permission denied" >&2 && exit 1
 
-for ARGV in $@ ; do
-    FILE=$(readlink -f "$ARGV")
-    BACKUP_FILE="$FILE.`date +%Y%m%d-%H%m%S`"
-    echo "`basename "$FILE"` -> `basename "$BACKUP_FILE"`"
-    cp -rp "$FILE" "$BACKUP_FILE"
+for argv in $@ ; do
+    file=$(readlink -f "$argv")
+    backup_file="$file.`date +%Y%m%d-%H%m%S`"
+    echo "`basename "$file"` -> `basename "$backup_file"`"
+    cp -rp "$file" "$backup_file"
 done
 
 # EOF

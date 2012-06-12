@@ -14,15 +14,15 @@ function usage() {
     exit 1
 }
 
-for ARGV in $@ ; do
-    [ ! -e "$ARGV" ] && echo "mime: no such file or directory '$ARGV'" >&2 && continue
-    [ ! -r "$ARGV" ] && echo "mime: permission denied '$ARGV'" >&2 && continue
-    if [ -d "$ARGV" ] ; then
+for argv in $@ ; do
+    [ ! -e "$argv" ] && echo "mime: no such file or directory '$argv'" >&2 && continue
+    [ ! -r "$argv" ] && echo "mime: permission denied '$argv'" >&2 && continue
+    if [ -d "$argv" ] ; then
 	echo "directory"
-    elif [ ! -f "$ARGV" ] ; then
-	file -b "$ARGV"
+    elif [ ! -f "$argv" ] ; then
+	file -b "$argv"
     else
-	file -i "$ARGV" | cut -d';' -f1 | cut -d' ' -f2
+	file -i "$argv" | cut -d';' -f1 | cut -d' ' -f2
     fi
 done
 

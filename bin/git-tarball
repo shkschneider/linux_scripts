@@ -16,16 +16,16 @@ function usage() {
     exit 1
 }
 
-DIR=$(git rev-parse --git-dir 2>/dev/null)
-[ -z "$DIR" ] && echo "git-tarball: not a git repository" >&2 && exit 1
+dir=$(git rev-parse --git-dir 2>/dev/null)
+[ -z "$dir" ] && echo "git-tarball: not a git repository" >&2 && exit 1
 
 [ $# -ne 1 ] && usage
 
-NAME=$(basename $(git rev-parse --show-toplevel))
-BRANCH=$(git branch --no-color | egrep '^\*' | cut -d' ' -f2)
-TAG="$1"
+name=$(basename $(git rev-parse --show-toplevel))
+branch=$(git branch --no-color | egrep '^\*' | cut -d' ' -f2)
+tag="$1"
 
-echo "$NAME/$BRANCH/$TAG $NAME-$TAG.tar.gz"
-git archive --prefix="$NAME-$TAG/" "$TAG" | gzip --best > $NAME-$TAG.tar.gz
+echo "$name/$branch/$tag $name-$tag.tar.gz"
+git archive --prefix="$name-$tag/" "$tag" | gzip --best > $name-$tag.tar.gz
 
 # EOF

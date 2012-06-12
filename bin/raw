@@ -11,14 +11,14 @@
 # under certain conditions.
 #
 
-TTY=$(stty -g)
+tty=$(stty -g)
 stty -icanon
 stty -echo
-KEY=$(head -c1)
+key=$(head -c1)
 stty echo
 
-echo $KEY
+echo $key
 
-stty "$TTY"
+stty "$tty"
 
 # EOF

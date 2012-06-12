@@ -17,42 +17,42 @@ function usage() {
     exit 1
 }
 
-DIR=".svn"
-[ ! -d "$DIR" ] && echo "svn-ignore: not a svn repository" >&2 && exit 1
+dir=".svn"
+[ ! -d "$dir" ] && echo "svn-ignore: not a svn repository" >&2 && exit 1
 
 [ $# -eq 0 ] && usage
 
-LIST="#"
-for FILE in `svn propget svn:ignore .` ; do
-    LIST=$(echo "$LIST$FILE#")
+list="#"
+for file in `svn propget svn:ignore .` ; do
+    list=$(echo "$list$file#")
 done
 
 function svn_ignore_list() {
-    echo $LIST | sed -r 's/(^#|#$)//g' | sed '/^$/d' | tr "#" "\n"
+    echo $list | sed -r 's/(^#|#$)//g' | sed '/^$/d' | tr "#" "\n"
 }
 
 function svn_ignore_add() {
-    for FILE in "$@" ; do
-	if [ -n "`svn propget svn:ignore | egrep "^$FILE"`" ] ; then
-	    echo "svn-ignore: $FILE already in ignore list"
+    for file in "$@" ; do
+	if [ -n "`svn propget svn:ignore | egrep "^$file"`" ] ; then
+	    echo "svn-ignore: $file already in ignore list"
 	else
-	    LIST=$(echo "$LIST$FILE#")
-	    echo "svn-ignore: $FILE added to ignore list"
+	    list=$(echo "$list$file#")
+	    echo "svn-ignore: $file added to ignore list"
 	fi
     done
-    svn propset svn:ignore "$(echo $LIST | sed -r 's/(^#|#$)//g' | sed '/^$/d' | tr "#" "\n")" . > /dev/null
+    svn propset svn:ignore "$(echo $list | sed -r 's/(^#|#$)//g' | sed '/^$/d' | tr "#" "\n")" . > /dev/null
 }
 
 function svn_ignore_rm() {
-    for FILE in "$@" ; do
-	if [ -z "`svn propget svn:ignore | egrep "^$FILE"`" ] ; then
-	    echo "svn-ignore: $FILE not in ignore list"
+    for file in "$@" ; do
+	if [ -z "`svn propget svn:ignore | egrep "^$file"`" ] ; then
+	    echo "svn-ignore: $file not in ignore list"
 	else
-	    LIST=$(echo $LIST | sed "s/#$FILE#/#/")
-	    echo "svn-ignore: $FILE removed from ignore list"
+	    list=$(echo $list | sed "s/#$file#/#/")
+	    echo "svn-ignore: $file removed from ignore list"
 	fi
     done
-    svn propset svn:ignore "$(echo $LIST | sed -r 's/(^#|#$)//g' | sed '/^$/d' | tr "#" "\n")" . > /dev/null
+    svn propset svn:ignore "$(echo $list | sed -r 's/(^#|#$)//g' | sed '/^$/d' | tr "#" "\n")" . > /dev/null
 }
 
 function svn_ignore_clear() {
@@ -60,10 +60,10 @@ function svn_ignore_clear() {
     echo "svn-ignore: ignore list is empty"
 }
 
-CMD="$1"
+cmd="$1"
 shift
 
-case $CMD in
+case $cmd in
     "list") svn_ignore_list ;;
     "add") svn_ignore_add "$@" ;;
     "rm") svn_ignore_rm "$@" ;;

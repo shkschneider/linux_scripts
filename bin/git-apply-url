@@ -3,7 +3,7 @@
 # git-apply-url -- create a apply-url of a git repository/commit
 # Copyright (C) 2012  Alan SCHNEIDER
 #                     <shk.schneider[at]gmail.com>
-# Copyright (c) 2008 Andrew Raines
+# Copyright (C) 2008 Andrew Raines
 #
 # Permission is hereby granted, free of charge, to any person
 # obtaining a copy of this software and associated documentation
@@ -35,8 +35,8 @@ function usage() {
     exit 1
 }
 
-DIR=$(git rev-parse --git-dir 2>/dev/null)
-[ -z "$DIR" ] && echo "git-apply-url: not a git repository" >&2 && exit 1
+dir=$(git rev-parse --git-dir 2>/dev/null)
+[ -z "$dir" ] && echo "git-apply-url: not a git repository" >&2 && exit 1
 
 [ $# -ne 1 ] && usage
 

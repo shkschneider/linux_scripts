@@ -15,14 +15,14 @@ if [ $# -ne 2 ] ; then
     exit 1
 fi
 
-DIR=$(readlink -f "$1")
-SIZE=$(echo "$2" | tr "[a-z]" "[A-Z]" | egrep "^[0-9]+[MGT]?$")
-[ ! -e "$DIR" ] && echo "big: $DIR: no such file or directory" >&2 && exit 1
-[ ! -d "$DIR" ] && echo "big: $DIR: not a directory" >&2 && exit 1
-[ ! -r "$DIR" ] && echo "big: $DIR: permission denied" >&2 && exit 1
-[ -z "$SIZE" ] && echo "big: invalid size" >&2 && exit 1
+dir=$(readlink -f "$1")
+size=$(echo "$2" | tr "[a-z]" "[A-Z]" | egrep "^[0-9]+[MGT]?$")
+[ ! -e "$dir" ] && echo "big: $dir: no such file or directory" >&2 && exit 1
+[ ! -d "$dir" ] && echo "big: $dir: not a directory" >&2 && exit 1
+[ ! -r "$dir" ] && echo "big: $dir: permission denied" >&2 && exit 1
+[ -z "$size" ] && echo "big: invalid size" >&2 && exit 1
 
-echo " * Searching in $DIR for files bigger than ${SIZE}B..."
-find "$DIR" -type f -size +$SIZE -exec ls -lh {} \; 2>/dev/null | sed -r 's/ +/ /g' | cut -d' ' -f5,9-
+echo " * Searching in '$dir' for files bigger than ${size}B..."
+find "$dir" -type f -size +$size -exec ls -lh {} \; 2>/dev/null | sed -r 's/ +/ /g' | cut -d' ' -f5,9-
 
 # EOF

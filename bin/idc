@@ -1,8 +1,8 @@
 #!/bin/bash
 #
 # idc -- id classes (on Debian)
-# Copyright (C) 2011  Alan SCHNEIDER
-#                     <shk.schneider[at]gmail.com>
+# Copyright (C) 2011-2012  Alan SCHNEIDER
+#                          <shk.schneider[at]gmail.com>
 #
 # This program comes with ABSOLUTELY NO WARRANTY.
 # This is free software, and you are welcome to redistribute it
@@ -11,33 +11,33 @@
 
 [ $# -eq 0 ] && echo "Usage: idc <uid/gid [...]>" >&2 && exit 1
 
-E=0
-for ID in $@ ; do
-    if [ -n "`echo $ID | tr -d '[0-9]'`" ] ; then
-	echo "idc: '$ID' is not a number" >&2
-	E=1
+e=0
+for id in $@ ; do
+    if [ -n "`echo $id | tr -d '[0-9]'`" ] ; then
+	echo "idc: '$id' is not a number" >&2
+	e=1
 	continue
     fi
-    if [ $ID -lt 99 ] ; then
-	echo "1 Debian project +"$(($ID - 0))
-    elif [ $ID -lt 999 ] ; then
-	echo "2 System users and groups +"$(($ID - 100))
-    elif [ $ID -lt 59999 ] ; then
-	echo "3 User accounts +"$(($ID - 1000))
-    elif [ $ID -lt 64999 ] ; then
-	echo "4 Debian project but available on-demand +"$(($ID - 60000))
-    elif [ $ID -lt 65533 ] ; then
-	echo "5 Strictly reserved +"$(($ID - 65000))
-    elif [ $ID -eq 64534 ] ; then
+    if [ $id -lt 99 ] ; then
+	echo "1 Debian project +"$(($id - 0))
+    elif [ $id -lt 999 ] ; then
+	echo "2 System users and groups +"$(($id - 100))
+    elif [ $id -lt 59999 ] ; then
+	echo "3 User accounts +"$(($id - 1000))
+    elif [ $id -lt 64999 ] ; then
+	echo "4 Debian project but available on-demand +"$(($id - 60000))
+    elif [ $id -lt 65533 ] ; then
+	echo "5 Strictly reserved +"$(($id - 65000))
+    elif [ $id -eq 64534 ] ; then
 	echo "6 Reserved nobody/nogroup +0"
-    elif [ $ID -eq 65535 ] ; then
+    elif [ $id -eq 65535 ] ; then
 	echo "7 Unusable +0"
     else
 	echo "0 Out of range (0-65535)" >&2
-	E=1
+	e=1
     fi
 done
 
-exit $E
+exit $e
 
 # EOF

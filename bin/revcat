@@ -1,8 +1,8 @@
 #!/bin/bash
 #
 # revcat -- output a file from bottom to top
-# Copyright (C) 2011  Alan SCHNEIDER
-#                     <shk.schneider[at]gmail.com>
+# Copyright (C) 2011-2012  Alan SCHNEIDER
+#                          <shk.schneider[at]gmail.com>
 #
 # This program comes with ABSOLUTELY NO WARRANTY.
 # This is free software, and you are welcome to redistribute it
@@ -11,8 +11,8 @@
 
 [ $# -eq 0 ] && echo "Usage: revcat <file [...]>" >&2 && exit 1
 
-for FILE in $@ ; do
-    sed -n '1!G;h;$p' "$FILE"
+for file in $@ ; do
+    sed -n '1!G;h;$p' "$file"
 done
 
 # EOF

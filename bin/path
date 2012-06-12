@@ -1,8 +1,8 @@
 #!/bin/bash
 #
 # path -- print a formatted $PATH
-# Copyright (C) 20112  Alan SCHNEIDER
-#                      <shk.schneider[at]gmail.com>
+# Copyright (C) 2012  Alan SCHNEIDER
+#                     <shk.schneider[at]gmail.com>
 #
 # This program comes with ABSOLUTELY NO WARRANTY.
 # This is free software, and you are welcome to redistribute it
@@ -11,14 +11,14 @@
 
 set -f
 
-PP=$(echo $PATH | tr ':' ' ')
+paths=$(echo $PATH | tr ':' ' ')
 
-N=0
-for P in $PP ; do
-    NN=$(find $P -type f -executable | wc -l)
-    printf "%5d %s\n" $NN "$P"
-    N=$(($N + $NN))
+n=0
+for path in $paths ; do
+    nn=$(find $(readlink -f $path) -type f -executable | wc -l)
+    printf "%5d %s\n" $nn "$path"
+    n=$(($n + $nn))
 done
-printf "%5d %s\n" $N "\$PATH"
+printf "%5d %s\n" $n "$PATH"
 
 # EOF

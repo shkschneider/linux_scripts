@@ -1,8 +1,8 @@
 #!/bin/bash
 #
 # dec2rom -- Arabic to Roman
-# Copyright (C) 2011  Alan SCHNEIDER
-#                     <shk.schneider[at]gmail.com>
+# Copyright (C) 2011-2012  Alan SCHNEIDER
+#                          <shk.schneider[at]gmail.com>
 #
 # This program comes with ABSOLUTELY NO WARRANTY.
 # This is free software, and you are welcome to redistribute it
@@ -13,79 +13,77 @@
 #
 
 [ $# -ne 1 ] && echo "Usage: dec2rom <number>" >&2 && exit 1
-N=$(echo "$1" | tr -d '[0-9]')
-[ -n "$N" ] && echo "dec2rom: '$1' is not a number" >&2 && exit 1
+n=$(echo "$1" | tr -d '[0-9]')
+[ -n "$n" ] && echo "dec2rom: '$1' is not a number" >&2 && exit 1
 
-function print_arabic_to_roman()
-{
-    local S=""
-    local N=$1
-    while [ $N -ge $2 ] ; do
-	N=$(($N - $2))
-	S="$S$3"
+function print_arabic_to_roman() {
+    local s=""
+    local n=$1
+    while [ $n -ge $2 ] ; do
+	n=$(($n - $2))
+	s="$s$3"
     done
-    echo "$S#$N"
+    echo "$s#$n"
 }
 
-function arabic_to_roman()
-{
-    local S=""
-    local N=$1
-    N=$(print_arabic_to_roman $N 1000 M)
-    S=$(echo $N | cut -d'#' -f1) ; [ -n "$S" ] && echo -n $S
-    N=$(echo $N | cut -d'#' -f2)
-    N=$(print_arabic_to_roman $N 900 CM)
-    S=$(echo $N | cut -d'#' -f1) ; [ -n "$S" ] && echo -n $S
-    N=$(echo $N | cut -d'#' -f2)
-    N=$(print_arabic_to_roman $N 500 D)
-    S=$(echo $N | cut -d'#' -f1) ; [ -n "$S" ] && echo -n $S
-    N=$(echo $N | cut -d'#' -f2)
-    N=$(print_arabic_to_roman $N 400 CD)
-    S=$(echo $N | cut -d'#' -f1) ; [ -n "$S" ] && echo -n $S
-    N=$(echo $N | cut -d'#' -f2)
-    N=$(print_arabic_to_roman $N 100 C)
-    S=$(echo $N | cut -d'#' -f1) ; [ -n "$S" ] && echo -n $S
-    N=$(echo $N | cut -d'#' -f2)
-    N=$(print_arabic_to_roman $N 90 IC)
-    S=$(echo $N | cut -d'#' -f1) ; [ -n "$S" ] && echo -n $S
-    N=$(echo $N | cut -d'#' -f2)
-    N=$(print_arabic_to_roman $N 50 L)
-    S=$(echo $N | cut -d'#' -f1) ; [ -n "$S" ] && echo -n $S
-    N=$(echo $N | cut -d'#' -f2)
-    N=$(print_arabic_to_roman $N 40 XL)
-    S=$(echo $N | cut -d'#' -f1) ; [ -n "$S" ] && echo -n $S
-    N=$(echo $N | cut -d'#' -f2)
-    N=$(print_arabic_to_roman $N 10 X)
-    S=$(echo $N | cut -d'#' -f1) ; [ -n "$S" ] && echo -n $S
-    N=$(echo $N | cut -d'#' -f2)
-    N=$(print_arabic_to_roman $N 9 IX)
-    S=$(echo $N | cut -d'#' -f1) ; [ -n "$S" ] && echo -n $S
-    N=$(echo $N | cut -d'#' -f2)
-    N=$(print_arabic_to_roman $N 5 V)
-    S=$(echo $N | cut -d'#' -f1) ; [ -n "$S" ] && echo -n $S
-    N=$(echo $N | cut -d'#' -f2)
-    N=$(print_arabic_to_roman $N 4 IV)
-    S=$(echo $N | cut -d'#' -f1) ; [ -n "$S" ] && echo -n $S
-    N=$(echo $N | cut -d'#' -f2)
-    N=$(print_arabic_to_roman $N 1 I)
-    S=$(echo $N | cut -d'#' -f1) ; [ -n "$S" ] && echo -n $S
-    N=$(echo $N | cut -d'#' -f2)
+function arabic_to_roman() {
+    local s=""
+    local n=$1
+    n=$(print_arabic_to_roman $n 1000 M)
+    s=$(echo $n | cut -d'#' -f1) ; [ -n "$s" ] && echo -n $s
+    n=$(echo $n | cut -d'#' -f2)
+    n=$(print_arabic_to_roman $n 900 CM)
+    s=$(echo $n | cut -d'#' -f1) ; [ -n "$s" ] && echo -n $s
+    n=$(echo $n | cut -d'#' -f2)
+    n=$(print_arabic_to_roman $n 500 D)
+    s=$(echo $n | cut -d'#' -f1) ; [ -n "$s" ] && echo -n $s
+    n=$(echo $n | cut -d'#' -f2)
+    n=$(print_arabic_to_roman $n 400 CD)
+    s=$(echo $n | cut -d'#' -f1) ; [ -n "$s" ] && echo -n $s
+    n=$(echo $n | cut -d'#' -f2)
+    n=$(print_arabic_to_roman $n 100 C)
+    s=$(echo $n | cut -d'#' -f1) ; [ -n "$s" ] && echo -n $s
+    n=$(echo $n | cut -d'#' -f2)
+    n=$(print_arabic_to_roman $n 90 IC)
+    s=$(echo $n | cut -d'#' -f1) ; [ -n "$s" ] && echo -n $s
+    n=$(echo $n | cut -d'#' -f2)
+    n=$(print_arabic_to_roman $n 50 L)
+    s=$(echo $n | cut -d'#' -f1) ; [ -n "$s" ] && echo -n $s
+    n=$(echo $n | cut -d'#' -f2)
+    n=$(print_arabic_to_roman $n 40 XL)
+    s=$(echo $n | cut -d'#' -f1) ; [ -n "$s" ] && echo -n $s
+    n=$(echo $n | cut -d'#' -f2)
+    n=$(print_arabic_to_roman $n 10 X)
+    s=$(echo $n | cut -d'#' -f1) ; [ -n "$s" ] && echo -n $s
+    n=$(echo $n | cut -d'#' -f2)
+    n=$(print_arabic_to_roman $n 9 IX)
+    s=$(echo $n | cut -d'#' -f1) ; [ -n "$s" ] && echo -n $s
+    n=$(echo $n | cut -d'#' -f2)
+    n=$(print_arabic_to_roman $n 5 V)
+    s=$(echo $n | cut -d'#' -f1) ; [ -n "$s" ] && echo -n $s
+    n=$(echo $n | cut -d'#' -f2)
+    n=$(print_arabic_to_roman $n 4 IV)
+    s=$(echo $n | cut -d'#' -f1) ; [ -n "$s" ] && echo -n $s
+    n=$(echo $n | cut -d'#' -f2)
+    n=$(print_arabic_to_roman $n 1 I)
+    s=$(echo $n | cut -d'#' -f1) ; [ -n "$s" ] && echo -n $s
+    n=$(echo $n | cut -d'#' -f2)
 }
 
-N=$1
-[ $N -lt 1 ] && echo "dec2rom: number '$N' is too small (< 1)" >&2 && exit 1
-if [ $N -ge 4000 ] ; then
-    [ $N -gt 4000000 ] && echo "dec2rom: number '$N' is too large (> 4000000)" >&2 && exit 1
+n=$1
+[ $n -lt 1 ] && echo "dec2rom: number '$n' is too small (< 1)" >&2 && exit 1
+if [ $n -ge 4000 ] ; then
+    [ $n -gt 4000000 ] && echo "dec2rom: number '$n' is too large (> 4000000)" >&2 && exit 1
     echo -n "M["
-    N=$(print_arabic_to_roman `echo "$N/1000" | bc -q` 1000 M)
-    S=$(echo -n $N | cut -d'#' -f1) ; [ -n "$S" ] && echo -n $S
-    N=$(echo $N | cut -d'#' -f2)
-    arabic_to_roman $N
+    n=$(print_arabic_to_roman `echo "$n/1000" | bc -q` 1000 M)
+    s=$(echo -n $n | cut -d'#' -f1) ; [ -n "$s" ] && echo -n $s
+    n=$(echo $n | cut -d'#' -f2)
+    arabic_to_roman $n
     echo -n "]"
-    N=$(($1 - ($N * 1000)))
+    n=$(($1 - ($n * 1000)))
 fi
 
-arabic_to_roman $N
+arabic_to_roman $n
 echo
 
 # EOF

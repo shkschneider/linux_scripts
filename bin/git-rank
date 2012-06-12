@@ -16,25 +16,25 @@ function usage() {
     exit 1
 }
 
-DIR=$(git rev-parse --git-dir 2>/dev/null)
-[ -z "$DIR" ] && echo "git-rank: not a git repository" >&2 && exit 1
+dir=$(git rev-parse --git-dir 2>/dev/null)
+[ -z "$dir" ] && echo "git-rank: not a git repository" >&2 && exit 1
 
 [ $# -ne 0 ] && usage
 
-RANK=""
+rank=""
 
-CONTRIBUTORS=$(git log | egrep '^Author: ' | cut -d' ' -f2- | sed -r 's/ <.+>//g' | sort | uniq)
-for CONTRIBUTOR in $CONTRIBUTORS ; do
-    N=$(git log | egrep  "^Author: $CONTRIBUTOR <" | wc -l)
-    RANK=$(echo "$RANK#$N:$CONTRIBUTOR")
+contributors=$(git log | egrep '^Author: ' | cut -d' ' -f2- | sed -r 's/ <.+>//g' | sort | uniq)
+for contributor in $contributors ; do
+    n=$(git log | egrep  "^Author: $contributor <" | wc -l)
+    rank=$(echo "$rank#$n:$contributor")
 done
 
-for CONTRIBUTOR in `echo $RANK | sed -r 's/^.//' | tr "#" "\n" | sort -r` ; do
-    N=$(echo $CONTRIBUTOR | cut -d':' -f1)
-    if [ $N -gt 0 ] ; then
-	CONTRIBUTOR=$(echo $CONTRIBUTOR | cut -d':' -f2-)
-	CONTRIBUTOR=$(git log | egrep "^Author: $CONTRIBUTOR <" | head -1 | cut -d' ' -f2-)
-	printf "%5d %s\n" "$N" "$CONTRIBUTOR"
+for contributor in `echo $rank | sed -r 's/^.//' | tr "#" "\n" | sort -r` ; do
+    n=$(echo $contributor | cut -d':' -f1)
+    if [ $n -gt 0 ] ; then
+	contributor=$(echo $contributor | cut -d':' -f2-)
+	contributor=$(git log | egrep "^Author: $contributor <" | head -1 | cut -d' ' -f2-)
+	printf "%5d %s\n" "$n" "$contributor"
     fi
 done
 

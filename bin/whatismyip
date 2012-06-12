@@ -13,8 +13,8 @@
 
 [ -z "`cat /proc/net/arp | egrep '^[0-9]'`" ] && echo "W: `basename "$0"`: No network connection" >&2 && exit 1
 
-INTERNAL=$(cat /proc/net/arp | egrep '^[0-9]' | cut -d' ' -f1 | tr "\n" " " | sed -r 's/ $//')
-EXTERNAL=$(curl -s ifconfig.me/ip)
-echo "$INTERNAL $EXTERNAL"
+internal=$(cat /proc/net/arp | egrep '^[0-9]' | cut -d' ' -f1 | tr "\n" " " | sed -r 's/ $//')
+external=$(curl -s ifconfig.me/ip)
+echo "$Internal $external"
 
 # EOF
