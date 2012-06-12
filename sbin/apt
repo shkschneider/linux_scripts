@@ -13,10 +13,10 @@
 #
 
 set -f
-BINS="aptitude apt-get"
-SOURCE_LIST="sources.list"
-APT=""
-REVERSE=1
+bins="aptitude apt-get"
+source_list="sources.list"
+apt=""
+reverse=1
 
 #
 ## SIGINT handler
@@ -38,16 +38,16 @@ function bashtrap()
 
 case $1 in
     -ap|--use-aptitude)
-	APT="aptitude" && shift ;;
+	apt="aptitude" && shift ;;
     -ag|--use-apt-get)
-	APT="apt-get" && shift ;;
+	apt="apt-get" && shift ;;
     -nr|--no-reverse)
-	REVERSE=0 && shift ;;
+	reverse=0 && shift ;;
 esac
 
 # For full features, this script requiers:
 # dpkg + apt-cache + apt-get + aptitude + apt-show-versions + dpkg-query
-[ -z "$APT" ] && for BIN in $BINS ; do [ -x "`which $BIN`" ] && APT=$BIN && break ; done
+[ -z "$apt" ] && for bin in $bins ; do [ -x "`which $bin`" ] && apt=$bin && break ; done
 
 #
 ## Functions
@@ -85,192 +85,192 @@ function usage() {
 }
 
 function do_status() {
-    LINE=$(apt-show-versions --package=$PACKAGE)
-    MSTATUS=$(dpkg -l $PACKAGE 2>/dev/null | tail -1 | cut -c1,2)
-    [ -z "$MSTATUS" ] && MSTATUS="  "
-    check_package $PACKAGE
+    line=$(apt-show-versions --package=$package)
+    mstatus=$(dpkg -l $package 2>/dev/null | tail -1 | cut -c1,2)
+    [ -z "$mstatus" ] && mstatus="  "
+    check_package $package
     if [ $? -ne 0 ] ; then
-	STATUS="not available"
-	case $REVERSE in
-            1)	printf "%s \e[7m%s\e[0m - %s\n" "$MSTATUS" "$PACKAGE" "$STATUS" ;;
-            *)	printf "%s %s - %s\n" "$MSTATUS" "$PACKAGE" "$STATUS" ;;
+	status="not available"
+	case $reverse in
+            1)	printf "%s \e[7m%s\e[0m - %s\n" "$mstatus" "$package" "$status" ;;
+            *)	printf "%s %s - %s\n" "$mstatus" "$package" "$status" ;;
 	esac
-    elif [ -z "`echo $LINE | egrep "^$PACKAGE/"`" ] ; then
-	STATUS="not installed"
-	case $REVERSE in
-	    1)	printf "%s \e[7m%s\e[0m - %s\n" "$MSTATUS" "$PACKAGE" "$STATUS" ;;
-	    *)	printf "%s %s - %s\n" "$MSTATUS" "$PACKAGE" "$STATUS" ;;
+    elif [ -z "`echo $line | egrep "^$package/"`" ] ; then
+	status="not installed"
+	case $reverse in
+	    1)	printf "%s \e[7m%s\e[0m - %s\n" "$mstatus" "$package" "$status" ;;
+	    *)	printf "%s %s - %s\n" "$mstatus" "$package" "$status" ;;
 	esac
     else
-	if [ -z "`apt-show-versions -u | egrep "^$PACKAGE/"`" ] ; then
-	    STATUS="installed and up-to-date"
+	if [ -z "`apt-show-versions -u | egrep "^$package/"`" ] ; then
+	    status="installed and up-to-date"
 	else
-	    STATUS="installed but updatable"
+	    status="installed but updatable"
 	fi
-	REPO=$(echo $LINE | cut -d'/' -f2- | cut -d' ' -f1)
-	VERSION=$(echo $LINE | rev | cut -d' ' -f1 | rev)
-	COLUMNS=$(echo "`tput cols`-`echo "$MSTATUS $PACKAGE - $STATUS" | wc -c`+1" | bc -q)
-	case $REVERSE in
-	    1)	printf "%s \e[7m%s\e[0m - %s%${COLUMNS}s\n" "$MSTATUS" "$PACKAGE" "$STATUS" "$REPO/$VERSION" ;;
-	    *)	printf "%s %s - %s%${COLUMNS}s\n" "$MSTATUS" "$PACKAGE" "$STATUS" "$REPO/$VERSION" ;;
+	repo=$(echo $line | cut -d'/' -f2- | cut -d' ' -f1)
+	version=$(echo $line | rev | cut -d' ' -f1 | rev)
+	columns=$(echo "`tput cols`-`echo "$mstatus $package - $status" | wc -c`+1" | bc -q)
+	case $reverse in
+	    1)	printf "%s \e[7m%s\e[0m - %s%${columns}s\n" "$mstatus" "$package" "$status" "$repo/$version" ;;
+	    *)	printf "%s %s - %s%${columns}s\n" "$mstatus" "$package" "$status" "$repo/$version" ;;
 	esac
     fi
 }
 
 function do_search() {
-    N=0
-    PACKAGE=$1
-    #LAST_PACKAGE=""
-    while read LINE ; do
-	N=$(($N + 1))
-	PACKAGE=$(echo $LINE | cut -d' ' -f1)
-	#[ "$PACKAGE" = "$LAST_PACKAGE" ] && continue || LAST_PACKAGE="$PACKAGE"
-	VERSION=$(echo $LINE | cut -d' ' -f2)
-	SIZE=$(echo $LINE | awk '{print $NF}')
-	[ -z "`echo $SIZE | egrep '^[0-9]+$'`" ] && SIZE=$(echo $LINE | cut -d' ' -f3)
-	[ -z "`echo $SIZE | egrep '^[0-9]+$'`" ] && SIZE=0
-	DESCRIPTION=$(echo $LINE | cut -d' ' -f4- | sed -r 's# [0-9]+$##')
-	if [ $SIZE -gt 1048576 ] ; then
-	    SIZE=$(echo "$SIZE/1024/1024" | bc -q)" MB"
-	elif [ $SIZE -gt 1024 ] ; then
-	    SIZE=$(echo "$SIZE/1024" | bc -q)" kB"
+    n=0
+    package=$1
+    #last_package=""
+    while read line ; do
+	n=$(($n + 1))
+	package=$(echo $line | cut -d' ' -f1)
+	#[ "$package" = "$last_package" ] && continue || last_package="$package"
+	version=$(echo $line | cut -d' ' -f2)
+	size=$(echo $line | awk '{print $NF}')
+	[ -z "`echo $size | egrep '^[0-9]+$'`" ] && size=$(echo $line | cut -d' ' -f3)
+	[ -z "`echo $size | egrep '^[0-9]+$'`" ] && size=0
+	description=$(echo $line | cut -d' ' -f4- | sed -r 's# [0-9]+$##')
+	if [ $size -gt 1048576 ] ; then
+	    size=$(echo "$size/1024/1024" | bc -q)" MB"
+	elif [ $size -gt 1024 ] ; then
+	    size=$(echo "$size/1024" | bc -q)" kB"
 	else
-	    SIZE="$SIZE kB"
+	    size="$size kB"
 	fi
-	STATUS=$(dpkg -l $PACKAGE 2>/dev/null | tail -1 | cut -c1,2)
-	[ -z "$STATUS" ] && STATUS="  "
-	COLUMNS=$(echo "`tput cols`-`echo "$STATUS $PACKAGE - $DESCRIPTION" | wc -c`-`echo "$VERSION - $SIZE" | wc -c`+1" | bc -q)
-	case $REVERSE in
-            1)	printf "%s \e[7m%s\e[0m - %s%${COLUMNS}sv%s - \e[1m%s\e[0m\n" "$STATUS" "$PACKAGE" "$DESCRIPTION" " " "$VERSION" "$SIZE" ;;
-            *)	printf "%s %s - %s%${COLUMNS}sv%s - %s\n" "$STATUS" "$PACKAGE" "$DESCRIPTION" " " "$VERSION" "$SIZE" ;;
+	status=$(dpkg -l $package 2>/dev/null | tail -1 | cut -c1,2)
+	[ -z "$status" ] && status="  "
+	columns=$(echo "`tput cols`-`echo "$status $package - $description" | wc -c`-`echo "$version - $size" | wc -c`+1" | bc -q)
+	case $reverse in
+            1)	printf "%s \e[7m%s\e[0m - %s%${columns}sv%s - \e[1m%s\e[0m\n" "$status" "$package" "$description" " " "$version" "$size" ;;
+            *)	printf "%s %s - %s%${columns}sv%s - %s\n" "$status" "$package" "$description" " " "$version" "$size" ;;
 	esac
-    done < <(apt-cache show $PACKAGE 2>/dev/null \
+    done < <(apt-cache show $package 2>/dev/null \
 	| egrep '^(Package|Version|Description|Size)' \
 	| sed "s#Package: #\n#g" \
 	| sed "s#Version: ##g" \
 	| sed "s#Description: ##g" \
 	| sed "s#Size: ##g" \
 	| sed '1d' | tr "\n" "@" | sed "s#@@#\n#g" | tr '@' ' ' | sed -r "s#\s\$#\n#" | sort | uniq -u)
-    [ $N -eq 0 ] && echo "No package found for \`$PACKAGE'" >&2
+    [ $n -eq 0 ] && echo "No package found for \`$package'" >&2
 }
 
 function do_depends() {
-    PACKAGE=$1
-    check_package $PACKAGE
-    [ $? -ne 0 ] && echo "apt: package '$PACKAGE' not found" >&2 && return
-    D=$(apt-cache depends -i $PACKAGE | sed '1d' | sed -r 's#\s+\w+: ##' | wc -l)
-    case $REVERSE in
-	1)	echo -ne "\e[7m$PACKAGE\e[0m (\e[1m$D\e[0m) " ;;
-	*)	echo -n "$PACKAGE ($D) " ;;
+    package=$1
+    check_package $package
+    [ $? -ne 0 ] && echo "apt: package '$package' not found" >&2 && return
+    d=$(apt-cache depends -i $package | sed '1d' | sed -r 's#\s+\w+: ##' | wc -l)
+    case $reverse in
+	1)	echo -ne "\e[7m$package\e[0m (\e[1m$D\e[0m) " ;;
+	*)	echo -n "$package ($d) " ;;
     esac
-    DEPENDS=$(apt-cache depends -i $PACKAGE | sed '1d' | sed -r "s#\s+\w+: ##")
-    echo $DEPENDS
+    depends=$(apt-cache depends -i $package | sed '1d' | sed -r "s#\s+\w+: ##")
+    echo $depends
 }
 
 function do_size() {
-    N=0
-    while read LINE ; do
-	N=$(($N + 1))
-	SIZE=$(echo $LINE | cut -d' ' -f1)
-	if [ $SIZE -gt 1048576 ] ; then
-	    SIZE=$(echo "$SIZE/1024/1024" | bc -q)" GB"
-	elif [ $SIZE -gt 1024 ] ; then
-	    SIZE=$(echo "$SIZE/1024" | bc -q)" MB"
+    n=0
+    while read line ; do
+	n=$(($n + 1))
+	size=$(echo $line | cut -d' ' -f1)
+	if [ $size -gt 1048576 ] ; then
+	    size=$(echo "$size/1024/1024" | bc -q)" GB"
+	elif [ $size -gt 1024 ] ; then
+	    size=$(echo "$size/1024" | bc -q)" MB"
 	else
-	    SIZE="$SIZE kB"
+	    size="$size kB"
 	fi
-	PACKAGE=$(echo $LINE | cut -d' ' -f2)
-	COLUMNS=$(echo "`tput cols`-`echo "$PACKAGE" | wc -c`-6" | bc -q)
-	case $REVERSE in
-	    1)	printf "%5d \e[7m%s\e[0m \e[1m%${COLUMNS}s\e[0m\n" $N "$PACKAGE" "$SIZE" ;;
-	    *)	printf "%5d %s %${COLUMNS}s\n" $N "$PACKAGE" "$SIZE" ;;
+	package=$(echo $line | cut -d' ' -f2)
+	columns=$(echo "`tput cols`-`echo "$package" | wc -c`-6" | bc -q)
+	case $reverse in
+	    1)	printf "%5d \e[7m%s\e[0m \e[1m%${columns}s\e[0m\n" $n "$package" "$size" ;;
+	    *)	printf "%5d %s %${columns}s\n" $n "$package" "$size" ;;
 	esac
     done < <(dpkg-query -W --showformat='${Installed-Size;10}\t${Package}\n' | sort -k1,1n | sed -n '1!G;h;$p' | head -$1)
 }
 
 function do_policy() {
-    check_package $PACKAGE
-    [ $? -ne 0 ] && echo "apt: package '$PACKAGE' not found" >&2 && return
-    while read LINE ; do
-	[ $REVERSE -eq 1 ] && echo -ne "\e[7m$PACKAGE\e[0m " || echo -n "$PACKAGE "
-	PRIOR=$(echo $LINE | cut -d' ' -f1)
-	REPO=$(echo $LINE | cut -d' ' -f2-)
-	TARGET=$(echo $REPO | cut -d' ' -f2- | cut -d'/' -f1)
-	COLUMNS=$(echo "`tput cols`-`echo "$PACKAGE$REPO" | wc -c`-5" | bc -q)
-	printf "%4d %s" $PRIOR "$REPO"
-	[ $REVERSE -eq 1 ] && printf "\e[1m%${COLUMNS}s\e[0m\n" "$TARGET" || printf "%${COLUMNS}s\n" "$TARGET"
-    done < <(apt-cache policy $PACKAGE | egrep 'Packages$' | sort -nr)
+    check_package $package
+    [ $? -ne 0 ] && echo "apt: package '$package' not found" >&2 && return
+    while read line ; do
+	[ $reverse -eq 1 ] && echo -ne "\e[7m$package\e[0m " || echo -n "$package "
+	prior=$(echo $line | cut -d' ' -f1)
+	repo=$(echo $line | cut -d' ' -f2-)
+	target=$(echo $repo | cut -d' ' -f2- | cut -d'/' -f1)
+	columns=$(echo "`tput cols`-`echo "$package$repo" | wc -c`-5" | bc -q)
+	printf "%4d %s" $prior "$repo"
+	[ $reverse -eq 1 ] && printf "\e[1m%${columns}s\e[0m\n" "$target" || printf "%${columns}s\n" "$target"
+    done < <(apt-cache policy $package | egrep 'Packages$' | sort -nr)
 }
 
 function do_available() {
-    N=0
-    while read LINE ; do
-	N=$(($N + 1))
-	PACKAGE=$(echo $LINE | cut -d'/' -f1)
-	OLD=$(echo $LINE | awk '{print $4}')
-	NEW=$(echo $LINE | awk '{print $6}')
-	L=$(echo $PACKAGE | wc -c)
-	COLUMNS=$(echo "`tput cols`-$L-6" | bc -q)
-	printf "%5d %s %${COLUMNS}s\n" $N "$PACKAGE" "$OLD -> $NEW"
+    n=0
+    while read line ; do
+	n=$(($n + 1))
+	package=$(echo $line | cut -d'/' -f1)
+	old=$(echo $line | awk '{print $4}')
+	new=$(echo $line | awk '{print $6}')
+	l=$(echo $package | wc -c)
+	columns=$(echo "`tput cols`-$L-6" | bc -q)
+	printf "%5d %s %${columns}s\n" $n "$package" "$old -> $new"
     done < <(apt-show-versions -u 2>/dev/null)
-    [ $N -eq 0 ] && echo "Everything is up-to-date" >&2
+    [ $n -eq 0 ] && echo "Everything is up-to-date" >&2
 }
 
 function do_repositories() {
-    P=0
-    ARCH=$(dpkg --print-architecture)
-    while read FILE ; do
-	while read LINE ; do
-	    REPO=$(echo $LINE | cut -d' ' -f1)
-	    REL=$(echo $LINE | cut -d' ' -f1 | rev | cut -d'_' -f1 | rev)
-	    TARGETS=$(echo $LINE | cut -d' ' -f2-)
-	    for TARGET in $TARGETS ; do
-		FILE=$(find /var/lib/apt/lists -type f -name "${REPO}_${TARGET}*-${ARCH}_Packages")
-		SITE=$(basename $FILE | cut -d'_' -f1)
-		N=$(egrep '^Package:' $FILE | wc -l)
-		case $REVERSE in
-		    1)	printf "\e[1m%5d\e[0m %s/%s/%s\n" $N "$SITE" "$REL" "$TARGET" ;;
-		    *)	printf "%5d %s/%s/%s\n" $N "$SITE" "$REL" "$TARGET" ;;
+    p=0
+    arch=$(dpkg --print-architecture)
+    while read file ; do
+	while read line ; do
+	    repo=$(echo $line | cut -d' ' -f1)
+	    rel=$(echo $line | cut -d' ' -f1 | rev | cut -d'_' -f1 | rev)
+	    targets=$(echo $line | cut -d' ' -f2-)
+	    for target in $targets ; do
+		file=$(find /var/lib/apt/lists -type f -name "${repo}_${target}*-${arch}_Packages")
+		site=$(basename $file | cut -d'_' -f1)
+		n=$(egrep '^Package:' $file | wc -l)
+		case $reverse in
+		    1)	printf "\e[1m%5d\e[0m %s/%s/%s\n" $n "$site" "$rel" "$target" ;;
+		    *)	printf "%5d %s/%s/%s\n" $n "$site" "$rel" "$target" ;;
 		esac
-		P=$(($P + $N))
+		p=$(($p + $n))
 	    done
-	done < <(egrep '^deb ' "$FILE" | sed -r 's#^deb\s+https?://##g' | tr '/' '_' | sed -r 's#_?\s+#_dists_#')
+	done < <(egrep '^deb ' "$file" | sed -r 's#^deb\s+https?://##g' | tr '/' '_' | sed -r 's#_?\s+#_dists_#')
     done < <(find /etc/apt -type f -name "*.list")
-    case $REVERSE in
-	1)	printf "\e[1m%5d\e[0m packages indexed\n" $P ;;
-	*)	printf "%5d packages indexed\n" $P ;;
+    case $reverse in
+	1)	printf "\e[1m%5d\e[0m packages indexed\n" $p ;;
+	*)	printf "%5d packages indexed\n" $p ;;
     esac
 }
 
 function do_hold() {
-    check_package $PACKAGE
-    [ $? -ne 0 ] && echo "apt: package '$PACKAGE' not found" >&2 && return
-    IGNORE=$(dpkg --get-selections | grep hold)
-    if [ -z "$IGNORE" ] ; then
-	echo "$PACKAGE hold" | dpkg --set-selections
-	echo "$PACKAGE: put on hold"
+    check_package $package
+    [ $? -ne 0 ] && echo "apt: package '$package' not found" >&2 && return
+    ignore=$(dpkg --get-selections | grep hold)
+    if [ -z "$ignore" ] ; then
+	echo "$package hold" | dpkg --set-selections
+	echo "$package: put on hold"
     else
-	echo "$PACKAGE install" | dpkg --set-selections
-	echo "$PACKAGE: taken off hold"
+	echo "$package install" | dpkg --set-selections
+	echo "$package: taken off hold"
     fi
 }
 
 function do_post_hold() {
-    N=$(dpkg --get-selections | grep hold | wc -l)
-    [ $N -eq 0 ] && echo "No package holded" >&2
+    n=$(dpkg --get-selections | grep hold | wc -l)
+    [ $n -eq 0 ] && echo "No package holded" >&2
     if [ $# -eq 0 ] ; then
-	PACKAGES=$(dpkg --get-selections | grep hold | awk '{print $1}')
-	for PACKAGE in $PACKAGES ; do
-	    case $REVERSE in
-		1)	printf "hold \e[7m%s\e[0m\n" "$PACKAGE";;
-		*)	printf "hold %s\n" "$PACKAGE" ;;
+	packages=$(dpkg --get-selections | grep hold | awk '{print $1}')
+	for package in $packages ; do
+	    case $reverse in
+		1)	printf "hold \e[7m%s\e[0m\n" "$package";;
+		*)	printf "hold %s\n" "$package" ;;
 	    esac
 	done
     fi
 }
 
 function check_package() {
-    while read TMP ; do
+    while read tmp ; do
 	return 0
     done < <(apt-cache policy $1)
     return 1
@@ -290,8 +290,8 @@ case $1 in
     "install"|"reinstall"|"remove"|"purge"|"download"|"source")
 	[ `id -u` -ne 0 ] && echo "apt-$1: are you root, `id -un`?" >&2 && exit 1
 	[ $# -lt 2 ] && echo "apt-$1: too few arguments" >&2 && usage
-	[ -z "$APT" ] && echo "apt-$1: that command requiers `echo $BINS | sed 's/ / or /g'`" >&2 && exit 1
-	[ $1 = "source" -a $APT != "apt-get" ] && echo "apt-$1: that command requiers apt-get" >&2 && exit 1
+	[ -z "$apt" ] && echo "apt-$1: that command requiers `echo $bins | sed 's/ / or /g'`" >&2 && exit 1
+	[ $1 = "source" -a $apt != "apt-get" ] && echo "apt-$1: that command requiers apt-get" >&2 && exit 1
 	;;
     "status"|"search"|"show")
 	[ $1 != "status" -a -z "`which apt-cache`" ] && echo "apt-$1: that command requiers apt-cache" >&2 && exit 1
@@ -328,7 +328,7 @@ case $1 in
 	[ $# -gt 1 ] && echo "apt-$1: too many arguments" >&2 && usage
 	;;
     "keep")
-	[ $APT != "aptitude" ] && echo "apt-$1: that command requiers aptitude" >&2 && exit 1
+	[ $apt != "aptitude" ] && echo "apt-$1: that command requiers aptitude" >&2 && exit 1
 	[ $# -gt 1 ] && echo "apt-$1: too many arguments" >&2 && usage
 	;;
     "repositories")
@@ -354,80 +354,80 @@ esac
 
 case $1 in
     "update")
-	$APT update
+	$apt update
 	;;
     "upgrade")
-	case $APT in
-	    "aptitude")	$APT safe-upgrade ;;
-	    *)		$APT upgrade ;;
+	case $apt in
+	    "aptitude")	$apt safe-upgrade ;;
+	    *)		$apt upgrade ;;
 	esac
 	;;
     "status")
 	shift
-	for PACKAGE in $@ ; do
-	    do_status $PACKAGE
+	for package in $@ ; do
+	    do_status $package
 	done
 	;;
     "search")
 	shift
-	for PACKAGE in $@ ; do
-	    do_search $PACKAGE
+	for package in $@ ; do
+	    do_search $package
 	done
 	;;
     "show")
 	shift
-	N=0
-	for PACKAGE in $@ ; do
-	    [ $N -gt 0 ] && echo ""
-	    N=$(($N + 1))
-	    check_package $PACKAGE
-	    [ $? -eq 0 ] && apt-cache show $PACKAGE 2>/dev/null | sed '/^$/d' || echo "apt: package '$PACKAGE' not found" >&2
+	n=0
+	for package in $@ ; do
+	    [ $n -gt 0 ] && echo ""
+	    n=$(($n + 1))
+	    check_package $package
+	    [ $? -eq 0 ] && apt-cache show $package 2>/dev/null | sed '/^$/d' || echo "apt: package '$package' not found" >&2
 	done
 	;;
     "file")
-	PACKAGES=$(dpkg -S $2 | cut -d':' -f1 | uniq)
-	for PACKAGE in $PACKAGES ; do
-	    do_search $PACKAGE
+	packages=$(dpkg -S $2 | cut -d':' -f1 | uniq)
+	for package in $packages ; do
+	    do_search $package
 	done
 	;;
     "install")
 	shift
-	$APT install $@
+	$apt install $@
 	;;
     "reinstall")
 	shift
-	case $APT in
-	    "apt-get")	$APT install --reinstall $@ ;;
-	    *)		$APT reinstall $@ ;;
+	case $apt in
+	    "apt-get")	$apt install --reinstall $@ ;;
+	    *)		$apt reinstall $@ ;;
 	esac
 	;;
     "remove")
 	shift
-	$APT remove $@
+	$apt remove $@
 	;;
     "purge")
 	shift
-	$APT purge $@
+	$apt purge $@
 	;;
     "download")
 	shift
-	$APT download $@
+	$apt download $@
 	;;
     "source")
 	shift
-	$APT source $@
+	$apt source $@
 	;;
     "depends")
 	shift
-	for PACKAGE in $@ ; do
-	    do_depends $PACKAGE
+	for package in $@ ; do
+	    do_depends $package
 	done
 	;;
     "policy")
 	shift
 	[ $# -eq 0 ] && apt-cache policy
-	for PACKAGE in $@ ; do
-	    do_policy $PACKAGE
+	for package in $@ ; do
+	    do_policy $package
 	done
 	;;
     "size")
@@ -435,9 +435,9 @@ case $1 in
 	[ $# -eq 2 ] && do_size 5 || do_size $1
 	;;
     "architecture")
-	ARCH=$(dpkg --print-architecture)
-	COLUMNS=$(echo "`tput cols`-`echo "$ARCH" | wc -c`+1" | bc -q)
-	printf "%s%${COLUMNS}s\n" "$ARCH" "`hostname -f` (`uname -a | sed -r 's/\s#.+$//'`)"
+	arch=$(dpkg --print-architecture)
+	columns=$(echo "`tput cols`-`echo "$arch" | wc -c`+1" | bc -q)
+	printf "%s%${columns}s\n" "$arch" "`hostname -f` (`uname -a | sed -r 's/\s#.+$//'`)"
 	;;
     "available")
 	do_available
@@ -447,8 +447,8 @@ case $1 in
 	;;
     "hold")
 	shift
-	for PACKAGE in $@ ; do
-	    do_hold $PACKAGE
+	for package in $@ ; do
+	    do_hold $package
 	done
 	do_post_hold
 	;;

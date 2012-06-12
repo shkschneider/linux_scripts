@@ -25,37 +25,37 @@ function cancel() {
     shutdown -c
 }
 
-PID=$(ps aux | grep "shutdown -h" | grep -v "grep shutdown -h" | awk '{print $2}')
+pid=$(ps aux | grep "shutdown -h" | grep -v "grep shutdown -h" | awk '{print $2}')
 
 if [ $# -eq 0 ] ; then
     usage
 elif [ -n "`echo "$1" | egrep '^[0-9]+:[0-9]+:[0-9]+$'`" ] ; then
     # dd:hh:mm
-    DAYS=$(echo "$1" | cut -d':' -f1)
-    HOURS=$(echo "$1" | cut -d':' -f2)
-    MINUTES=$(echo "$1" | cut -d':' -f3)
-    [ -n "$PID" ] && cancel
-    echo "Shutdown in: ${DAYS}d ${HOURS}h${MINUTES}m"
-    down $(echo "$DAYS * 3600 + $HOURS * 60 + $MINUTES" | bc -q)
+    days=$(echo "$1" | cut -d':' -f1)
+    hours=$(echo "$1" | cut -d':' -f2)
+    minutes=$(echo "$1" | cut -d':' -f3)
+    [ -n "$pid" ] && cancel
+    echo "Shutdown in: ${days}d ${hours}h${minutes}m"
+    down $(echo "$days * 3600 + $hours * 60 + $minutes" | bc -q)
 elif [ -n "`echo "$1" | egrep '^[0-9]+:[0-9]+$'`" ] ; then
     # hh:mm
-    DAYS=0
-    HOURS=$(echo "$1" | cut -d':' -f1)
-    MINUTES=$(echo "$1" | cut -d':' -f2)
-    [ -n "$PID" ] && cancel
-    echo "Shutdown in: ${DAYS}d ${HOURS}h${MINUTES}m"
-    down $(echo "$DAYS * 3600 + $HOURS * 60 + $MINUTES" | bc -q)
+    days=0
+    hours=$(echo "$1" | cut -d':' -f1)
+    minutes=$(echo "$1" | cut -d':' -f2)
+    [ -n "$pid" ] && cancel
+    echo "Shutdown in: ${days}d ${hours}h${minutes}m"
+    down $(echo "$days * 3600 + $hours * 60 + $minutes" | bc -q)
 elif [ -n "`echo "$1" | egrep '^[0-9]+$'`" ] ; then
     # mm
-    DAYS=0
-    HOURS=0
-    MINUTES=$(echo "$1")
-    [ -n "$PID" ] && cancel
-    echo "Shutdown in: ${DAYS}d ${HOURS}h${MINUTES}m"
-    down $(echo "$DAYS * 3600 + $HOURS * 60 + $MINUTES" | bc -q)
+    days=0
+    hours=0
+    minutes=$(echo "$1")
+    [ -n "$pid" ] && cancel
+    echo "Shutdown in: ${days}d ${hours}h${minutes}m"
+    down $(echo "$days * 3600 + $hours * 60 + $minutes" | bc -q)
 elif [ "_$1" = "_cancel" ] ; then
-    if [ -n "$PID" ] ; then
-	echo "Shutdown (pid:$PID) canceled"
+    if [ -n "$pid" ] ; then
+	echo "Shutdown (pid:$pid) canceled"
 	cancel
     else
 	echo "No shutdown detected"
@@ -63,3 +63,5 @@ elif [ "_$1" = "_cancel" ] ; then
 else
     usage
 fi
+
+# EOF

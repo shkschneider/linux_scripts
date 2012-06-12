@@ -20,52 +20,54 @@ fi
 
 [ $# -eq 0 ] && echo "Usage: apt-add-ppa <PPA [...]>" >&2 && exit 1
 
-LINUX_DISTRO=$(lsb_release -is)
-LINUX_CODENAME=$(lsb_release -cs)
+linux_distro=$(lsb_release -is)
+linux_codename=$(lsb_release -cs)
 
-case "$LINUX_DISTRO" in
+case "$linux_distro" in
     debian|Debian)
-	LINUX_DISTRO="ubuntu"
-	case "$LINUX_CODENAME" in
+	linux_distro="ubuntu"
+	case "$linux_codename" in
 	    squeeze)
-		LINUX_CODENAME="lucid"
+		linux_codename="lucid"
 		;;
 	    *)
-		echo "apt-add-ppa: unsupported distro codename '$LINUX_CODENAME'" >&2 && exit 1
+		echo "apt-add-ppa: unsupported distro codename '$linux_codename'" >&2 && exit 1
 		;;
 	esac
 	;;
     ubuntu|Ubuntu)
-	LINUX_DISTRO="ubuntu"
+	linux_distro="ubuntu"
 	;;
     *)
-	echo "apt-add-ppa: unsupported distro '$LINUX_DISTRO'" >&2 && exit 1
+	echo "apt-add-ppa: unsupported distro '$linux_distro'" >&2 && exit 1
 	;;
 esac
 
-echo "Adding repositories as for $LINUX_DISTRO/$LINUX_CODENAME..."
-I=0
-for ARGV in $@ ; do
-    if [ -z "`echo "$ARGV" | egrep '^ppa:[A-Za-z0-9]+/.+$'`" ] ; then
-	echo "apt-add-ppa: bad PPA '$ARGV'" >&2
+echo "Adding repositories as for $linux_distro/$linux_codename..."
+i=0
+for argv in $@ ; do
+    if [ -z "`echo "$argv" | egrep '^ppa:[A-Za-z0-9]+/.+$'`" ] ; then
+	echo "apt-add-ppa: bad PPA '$argv'" >&2
 	continue
     fi
-    PPA=$(echo "$ARGV" | cut -d':' -f2)
-    USER=$(echo "$ARGV" | cut -d':' -f2 | cut -d'/' -f1)
-    REPO=$(echo "$ARGV" | cut -d':' -f2 | cut -d'/' -f2)
+    ppa=$(echo "$argv" | cut -d':' -f2)
+    user=$(echo "$argv" | cut -d':' -f2 | cut -d'/' -f1)
+    repo=$(echo "$argv" | cut -d':' -f2 | cut -d'/' -f2)
     echo " * $PPA"
-    EXISTS=$(grep "deb http://ppa.launchpad.net/$PPA/" /etc/apt/sources.list)
-    [ -n "$EXISTS" ] && echo "apt-add-ppa: ppa '$PPA' already exists" >&2 && continue
+    exists=$(grep "deb http://ppa.launchpad.net/$ppa/" /etc/apt/sources.list)
+    [ -n "$exists" ] && echo "apt-add-ppa: ppa '$ppa' already exists" >&2 && continue
     echo "" >> /etc/apt/sources.list
-    echo "# apt-add-ppa: $PPA" >> /etc/apt/sources.list
-    echo "deb http://ppa.launchpad.net/$PPA/$LINUX_DISTRO $LINUX_CODENAME main" >> /etc/apt/sources.list
-    HTTP=$(curl -I "https://launchpad.net/~$USER" 2>/dev/null | head -1 | cut -d' ' -f2)
-    if [ -z "$HTTP" ] || [ "_$HTTP" != "_200" ] ; then
-	echo "apt-add-ppa: no such PPA user '$USER'" >&2
+    echo "# apt-add-ppa: $ppa" >> /etc/apt/sources.list
+    echo "deb http://ppa.launchpad.net/$ppa/$linux_distro $linux_codename main" >> /etc/apt/sources.list
+    http=$(curl -I "https://launchpad.net/~$user" 2>/dev/null | head -1 | cut -d' ' -f2)
+    if [ -z "$http" ] || [ "_$http" != "_200" ] ; then
+	echo "apt-add-ppa: no such PPA user '$user'" >&2
 	continue
     fi
-    I=$(($I + 1))
+    i=$(($i + 1))
 done
-echo -n "Added $I repositor"
-[ $I -gt 1 ] && echo -n "ies" || echo -n "y"
+echo -n "Added $i repositor"
+[ $i -gt 1 ] && echo -n "ies" || echo -n "y"
 echo " to /etc/apt/sources.list"
+
+# EOF

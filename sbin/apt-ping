@@ -9,55 +9,57 @@
 # under certain conditions.
 #
 
-OK=$(echo -e "[ \033[0;32mok\033[0;0m ]")
-KO=$(echo -e "[ \033[0;31mko\033[0;0m ]")
+ok=$(echo -e "[ \033[0;32mok\033[0;0m ]")
+ko=$(echo -e "[ \033[0;31mko\033[0;0m ]")
 
 [ -z "`cat /proc/net/arp | egrep '^[0-9]'`" ] && echo "apt-ping: no network connection" >&2 && exit 1
 [ -z "`which curl`" ] && echo "apt-ping: command 'curl' not found" >&2 && exit 1
 
 function ping_apt() {
-    HTTP_STATUS=$(curl -I "$URL" 2>/dev/null | grep -E '^HTTP' | tr -d "\r" | awk '{print "HTTP/"$2}')
-    [ -z "$HTTP_STATUS" ] && return
-    if [ "$HTTP_STATUS" = "HTTP/200" ] ; then
-	echo -ne "   $HTTP_STATUS $URL"
-	OFFSET=$(echo "`tput cols` - `echo $URL | wc -c` + 2" | bc -q)
-	printf "%${OFFSET}s\n" "$OK"
-    elif [ "$HTTP_STATUS" = "HTTP/302" ] ; then
-	LOCATION=$(curl -I "$URL" 2>/dev/null | grep -E '^Location' | tr -d "\r" | cut -d' ' -f2-)
-	echo "-> $LOCATION"
-	[ "$LOCATION" = "$URL" ] && echo "!!!!!"
-	if [ -n "$LOCATION" ] ; then
-	    HTTP_STATUS=$(curl -I "$LOCATION" 2>/dev/null | grep -E '^HTTP' | tr -d "\r" | awk '{print "HTTP/"$2}')
-	    ping_apt "$FILE" "$LINE" "$LOCATION"
+    http_status=$(curl -I "$url" 2>/dev/null | grep -E '^http' | tr -d "\r" | awk '{print "HTTP/"$2}')
+    [ -z "$http_status" ] && return
+    if [ "$http_status" = "HTTP/200" ] ; then
+	echo -ne "   $http_status $url"
+	offset=$(echo "`tput cols` - `echo $url | wc -c` + 2" | bc -q)
+	printf "%${offset}s\n" "$ok"
+    elif [ "$http_status" = "HTTP/302" ] ; then
+	location=$(curl -I "$url" 2>/dev/null | grep -E '^Location' | tr -d "\r" | cut -d' ' -f2-)
+	echo "-> $location"
+	[ "$location" = "$url" ] && echo "!!!!!"
+	if [ -n "$location" ] ; then
+	    http_status=$(curl -I "$location" 2>/dev/null | grep -E '^HTTP' | tr -d "\r" | awk '{print "HTTP/"$2}')
+	    ping_apt "$file" "$line" "$location"
 	fi
     else
-	echo -ne "   $HTTP_STATUS $URL ($FILE:$LINE)"
-	OFFSET=$(echo "`tput cols` - `echo "$URL$FILE$LINE" | wc -c` - 2" | bc -q)
-	printf "%${OFFSET}s\n" "$KO"
+	echo -ne "   $http_status $url ($file:$line)"
+	offset=$(echo "`tput cols` - `echo "$url$file$line" | wc -c` - 2" | bc -q)
+	printf "%${offset}s\n" "$ko"
     fi
 }
 
 if [ $# -ne 0 ] ; then
-    FILE=$(readlink -f "$1")
-    echo " * Reading $FILE..."
-    [ ! -e "$FILE" ] && echo "apt-ping: $FILE: no such file or directory" >&2 && continue
-    [ -d "$FILE" ] && echo "apt-ping: $FILE: is a directory" >&2 && continue
-    [ ! -r "$FILE" ] && echo "apt-ping: $FILE: permission denied" >&2 && continue
-    grep -HEn '^deb' $FILE 2>/dev/null | sed -e 's/:deb//g' -e 's/:/ /' | awk '{print $1" "$2" " $3}' | \
-	while read REPOSITORY ; do
-	    LINE=$(echo $REPOSITORY | cut -d' ' -f2)
-	    URL=$(echo $REPOSITORY | cut -d' ' -f3-)
-	    ping_apt "$FILE" "$LINE" "$URL"
+    file=$(readlink -f "$1")
+    echo " * Reading $file..."
+    [ ! -e "$file" ] && echo "apt-ping: $file: no such file or directory" >&2 && continue
+    [ -d "$file" ] && echo "apt-ping: $file: is a directory" >&2 && continue
+    [ ! -r "$file" ] && echo "apt-ping: $file: permission denied" >&2 && continue
+    grep -HEn '^deb' $file 2>/dev/null | sed -e 's/:deb//g' -e 's/:/ /' | awk '{print $1" "$2" " $3}' | \
+	while read repository ; do
+	    line=$(echo $repository | cut -d' ' -f2)
+	    url=$(echo $repository | cut -d' ' -f3-)
+	    ping_apt "$file" "$line" "$url"
         done
 else
-    while read FILE ; do
-	echo " * Reading $FILE..."
-	[ ! -r "$FILE" ] && echo "apt-ping: $FILE: permission denied" >&2 && continue
-	grep -HEn '^deb' $FILE 2>/dev/null | sed -e 's/:deb//g' -e 's/:/ /' | awk '{print $1" "$2" " $3}' | \
-	    while read REPOSITORY ; do
-	    LINE=$(echo $REPOSITORY | cut -d' ' -f2)
-	    URL=$(echo $REPOSITORY | cut -d' ' -f3- | cut -d'/' -f1,2,3)
-	    ping_apt "$FILE" "$LINE" "$URL"
+    while read file ; do
+	echo " * Reading $file..."
+	[ ! -r "$file" ] && echo "apt-ping: $file: permission denied" >&2 && continue
+	grep -HEn '^deb' $file 2>/dev/null | sed -e 's/:deb//g' -e 's/:/ /' | awk '{print $1" "$2" " $3}' | \
+	    while read repository ; do
+	    line=$(echo $repository | cut -d' ' -f2)
+	    url=$(echo $repository | cut -d' ' -f3- | cut -d'/' -f1,2,3)
+	    ping_apt "$file" "$line" "$url"
         done
     done < <(find /etc/apt -type f -name "*.list")
 fi
+
+# EOF

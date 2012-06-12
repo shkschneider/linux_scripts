@@ -68,52 +68,52 @@ function interfaces_list_up() {
 }
 
 function interfaces_list_down() {
-    INTERFACES=$(ifconfig -a -s | egrep '^(eth|wlan|usb)' | awk '{print $1}')
-    [ -z "$INTERFACES" ] && return
-    for INTERFACE in $INTERFACES ; do
-	[ `getStatus $INTERFACE` = "down" ] && echo "$INTERFACE"
+    interfaces=$(ifconfig -a -s | egrep '^(eth|wlan|usb)' | awk '{print $1}')
+    [ -z "$interfaces" ] && return
+    for interface in $interfaces ; do
+	[ `getStatus $interface` = "down" ] && echo "$interface"
     done
 }
 
 function interfaces_status() {
-    INTERFACES=$(ifconfig -a -s | egrep '^(eth|wlan|usb)' | awk '{print $1}')
-    [ -z "$INTERFACES" ] && return
-    for INTERFACE in $INTERFACES ; do
-	[ `getStatus $INTERFACE` = "up" ] && echo "$INTERFACE: UP "$(getIp $INTERFACE) || echo "$INTERFACE: DOWN"
+    interfaces=$(ifconfig -a -s | egrep '^(eth|wlan|usb)' | awk '{print $1}')
+    [ -z "$interfaces" ] && return
+    for interface in $interfaces ; do
+	[ `getStatus $interface` = "up" ] && echo "$interface: UP "$(getIp $interface) || echo "$interface: DOWN"
     done
 }
 
 # Type-specific
 
 function type_list() {
-    INTERFACES=$(ifconfig -a -s | egrep "^$1" | awk '{print $1}')
-    [ -z "$INTERFACES" ] && return
-    for INTERFACE in $INTERFACES ; do
-	[ `getType $INTERFACE` = "$1" ] && echo "$INTERFACE"
+    interfaces=$(ifconfig -a -s | egrep "^$1" | awk '{print $1}')
+    [ -z "$interfaces" ] && return
+    for interface in $interfaces ; do
+	[ `getType $interface` = "$1" ] && echo "$interface"
     done
 }
 
 function type_list_up() {
-    INTERFACES=$(ifconfig -s | egrep "^$1" | awk '{print $1}')
-    [ -z "$INTERFACES" ] && return
-    for INTERFACE in $INTERFACES ; do
-	[ `getType $INTERFACE` = "$1" ] && [ `getStatus $INTERFACE` = "up" ] && echo "$INTERFACE"
+    interfaces=$(ifconfig -s | egrep "^$1" | awk '{print $1}')
+    [ -z "$interfaces" ] && return
+    for interface in $interfaces ; do
+	[ `getType $interface` = "$1" ] && [ `getStatus $interface` = "up" ] && echo "$interface"
     done
 }
 
 function type_list_down() {
-    INTERFACES=$(ifconfig -a -s | egrep "^$1" | awk '{print $1}')
-    [ -z "$INTERFACES" ] && return
-    for INTERFACE in $INTERFACES ; do
-	[ `getType $INTERFACE` = "$1" ] && [ `getStatus $INTERFACE` = "down" ] && echo "$INTERFACE"
+    interfaces=$(ifconfig -a -s | egrep "^$1" | awk '{print $1}')
+    [ -z "$interfaces" ] && return
+    for interface in $interfaces ; do
+	[ `getType $interface` = "$1" ] && [ `getStatus $interface` = "down" ] && echo "$interface"
     done
 }
 
 function type_status() {
-    INTERFACES=$(ifconfig -a -s | egrep "^$1" | awk '{print $1}')
-    [ -z "$INTERFACES" ] && return
-    for INTERFACE in $INTERFACES ; do
-	[ `getStatus $INTERFACE` = "up" ] && echo "$INTERFACE: UP "$(getIp $INTERFACE) || echo "$INTERFACE: DOWN"
+    interfaces=$(ifconfig -a -s | egrep "^$1" | awk '{print $1}')
+    [ -z "$interfaces" ] && return
+    for interface in $interfaces ; do
+	[ `getStatus $interface` = "up" ] && echo "$interface: UP "$(getIp $interface) || echo "$interface: DOWN"
     done
 }
 
@@ -224,3 +224,5 @@ case "$1" in
 	esac ;;
     *) echo "network: unrecognized argument '$1'" >&2 && exit 1 ;;
 esac
+
+# EOF

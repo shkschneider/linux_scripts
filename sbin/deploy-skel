@@ -16,41 +16,41 @@ function usage() {
     exit 1
 }
 
-FORCE="false"
-for ARGV in $@ ; do
-    [ -z "$ARGV" ] && continue
-    [ "$ARGV" == "--help" ] && usage
-    [ "$ARGV" == "--force" ] && FORCE="true" && shift
+force="false"
+for argv in $@ ; do
+    [ -z "$argv" ] && continue
+    [ "$argv" == "--help" ] && usage
+    [ "$argv" == "--force" ] && force="true" && shift
 done
 
 function deploy_skel_for_user() {
-    [ -z "$LINE" ] && return
-    _USER=$(echo $LINE | cut -d':' -f1)
-    _UID=$(echo $LINE | cut -d':' -f3)
-    _HOME=$(echo $LINE | cut -d':' -f6)
-    if [ $_UID -ge 1000 ] && [ $_UID -le 59999 ] ; then
-	while read FILE ; do
-	    FILENAME=$(basename "$FILE")
-	    if [ "$FORCE" = "true" ] || [ ! -f "$_HOME/$FILENAME" ] ; then
-		if [ "$FORCE" = "true" ] ; then
-		    printf "[F] $_USER: $_HOME/$FILENAME\n"
+    [ -z "$line" ] && return
+    user=$(echo $line | cut -d':' -f1)
+    uid=$(echo $line | cut -d':' -f3)
+    home=$(echo $line | cut -d':' -f6)
+    if [ $uid -ge 1000 ] && [ $uid -le 59999 ] ; then
+	while read file ; do
+	    filename=$(basename "$file")
+	    if [ "$force" = "true" ] || [ ! -f "$home/$filename" ] ; then
+		if [ "$force" = "true" ] ; then
+		    printf "[F] $user: $home/$filename\n"
 		else
-		    printf "$_USER: $_HOME/$FILENAME\n"
+		    printf "$user: $home/$filename\n"
 		fi
-	        cp -r "$FILE" "$_HOME/" > /dev/null
-		chown -R "$_USER:$_USER" "$_HOME/$FILENAME"
+	        cp -r "$file" "$home/" > /dev/null
+		chown -R "$user:$user" "$home/$filename"
 	    fi
 	done < <(find /etc/skel -maxdepth 1 | sed '1d')
     fi
 }
 
 if [ $# -gt 0 ] ; then
-    for LOGIN in $@ ; do
-	LINE=$(egrep ^$LOGIN: /etc/passwd)
+    for login in $@ ; do
+	line=$(egrep ^$login: /etc/passwd)
 	deploy_skel_for_user
     done
 else
-    while read LINE ; do
+    while read line ; do
 	deploy_skel_for_user
     done < <(cat /etc/passwd)
 fi

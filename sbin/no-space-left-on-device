@@ -27,6 +27,7 @@ aptitude autoclean
 
 echo "   aptitude clean"
 aptitude clean
+#find /var/cache/apt/archives -type f -name "*.deb" -exec rm -vf {} \;
 
 echo "   empty trash"
 rm -r -f /home/*/.local/share/Trash/files/*
