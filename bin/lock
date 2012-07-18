@@ -1,0 +1,63 @@
+#!/bin/bash
+#
+# lock -- lock files in bash
+# Copyright (C) 2011-2012  Alan SCHNEIDER
+#                          <shk.schneider[at]gmail.com>
+#
+# This program comes with ABSOLUTELY NO WARRANTY.
+# This is free software, and you are welcome to redistribute it
+# under certain conditions.
+#
+
+name=$(basename "$0")
+lockfile="/tmp/$name.pid"
+[ -f "$lockfile" ] && lock=$(tail -n1 "$lockfile") || lock=0
+
+function start() {
+    if [ "$lock" -eq 0 ] ; then
+        # No lock file found
+	[ -f "$lockfile" ] && chmod 644 "$lockfile"
+	echo "$name: Locked by $$ ($lockfile)"
+	echo -n $$ > "$lockfile"
+	chmod 444 "$lockfile"
+	# ...
+    else
+	echo "$name: Locked by $lock" >&2 && exit 1
+    fi
+}
+
+function stop() {
+    if [ "$lock" -ne 0 ] ; then
+	# Lock file found
+	chmod 644 "$lockfile"
+	echo -n 0 > "$lockfile"
+	chmod 444 "$lockfile"
+	echo "$name: Unlocked by $$"
+    else
+	echo "$name: Not locked, so not stoped" >&2 && exit 1
+    fi
+}
+
+function status() {
+    if [ "$lock" -ne 0 ] ; then
+	echo "$name is locked ($lock)"
+    else
+	echo "$name is unlocked"
+    fi
+}
+
+function usage() {
+    echo "Usage: $name <start|stop|status>" >&2
+    exit 1
+}
+
+[ $# -ne 1 ] && usage
+
+case "$1" in
+    start)  start ;;
+    stop)   stop ;;
+    status) status ;;
+    *)      usage ;;
+esac
+
+# EOF
