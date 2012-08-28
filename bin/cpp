@@ -1,0 +1,18 @@
+#!/bin/bash
+#
+# cpp -- cp with prograss bars
+# Copyright (C) 2009-2012  Alan SCHNEIDER
+#                          <shk.schneider[at]gmail.com>
+#
+# This program comes with ABSOLUTELY NO WARRANTY.
+# This is free software, and you are welcome to redistribute it
+# under certain conditions.
+#
+
+[ $# -ne 2 ] && echo "Usage: rsync <src> <dst>" >&2 && exit 1
+
+[ ! -x "$(which rsync)" ] && echo "E: rsync: command not found" >&2 && exit 1
+
+rsync -WavP --human-readable --progress "$1" "$2"
+
+# EOF

@@ -1,0 +1,27 @@
+#!/bin/bash
+#
+# json -- json prettyfier from url or file
+# Copyright (C) 2012  Alan SCHNEIDER
+#                     <shk.schneider[at]gmail.com>
+#
+# This program comes with ABSOLUTELY NO WARRANTY.
+# This is free software, and you are welcome to redistribute it
+# under certain conditions.
+#
+
+[ $# -eq 0 ] && echo "Usage: json <url[ ...]>" >&2 && exit 1
+
+[ ! -x "$(which curl)" ] && echo "E: curl: command not found" >&2 && exit 1
+[ ! -x "$(which python)" ] && echo "E: python: command not found" >&2 && exit 1
+[ ! -x "$(which pygmentize)" ] && echo "E: pygmentize: command not found" >&2 && exit 1
+
+for url in $@ ; do
+    echo "$url"
+    if [ -n "$(echo $url | egrep '^https?://')" ] ; then
+	curl --silent "$url" | python -m json.tool | pygmentize -O style=monokai -f console256 -g
+    else
+	cat "$url" | python -m json.tool | pygmentize -O style=monokai -f console256 -g
+    fi
+done
+
+# EOF
