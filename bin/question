@@ -1,0 +1,20 @@
+#!/bin/bash
+#
+# question -- correctly read answer in bash
+# Copyright (C) 2012  Alan SCHNEIDER
+#                     <shk.schneider[at]gmail.com>
+#
+# This program comes with ABSOLUTELY NO WARRANTY.
+# This is free software, and you are welcome to redistribute it
+# under certain conditions.
+#
+
+echo -n "Don't you love GNU/Linux [Y/n]? "
+read REPLY
+if [[ $REPLY =~ ^[Yy]?$ ]] ; then
+    echo "Linus would be proud!"
+else
+    echo "Get out of my TTY!"
+fi
+
+# EOF
