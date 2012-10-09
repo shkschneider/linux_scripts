@@ -9,19 +9,23 @@
 # under certain conditions.
 #
 
-[ $# -eq 0 ] && echo "Usage: json <url[ ...]>" >&2 && exit 1
-
-[ ! -x "$(which curl)" ] && echo "E: curl: command not found" >&2 && exit 1
 [ ! -x "$(which python)" ] && echo "E: python: command not found" >&2 && exit 1
 [ ! -x "$(which pygmentize)" ] && echo "E: pygmentize: command not found" >&2 && exit 1
 
-for url in $@ ; do
-    echo "$url"
-    if [ -n "$(echo $url | egrep '^https?://')" ] ; then
-	curl --silent "$url" | python -m json.tool | pygmentize -O style=monokai -f console256 -g
-    else
-	cat "$url" | python -m json.tool | pygmentize -O style=monokai -f console256 -g
-    fi
-done
+if [ $# -gt 0 ] ; then
+    [ ! -x "$(which curl)" ] && echo "E: curl: command not found" >&2 && exit 1
+    for url in $@ ; do
+	echo "$url"
+	if [ -n "$(echo $url | egrep '^https?://')" ] ; then
+	    curl --silent "$url" | python -m json.tool | pygmentize -O style=monokai -f console256 -g
+	else
+	    cat "$url" | python -m json.tool | pygmentize -O style=monokai -f console256 -g
+	fi
+    done
+else
+    read -u 0 JSON
+    echo $JSON
+    echo $JSON | python -m json.tool | pygmentize -O style=monokai -f console256 -g
+fi
 
 # EOF
