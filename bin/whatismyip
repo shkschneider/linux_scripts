@@ -15,6 +15,6 @@
 
 internal=$(cat /proc/net/arp | egrep '^[0-9]' | cut -d' ' -f1 | tr "\n" " " | sed -r 's/ $//')
 external=$(curl -s ifconfig.me/ip)
-echo "$Internal $external"
+echo "$internal $external"
 
 # EOF
