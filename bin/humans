@@ -10,7 +10,7 @@
 #
 
 [ -z "`cat /proc/net/arp | egrep '^[0-9]'`" ] && echo "humans: no network connection" >&2 && exit 1
-humans=$(wget -q -O - http://www.census.gov/population/international/ | grep wclocknum | sed -r 's#^.*>([0-9,]+)<.*$#\1#')
+humans=$(curl --silent http://www.census.gov/population/international/ | grep wclocknum | sed -r 's#^.*>([0-9,]+)<.*$#\1#')
 echo "$humans humans on earth"
 
 # EOF
