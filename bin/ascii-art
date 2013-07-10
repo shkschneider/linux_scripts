@@ -1,0 +1,35 @@
+#!/bin/bash
+#
+# ascii-art -- ascii art out of simple strings
+# Copyright (C) 2013  Alan SCHNEIDER
+#                     <shk.schneider[at]gmail.com>
+#
+# From <http://www.network-science.de/ascii/>
+#
+# This program comes with ABSOLUTELY NO WARRANTY.
+# This is free software, and you are welcome to redistribute it
+# under certain conditions.
+#
+
+[ ! -x "$(which curl)" ] && echo "E: curl: command not found" >&2 && exit 1
+
+chars='[a-zA-Z0-9\-]'
+
+if [ $# -gt 0 ] ; then
+    for argv in $@ ; do
+        # Allowed are a-z,A-Z,ä,ö,ü,å,0-9,_,+,-,blank,!,?,@,#,:,comma and dot.
+        if [ -n "$(echo "$argv" | egrep "^${chars}+$")" ] ; then
+            get="TEXT=${argv}&x=32&y=14&FONT=graffiti&RICH=no&FORM=left&STRE=no&WIDT=80"
+            curl --silent "http://www.network-science.de/ascii/ascii.php?${get}" | \
+                sed -n '35,39p' | \
+                sed 's/&lt;/>/g' | \
+                sed 's/&gt;/</g'
+        else
+            echo "E: $argv: allowed characters are: ${chars}" >&2 && continue
+        fi
+    done
+else
+    echo "Usage: $0 <text ...>" >&2 && exit 1
+fi
+
+# EOF
