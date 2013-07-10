@@ -22,12 +22,21 @@ echo " * Cleaning..."
 echo "   dpkg --purge"
 dpkg --purge $(COLUMNS=200 dpkg -l | grep "^rc" | tr -s ' ' | cut -d ' ' -f 2)
 
+if [ -z "`which deborphan`" ] ; then
+  echo "no-space-left-on-device: command 'deborphan' not found" >&2
+else
+  while [ -n "$(deborphan)" ] ; do
+    echo "   aptitude purge"
+    aptitude purge $(deborphan)
+  done
+fi
+
 echo "   aptitude autoclean"
 aptitude autoclean
 
 echo "   aptitude clean"
 aptitude clean
-#find /var/cache/apt/archives -type f -name "*.deb" -exec rm -vf {} \;
+find /var/cache/apt/archives -type f -name "*.deb" -exec rm -vf {} \;
 
 echo "   empty trash"
 rm -r -f /home/*/.local/share/Trash/files/*
@@ -35,8 +44,8 @@ rm -r -f /home/*/.local/share/Trash/files/*
 echo "   old thumbnails"
 find /home/*/.thumbnails -type f -atime +7 -exec rm {} \;
 
-#echo "   old kernels"
-#aptitude purge $(dpkg -l | grep '^ii  linux\-\(headers\|image\)\-[0-9]' | grep -v `uname -r` | cut -d' ' -f3)
+echo "   old kernels"
+aptitude purge $(dpkg -l | grep '^ii  linux\-\(headers\|image\)\-[0-9]' | grep -v `uname -r` | cut -d' ' -f3)
 
 echo "   localepurge"
 [ -z "`which localepurge`" ] && aptitude install localepurge || dpkg-reconfigure localepurge
