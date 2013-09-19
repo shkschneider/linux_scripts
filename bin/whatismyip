@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# whatismyip -- retrieve your external IP from command line
+# whatismyip -- retrieve your internal/external IP from command line
 # Copyright (C) 2010-2012  Alan SCHNEIDER
 #                          <shk.schneider[at]gmail.com>
 #
@@ -9,12 +9,16 @@
 # under certain conditions.
 #
 
+ifconfig=$(which ifconfig 2>/dev/null)
+[ -z "$ifconfig" ] && ifconfig="/sbin/ifconfig"
+
+[ ! -x "$ifconfig" ] && echo "whatismyip: command 'ifconfig' not found" >&2 && exit 1
 [ -z "`which curl`" ] && echo "whatismyip: command 'curl' not found" >&2 && exit 1
 
-[ -z "`cat /proc/net/arp | egrep '^[0-9]'`" ] && echo "W: `basename "$0"`: No network connection" >&2 && exit 1
-
-internal=$(cat /proc/net/arp | egrep '^[0-9]' | cut -d' ' -f1 | tr "\n" " " | sed -r 's/ $//')
+internal=$($ifconfig  | grep "inet addr:" | grep Bcast | awk '{print $2}' | cut -d':' -f2)
 external=$(curl -s ifconfig.me/ip)
 echo "$internal $external"
+
+# Todo: retrieve interface
 
 # EOF

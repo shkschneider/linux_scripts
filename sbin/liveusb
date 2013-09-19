@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+#
+# liveusb -- flash iso to usb
+# Copyright (C) 2013  Alan SCHNEIDER
+#                     <shk.schneider[at]gmail.com>
+#
+# This program comes with ABSOLUTELY NO WARRANTY.
+# This is free software, and you are welcome to redistribute it
+# under certain conditions.
+#
+
+[ "_$(id -u)" != "_0" ] && echo "E: need to be root" >&2 && exit 1
+[ -z "$(which pv)" ] && echo "E: pv: command not found" >&2 && exit 1
+[ -z "$(which dd)" ] && echo "E: dd: command not found" >&2 && exit 1
+
+[ $# -ne 2 ] && echo "Usage: $0 <iso> <device>" >&2 && exit 1
+
+if=$(readlink -f "$1")
+of=$(readlink -f "$2")
+[ -z "$if" ] && echo "E: no input" >&2 && exit 1
+[ ! -f "$if" ] && echo "E: input is not a file" >&2 && exit 1
+[ -z "$of" ] && echo "E: no output" >&2 && exit 1
+[ ! -e "$of" ] && echo "E: output does not exists" >&2 && exit 1
+[ -z "$(echo $of | egrep '^/dev/')" ] && echo "E: output is not a device" >&2 && exit 1
+
+echo "$1 -> $2"
+
+pv -tpreb "$if" | dd of="$of"
+
+# EOF
