@@ -1,14 +1,81 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
-# rand -- generate random string
-# Copyright (C) 2012  Alan SCHNEIDER
-#                     <shk.schneider[at]gmail.com>
+# random -- randomizer using urandom or random.org api
+# Copyright (C) 2012-2013  Alan SCHNEIDER
+#                          <shk.schneider[at]gmail.com>
 #
 # This program comes with ABSOLUTELY NO WARRANTY.
 # This is free software, and you are welcome to redistribute it
 # under certain conditions.
 #
 
-echo $(dd if=/dev/urandom bs=1 count=64 2>/dev/null | base64 -w 0)
+min="1"
+max="100"
+len="8"
+n="1"
+
+function usage() {
+    echo "Usage: $(basename $0) [-m integer:MIN] [-M integer:MAX] [-l string:LENGTH] [-n NUM] <MODE ...>" >&2
+    echo "       Modes: <integer|string|quota|urandom>" >&2
+    echo "       Defaults: min=1 max=100 len=8 n=1 mode=urandom" >&2
+}
+
+function _integer() {
+    curl --silent "http://www.random.org/integers/?num=1&min=$min&max=$max&col=1&base=10&format=plain&rnd=new" 2>/dev/null
+}
+
+function _string() {
+    curl --silent "http://www.random.org/strings/?num=1&len=$len&digits=on&upperalpha=on&loweralpha=on&unique=on&format=plain&rnd=new" 2>/dev/null
+}
+
+function _quota() {
+    curl --silent "http://www.random.org/quota/?format=plain" 2>/dev/null
+}
+
+function _urandom() {
+    echo $(dd if=/dev/urandom bs=1 count=64 2>/dev/null | base64 -w 0)
+}
+
+function mode() {
+    i=0
+    b="False"
+    while [ $i -ne $n ] ; do
+        case $1 in
+            integer) _integer ;;
+            string) _string ;;
+            quota)
+                [ "_$b" = "_True" ] && i=$(($i + 1)) && continue
+                b="True"
+                _quota
+                ;;
+            urandom) _urandom ;;
+            *)
+                echo "E: $argv: invalid operation" >&2
+                usage
+                exit 1
+                ;;
+        esac
+        i=$(($i + 1))
+    done
+}
+
+while getopts ":m:M:l:n:h" opt ; do
+    case $opt in
+        m) min=$OPTARG ;;
+        M) max=$OPTARG ;;
+        l) len=$OPTARG ;;
+        n) n=$OPTARG ;;
+        h) usage && exit 0 ;;
+        :) echo "E: $OPTARG: invalid option" >&2 && usage && exit 1 ;;
+        \?) echo "E: $OPTARG: argument required" >&2 && usage && exit 1 ;;
+    esac
+done
+shift $((OPTIND-1))
+
+[ $# -eq 0 ] && mode "urandom"
+
+for argv in $@ ; do
+    mode "$argv"
+done
 
 # EOF
