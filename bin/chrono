@@ -1,0 +1,30 @@
+#!/bin/bash
+#
+# chrono -- time chronometer
+# Copyright (C) 2014  Alan SCHNEIDER
+#                     <shk.schneider[at]gmail.com>
+#
+# This program comes with ABSOLUTELY NO WARRANTY.
+# This is free software, and you are welcome to redistribute it
+# under certain conditions.
+#
+
+start=$(date +%s.%N)
+
+function sigint() {
+    echo ""
+    end=$(date +%s.%N)
+    diff=$(echo "$end-$start" | bc -ql)
+    diff=$(echo "$diff" | sed -r 's#^\.#0.#')
+    echo "${diff}s"
+    exit $?
+}
+
+trap sigint SIGINT
+
+echo -n "Timer waiting for SIGINT..."
+while true ; do
+    read x
+done
+
+# EOF
