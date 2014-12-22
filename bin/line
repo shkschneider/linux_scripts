@@ -1,0 +1,19 @@
+#!/bin/bash
+#
+# line -- print particular line(s) of file
+# Copyright (C) 2014  Alan SCHNEIDER
+#                     <shk.schneider[at]gmail.com>
+#
+# This program comes with ABSOLUTELY NO WARRANTY.
+# This is free software, and you are welcome to redistribute it
+# under certain conditions.
+#
+
+[ $# -ne 2 ] && echo "Usage: line <line(s)> <file>" >&2 && exit 1
+
+n="$1"
+file="$2"
+
+cat "$file" | sed -n "${n}p"
+
+# EOF
