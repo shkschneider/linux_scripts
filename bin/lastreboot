@@ -1,0 +1,16 @@
+#!/bin/bash
+#
+# lastreboot -- retrieve last reboot
+# Copyright (C) 2016  Alan SCHNEIDER
+#                     <shk.schneider[at]gmail.com>
+#
+# This program comes with ABSOLUTELY NO WARRANTY.
+# This is free software, and you are welcome to redistribute it
+# under certain conditions.
+#
+
+# <http://unix.stackexchange.com/a/131776>
+
+date -d "$(</proc/uptime awk '{print $1}') seconds ago"
+
+# EOF

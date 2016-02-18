@@ -1,0 +1,14 @@
+#!/bin/bash
+#
+# lastboot -- retrieve last boot
+# Copyright (C) 2016  Alan SCHNEIDER
+#                     <shk.schneider[at]gmail.com>
+#
+# This program comes with ABSOLUTELY NO WARRANTY.
+# This is free software, and you are welcome to redistribute it
+# under certain conditions.
+#
+
+date -d "$(uptime -s)"
+
+# EOF
