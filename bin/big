@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # big -- list big files
-# Copyright (C) 2010-2011  Alan SCHNEIDER
+# Copyright (C) 2010-2016  Alan SCHNEIDER
 #                          <shk.schneider[at]gmail.com>
 #
 # This program comes with ABSOLUTELY NO WARRANTY.
@@ -9,20 +9,46 @@
 # under certain conditions.
 #
 
-if [ $# -ne 2 ] ; then
-    echo "Usage: big <dir> <size>" >&2
-    echo "       SIZE is in bytes but can be 512M and so on" >&2
-    exit 1
-fi
+# <https://www.gnu.org/software/coreutils/manual/html_node/numfmt-invocation.html>
+export LC_ALL=C
 
-dir=$(readlink -f "$1")
-size=$(echo "$2" | tr "[a-z]" "[A-Z]" | egrep "^[0-9]+[MGT]?$")
+# rguments parsing
+format=0
+while getopts ":hf" opt ; do
+    case $opt in
+        h) echo "Usage: big [-f] [PATH] [SIZE]" >&2
+           exit 1 ;;
+        f) format=1 ;;
+        # allows no other option
+        \?) echo "big: $opt: unknown option" >&2 && exit 1 ;;
+    esac
+done
+shift $((OPTIND - 1))
+# dir
+dir="$(pwd)"
+[ $# -ge 1 ] && [ ! -z "$1" ] && dir="$(readlink -f "$1")"
 [ ! -e "$dir" ] && echo "big: $dir: no such file or directory" >&2 && exit 1
 [ ! -d "$dir" ] && echo "big: $dir: not a directory" >&2 && exit 1
 [ ! -r "$dir" ] && echo "big: $dir: permission denied" >&2 && exit 1
-[ -z "$size" ] && echo "big: invalid size" >&2 && exit 1
+# size
+size="0"
+[ $# -ge 2 ] && [ ! -z "$2" ] && size="$2"
+_size=$(echo $size | numfmt --from=auto 2>/dev/null)
+[ $? -ne 0 ] && echo "big: $size: invalid size" >&2 && exit 1
+size=$_size
 
-echo " * Searching in '$dir' for files bigger than ${size}B..."
-find "$dir" -type f -size +$size -exec ls -lh {} \; 2>/dev/null | sed -r 's/ +/ /g' | cut -d' ' -f5,9-
+# find printf | sort<https://unix.stackexchange.com/a/206739>
+# find -size <https://superuser.com/a/204571>
+if [ $format -eq 0 ] ; then
+    find "$dir" -type f -size "+${size}c" -printf '%s %p\n' 2>/dev/null \
+        | sort -n
+else
+    # numfmt <https://unix.stackexchange.com/a/44087>
+    find "$dir" -type f -size "+${size}c" -printf '%s %p\n' 2>/dev/null \
+        | sort -n \
+        | numfmt --to=iec
+fi
+
+exit 0
 
 # EOF
