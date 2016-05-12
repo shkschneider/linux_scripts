@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # mysqlm - mysql manager
 # Copyright (C) 2012  Alan SCHNEIDER

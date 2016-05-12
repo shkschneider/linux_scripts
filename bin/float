@@ -1,14 +1,14 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # float -- makes bash handle float numbers
-# Copyright (C) 2011-2012  Alan SCHNEIDER
+# Copyright (C) 2011-2016  Alan SCHNEIDER
 #                          <shk.schneider[at]gmail.com>
+#
+# From <http://www.linuxjournal.com/content/floating-point-math-bash>
 #
 # This program comes with ABSOLUTELY NO WARRANTY.
 # This is free software, and you are welcome to redistribute it
 # under certain conditions.
-#
-# From LinuxJournal <http://www.linuxjournal.com/content/floating-point-math-bash>
 #
 
 float_scale=2
@@ -44,5 +44,7 @@ set -f
 for argv in $@ ; do
     echo $(float_eval $argv)
 done
+
+exit 0
 
 # EOF

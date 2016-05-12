@@ -1,18 +1,17 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # 64bits -- know if your computer runs and supports 64bits OS
-# Copyright (C) 2011  Alan SCHNEIDER
-#                     <shk.schneider[at]gmail.com>
+# Copyright (C) 2011-2016  Alan SCHNEIDER
+#                          <shk.schneider[at]gmail.com>
 #
 # This program comes with ABSOLUTELY NO WARRANTY.
 # This is free software, and you are welcome to redistribute it
 # under certain conditions.
 #
 
-[ -z "`which file`" ] && echo "64bits: command 'file' not found" >&2 && exit 1
-
-echo "System: "$(uname -o)" "$(file -b `which file` | awk '{print $2}')
+echo "System: "$(uname -o)" "$(file -b "$(command -v file 2>/dev/null)" | awk '{print $2}')
 echo "Supports 64bits: "$(cat /proc/cpuinfo | grep flags | grep lm > /dev/null && echo "Yes" || echo "No")
-#echo "libc: v"$(dpkg -l | egrep '^ii  libc6 ' | awk '{print $3}')
+
+exit 0
 
 # EOF

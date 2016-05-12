@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # lastreboot -- retrieve last reboot
 # Copyright (C) 2016  Alan SCHNEIDER

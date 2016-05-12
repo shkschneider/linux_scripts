@@ -1,7 +1,7 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # clean -- delete annoying tmp files
-# Copyright (C) 2009-2012  Alan SCHNEIDER
+# Copyright (C) 2009-2016  Alan SCHNEIDER
 #                          <shk.schneider[at]gmail.com>
 #
 # This program comes with ABSOLUTELY NO WARRANTY.
@@ -13,5 +13,8 @@ find . -type f -name "*~" -exec rm -vf {} \;
 find . -type f -name "#*#" -exec rm -vf {} \;
 find . -type f -name "*.orig" -exec rm -vf {} \;
 find . -type f -name "*.bak" -exec rm -vf {} \;
+find . -type f -name "*.tmp" -exec rm -vf {} \;
+
+exit 0
 
 # EOF

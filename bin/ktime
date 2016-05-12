@@ -1,7 +1,7 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # ktime - kernel's up/idle time with ratio
-# Copyright (C) 2011-2012  Alan SCHNEIDER
+# Copyright (C) 2011-2016  Alan SCHNEIDER
 #                          <shk.schneider[at]gmail.com>
 #
 # This program comes with ABSOLUTELY NO WARRANTY.
@@ -22,6 +22,8 @@ while [ $busy_unit != $prefered ] ; do
         d) busy_unit="*" ;;
     esac
 done
+echo "$busy$busy_unit"
+
 idle=$(cat /proc/uptime | cut -d' ' -f2 | cut -d'.' -f1)
 idle_unit="s"
 while [ $idle_unit != $prefered ] ; do
@@ -32,9 +34,11 @@ while [ $idle_unit != $prefered ] ; do
         h) idle_unit="d" ;;
         d) idle_unit="*" ;; esac
 done
+echo "$idle$idle_unit"
 
-ratio=$(echo "scale=2;$(cat /proc/uptime | sed 's# #/#')" | bc -q)
+ratio=$(echo "scale=2; $(cat /proc/uptime | sed 's# #/#')" | bc -q)
+printf "%.2f%%\n" $ratio
 
-echo "$busy$busy_unit $idle$idle_unit $ratio"
+exit 0
 
 # EOF

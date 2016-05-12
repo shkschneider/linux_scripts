@@ -1,7 +1,7 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # dec2base -- decimal to a given base
-# Copyright (C) 2009-2012  Alan SCHNEIDER
+# Copyright (C) 2009-2016  Alan SCHNEIDER
 #                          <shk.schneider[at]gmail.com>
 #
 # Adapted from <http://tldp.org/LDP/abs/html/mathc.html#HEXCONVERT>
@@ -14,19 +14,19 @@
 base="0 1 2 3 4 5 6 7 8 9 A B C D E F"
 
 [ $# -ne 2 ] && echo "Usage: dec2base <number> <base_to>" >&2 && exit 1
-n1=$(echo "$1" | tr -d '[0-9]')
-n2=$(echo "$2" | tr -d '[0-9]')
-[ -n "$n1" ] && echo "dec2base: $1: not a number" >&2 && exit 1
-[ -n "$n2" ] && echo "dec2base: $2: not a number" >&2 && exit 1
-[ $2 -lt 2 ] || [ $2 -gt 16 ] && echo "dec2base: $2: must be between 2 and 16 (inclusive)" >&2 && exit 1
+[ -z "$(echo "$1" | sed -r 's;[^0-9];;g')" ] && echo "E: $1: not a number" >&2 && exit 1
+[ -z "$(echo "$2" | sed -r 's;[^0-9];;g')" ] && echo "E: $2: not a number" >&2 && exit 1
+[ $2 -lt 2 ] || [ $2 -gt 16 ] && echo "E: $2: must be between 2 and 16 (inclusive)" >&2 && exit 1
 
-i=0
-for b in $base ; do
-    echo -n "$b"
-    i=$(($i + 1))
-    [ $i -eq $2 ] && echo -n ": " && break
-done
+#i=0
+#for b in $base ; do
+#    echo -n "$b"
+#    i=$(($i + 1))
+#    [ $i -eq $2 ] && echo -n ": " && break
+#done
 
 echo "$1 $2 o p" | dc
+
+exit 0
 
 # EOF

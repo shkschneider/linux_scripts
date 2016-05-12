@@ -1,8 +1,8 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # owner -- get the owner of a file/directory
-# Copyright (C) 2012  Alan SCHNEIDER
-#                     <shk.schneider[at]gmail.com>
+# Copyright (C) 2012-2016  Alan SCHNEIDER
+#                          <shk.schneider[at]gmail.com>
 #
 # This program comes with ABSOLUTELY NO WARRANTY.
 # This is free software, and you are welcome to redistribute it
@@ -16,10 +16,12 @@ function usage() {
 
 for argv in $@ ; do
     [ ! -e "$argv" ] && echo "owner: no such file or directory '$argv'" >&2 && continue
-    path=$(readlink -f "$argv")
-    basename=$(basename "$path")
-    dirname=$(dirname "$path")
-    find "$dirname" -maxdepth 1 -name "$basename" -printf "$argv: %u:%g %U:%G\n"
+    path=$(readlink -f -- "$argv")
+    basename=$(basename -- "$path")
+    dirname=$(dirname -- "$path")
+    find "$dirname" -maxdepth 1 -name "$basename" -printf "$argv: %u:%g %U:%G\n" 2>/dev/null
 done
+
+exit 0
 
 # EOF

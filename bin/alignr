@@ -1,7 +1,7 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # alignr -- output text on the right in a terminal
-# Copyright (C) 2010-2012  Alan SCHNEIDER
+# Copyright (C) 2010-2016  Alan SCHNEIDER
 #                          <shk.schneider[at]gmail.com>
 #
 # This program comes with ABSOLUTELY NO WARRANTY.
@@ -15,5 +15,7 @@ columns=$(tput cols)
 for argv in "$@" ; do
     printf "%${columns}s\n" "$argv"
 done
+
+exit 0
 
 # EOF

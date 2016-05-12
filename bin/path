@@ -1,8 +1,8 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # path -- print a formatted $PATH
-# Copyright (C) 2012  Alan SCHNEIDER
-#                     <shk.schneider[at]gmail.com>
+# Copyright (C) 2012-2016  Alan SCHNEIDER
+#                          <shk.schneider[at]gmail.com>
 #
 # This program comes with ABSOLUTELY NO WARRANTY.
 # This is free software, and you are welcome to redistribute it
@@ -15,10 +15,12 @@ paths=$(echo $PATH | tr ':' ' ')
 
 n=0
 for path in $paths ; do
-    nn=$(find $(readlink -f $path) -type f -executable | wc -l)
+    nn=$(find "$(readlink -f -- "$path")" -type f -executable 2>/dev/null | wc -l)
     printf "%5d %s\n" $nn "$path"
     n=$(($n + $nn))
 done
 printf "%5d %s\n" $n "$PATH"
+
+exit $?
 
 # EOF

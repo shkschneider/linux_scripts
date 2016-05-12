@@ -1,7 +1,7 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # extract -- one script to extract them all
-# Copyright (C) 2008-2012  Alan SCHNEIDER
+# Copyright (C) 2008-2016  Alan SCHNEIDER
 #                          <shk.schneider[at]gmail.com>
 #
 # This program comes with ABSOLUTELY NO WARRANTY.
@@ -11,13 +11,13 @@
 
 function cmd() {
     for bin in "$1" ; do
-	[ -n "`which $bin`" ] && echo "extract: command '$bin' not found" >&2 && return 1
+        command -v "$bin" >/dev/null 2>&1 || { echo "E: $bin: command not found" >&2 ; return 1 ; }
     done
     return 0
 }
 
 function extract() {
-    echo " * Extracting `basename $file` to `pwd`..."
+    echo " * Extracting $(basename -- $file) to $(pwd)..."
     case "$file" in
 	*.tar)			cmd "tar" && tar xvf "$file" ;;
 	*.tar.bz2|*.tbz2)	cmd "tar" && tar xvjf "$file" ;;
@@ -63,10 +63,10 @@ for file in "$@" ; do
     [ ! -e "$file" ] && echo "extract: $file: no such file or directory" >&2 && exit 1
     [ -d "$file" ] && echo "extract: $file: is a directory" >&2 && exit 1
     [ ! -r "$file" ] && echo "extract: $file: permission denied" >&2 && exit 1
-    file=$(readlink -f "$file")
-    name=$(basename "$file" | sed -r 's/(\.[a-zZ2]{2,3})?\.[a-zZ2]{1,4}$//')
+    file=$(readlink -f -- "$file")
+    name=$(basename -- "$file" | sed -r 's/(\.[a-zZ2]{2,3})?\.[a-zZ2]{1,4}$//')
     if [ -d "$name" ] ; then
-	echo -n "   Directory \`$name' exists. Overwite [Y/n]? "
+	echo -n "   Directory '$name' exists. Overwite [Y/n]? "
 	read rep
 	[ "_$rep" = "_n" ] && continue
 	rm -rf "$name"
@@ -75,5 +75,7 @@ for file in "$@" ; do
     mkdir "$name" && cd "$name"
     extract
 done
+
+exit 0
 
 # EOF

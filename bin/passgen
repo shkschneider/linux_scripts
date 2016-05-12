@@ -1,7 +1,7 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # passgen -- randomly generates Unix password
-# Copyright (C) 2011-2012  Alan SCHNEIDER
+# Copyright (C) 2011-2016  Alan SCHNEIDER
 #                          <shk.schneider[at]gmail.com>
 #
 # This program comes with ABSOLUTELY NO WARRANTY.
@@ -10,13 +10,15 @@
 #
 
 if [ $# -eq 1 ] ; then
-    [ -z "`echo "$1" | egrep '^[0-9]+$'`" ] && echo "passgen: $1: not a number" >&2 && exit 1
+    [ -z "$(echo "$1" | sed -r 's;[^0-9];;g')" ] && echo "E: $1: not a number" >&2 && exit 1
     length=$1
 else
     # Default length
     length=16
 fi
 
-tr -dc A-Za-z0-9_ < /dev/urandom | head -c ${length} | xargs
+tr -dc A-Za-z0-9_ < /dev/urandom | head -c $length | xargs
+
+exit $?
 
 # EOF

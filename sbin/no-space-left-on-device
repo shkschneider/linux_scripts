@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # no-space-left-on-device -- cleanup some space
 # Copyright (C) 2011-2012  Alan SCHNEIDER

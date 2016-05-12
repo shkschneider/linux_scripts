@@ -1,18 +1,20 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # keep-screen-on -- tells X to never go to sleep
-# Copyright (C) 2012  Alan SCHNEIDER
-#                     <shk.schneider[at]gmail.com>
+# Copyright (C) 2012-2016  Alan SCHNEIDER
+#                          <shk.schneider[at]gmail.com>
 #
 # This program comes with ABSOLUTELY NO WARRANTY.
 # This is free software, and you are welcome to redistribute it
 # under certain conditions.
 #
 
-[ -z "`which xset`" ] && echo "keep-screen-on: command 'xset' not found" >&2 && exit 1
+command -v xset >/dev/null 2>&1 || { echo "E: xset: command not found" >&2 ; exit 1 ; }
 
 xset -dpms
 xset s off
 xset q | egrep '^\s+DPMS' | sed -r 's/^\s+//'
+
+exit 0
 
 # EOF

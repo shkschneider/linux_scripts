@@ -1,7 +1,7 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # traffic -- mesures traffic on interfaces
-# Copyright (C) 2011-2012  Alan SCHNEIDER
+# Copyright (C) 2011-2016  Alan SCHNEIDER
 #                          <shk.schneider[at]gmail.com>
 #
 # This program comes with ABSOLUTELY NO WARRANTY.
@@ -9,7 +9,7 @@
 # under certain conditions.
 #
 
-[ -z "`cat /proc/net/arp | egrep '^[0-9]'`" ] && echo "traffic: no network connection" >&2 && exit 1
+[ -z "$(cat /proc/net/arp | egrep '^[0-9]')" ] && echo "E: no network connection" >&2 && exit 1
 
 scale=$(echo "1024*1024" | bc -q)
 prefered="" # empty for auto (scale), B KB MB GB TB otherwise
@@ -46,7 +46,9 @@ for interface in $interfaces ; do
             TB) out_unit="*B" ;; esac
     done
     [ $out -gt 0 ] && ratio=$(echo "scale=2;$in/$out" | bc -q) || ratio="0.00"
-    echo "$interface up $in $in_unit $out $out_unit $ratio"
+    echo "$interface ↓ $in $in_unit ↑ $out $out_unit % $ratio"
 done
+
+exit 0
 
 # EOF

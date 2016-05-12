@@ -1,59 +1,61 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # supercopier -- cp with progress bar (with pv)
-# Copyright (C) 2010-211  Alan SCHNEIDER
-#                         <shk.schneider[at]gmail.com>
+# Copyright (C) 2010-2016  Alan SCHNEIDER
+#                          <shk.schneider[at]gmail.com>
 #
 # This program comes with ABSOLUTELY NO WARRANTY.
 # This is free software, and you are welcome to redistribute it
 # under certain conditions.
 #
 
-[ -z "`which pv`" ] && echo "supercopier: command 'pv' not found" >&2 && exit 1
+command -v pv >/dev/null 2>&1 || { echo "E: pv: command not found" >&2 ; exit 1 ; }
 
 [ $# -lt 2 ] && echo "Usage: supercopier <source [...]> <destination>" >&2 && exit 1
 
 function supercopier() {
     # 1: source
     # 2: destination
-    [ ! -e "$1" ] && echo "supercopier: $1: no such file or directory" >&2 && exit 1
-    [ ! -r "$1" ] && echo "supercopier: $1: premission denied" >&2 && exit 1
-    [ "$1" = "$2" ] && echo "supercopier: input file is output file" >&2 && exit 1
+    [ ! -e "$1" ] && echo "E: $1: no such file or directory" >&2 && exit 1
+    [ ! -r "$1" ] && echo "E: $1: premission denied" >&2 && exit 1
+    [ "$1" = "$2" ] && echo "E: input file is output file" >&2 && exit 1
     [ -d "$S1" -a ! -d "$2" ] && mkdir -p "$2"
-    OFFSET=$(echo "`tput cols` - `echo "$1$2 "| wc -c` - 6" | bc -q)
-    printf " * %s -> %s %${OFFSET}s\n" "$1" "$2" $(du -sh "$SOURCE" 2>/dev/null | awk '{print $1}')
-    find "$1" | sed "s#$1##g" | while read TARGET ; do
-	SOURCE=$1$TARGET
-	DESTINATION=$2$TARGET
-	if [ -d "$SOURCE" ] ; then
-	    [ ! -d "$DESTINATION" ] && mkdir -p "$DESTINATION"
-	elif [ -d "$DESTINATION" ] ; then
-	    echo "supercopier: $DESTINATION: is a directory" >&2 && sleep 1
+    offset=$(echo "$(tput cols) - $(echo "$1$2 "| wc -c) - 6" | bc -q)
+    printf " * %s -> %s %${offset}s\n" "$1" "$2" $(du -sh "$source" 2>/dev/null | awk '{print $1}')
+    find "$1" | sed "s#$1##g" | while read target ; do
+	source=$1$target
+	destination=$2$target
+	if [ -d "$source" ] ; then
+	    [ ! -d "$destination" ] && mkdir -p "$destination"
+	elif [ -d "$destination" ] ; then
+	    echo "E: $destination: is a directory" >&2 && sleep 1
 	else
-	    pv -pert "$SOURCE" > "$DESTINATION"
-	    [ $? -ne 0 ] && echo "supercopier: pv seems to have failed ($?)" >&2 && sleep 1
+	    pv -pert "$source" > "$destination"
+	    [ $? -ne 0 ] && echo "E: pv seems to have failed ($?)" >&2 && sleep 1
 	fi
     done
 }
 
-CMD_SOURCE=$(echo "$1" | sed "s#~#$HOME#g")
-CMD_DESTINATION=$(echo "$2" | sed "s#~#$HOME#g")
+cmd_source=$(echo "$1" | sed "s#~#$HOME#g")
+cmd_destination=$(echo "$2" | sed "s#~#$HOME#g")
 
 if [ $# -eq 2 ] ; then
-    SOURCE=$(readlink -f "$CMD_SOURCE")
-    DESTINATION=$(readlink -f "$CMD_DESTINATION")
-    supercopier "$SOURCE" "$DESTINATION/$(basename "$SOURCE")"
+    source=$(readlink -f -- "$cmd_source")
+    destination=$(readlink -f -- "$cmd_destination")
+    supercopier "$source" "$destination/$(basename -- "$source")"
 else
-    CMD_DESTINATION=$(while [ $# -gt 1 ] ; do shift; done ; echo $1)
+    cmd_destination=$(while [ $# -gt 1 ] ; do shift; done ; echo $1)
     I=1
-    for SOURCE in "$@" ; do
-	SOURCE=$(readlink -f "$SOURCE")
-	DESTINATION=$CMD_DESTINATION/$(basename "$SOURCE")
-	DESTINATION=$(readlink -f "$DESTINATION")
-	supercopier "$SOURCE" "$DESTINATION"
+    for source in "$@" ; do
+	source=$(readlink -f -- "$source")
+	destination=$cmd_destination/$(basename -- "$source")
+	destination=$(readlink -f -- "$destination")
+	supercopier "$source" "$destination"
 	I=$(($I + 1))
 	[ $I -eq $# ] && break
     done
 fi
+
+exit 0
 
 # EOF

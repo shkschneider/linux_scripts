@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # big -- list big files
 # Copyright (C) 2010-2016  Alan SCHNEIDER
@@ -26,7 +26,7 @@ done
 shift $((OPTIND - 1))
 # dir
 dir="$(pwd)"
-[ $# -ge 1 ] && [ ! -z "$1" ] && dir="$(readlink -f "$1")"
+[ $# -ge 1 ] && [ ! -z "$1" ] && dir="$(readlink -f -- "$1")"
 [ ! -e "$dir" ] && echo "big: $dir: no such file or directory" >&2 && exit 1
 [ ! -d "$dir" ] && echo "big: $dir: not a directory" >&2 && exit 1
 [ ! -r "$dir" ] && echo "big: $dir: permission denied" >&2 && exit 1

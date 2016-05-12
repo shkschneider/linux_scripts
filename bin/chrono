@@ -1,15 +1,13 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # chrono -- time chronometer
-# Copyright (C) 2014  Alan SCHNEIDER
-#                     <shk.schneider[at]gmail.com>
+# Copyright (C) 2014-2016  Alan SCHNEIDER
+#                          <shk.schneider[at]gmail.com>
 #
 # This program comes with ABSOLUTELY NO WARRANTY.
 # This is free software, and you are welcome to redistribute it
 # under certain conditions.
 #
-
-start=$(date +%s.%N)
 
 function sigint() {
     echo ""
@@ -23,8 +21,11 @@ function sigint() {
 trap sigint SIGINT
 
 echo -n "Timer waiting for SIGINT..."
+start=$(date +%s.%N)
 while true ; do
     read x
 done
+
+exit 0
 
 # EOF

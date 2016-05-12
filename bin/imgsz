@@ -1,24 +1,24 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # imgsz -- get image sizes and dpi
-# Copyright (C) 2012  Alan SCHNEIDER
-#                     <shk.schneider[at]gmail.com>
+# Copyright (C) 2012-2016  Alan SCHNEIDER
+#                          <shk.schneider[at]gmail.com>
 #
 # This program comes with ABSOLUTELY NO WARRANTY.
 # This is free software, and you are welcome to redistribute it
 # under certain conditions.
 #
 
-[ $# -eq 0 ] && echo "Usage: imgsz <img[ ...]>" >&2 && exit 1
+command -v sips >/dev/null 2>&1 || { echo "E: sips: command not found" >&2 ; exit 1 ; }
 
-[ ! -x "$(which sips)" ] && echo "E: sips: command not found" >&2 && exit 1
+[ $# -eq 0 ] && echo "Usage: imgsz <img[ ...]>" >&2 && exit 1
 
 for file in $@ ; do
     if [ ! -f "$file" ] ; then
-	echo "E: $file is not a file" >&2
+	echo "E: $file: not a file" >&2
 	continue
     elif [ ! -r "$file" ] ; then
-	echo "E: $file is not readable" >&2
+	echo "E: $file: not readable" >&2
 	continue
     fi
     width=$(sips -g pixelWidth $1 | grep -oE "[0-9\.]{1,}$")
@@ -28,5 +28,7 @@ for file in $@ ; do
     dpi=$(echo "$dpiw+$dpih" | bc -ql | cut -d'.' -f1)
     echo "$file: $width*$height:$dpi"
 done
+
+exit 0
 
 # EOF

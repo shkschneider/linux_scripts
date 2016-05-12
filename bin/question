@@ -1,8 +1,8 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # question -- correctly read answer in bash
-# Copyright (C) 2012  Alan SCHNEIDER
-#                     <shk.schneider[at]gmail.com>
+# Copyright (C) 2012-2016  Alan SCHNEIDER
+#                          <shk.schneider[at]gmail.com>
 #
 # This program comes with ABSOLUTELY NO WARRANTY.
 # This is free software, and you are welcome to redistribute it
@@ -10,11 +10,14 @@
 #
 
 echo -n "Don't you love GNU/Linux [Y/n]? "
-read REPLY
-if [[ $REPLY =~ ^[Yy]?$ ]] ; then
-    echo "Linus would be proud!"
+read r
+if [[ $r =~ ^[Yy]?$ ]] ; then
+    [ -z "$r" ] && echo
+    echo "Both RMS and Linus would be proud!"
 else
     echo "Get out of my TTY!"
 fi
+
+exit 0
 
 # EOF

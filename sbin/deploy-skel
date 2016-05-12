@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # deploy-skel -- deploy /etc/skel configuration
 # Copyright (C) 2012  Alan SCHNEIDER

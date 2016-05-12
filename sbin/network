@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # network -- manage ethernet and wireless connections easily from the command line
 # Copyright (C) 2010-2012  Alan SCHNEIDER

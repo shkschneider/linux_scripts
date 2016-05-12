@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # apt-add-ppa -- recode for debian
 # Copyright (C) 2011-2012  Alan SCHNEIDER

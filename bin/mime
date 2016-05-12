@@ -1,8 +1,8 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # mine -- get the mine type of a file
-# Copyright (C) 2012  Alan SCHNEIDER
-#                     <shk.schneider[at]gmail.com>
+# Copyright (C) 2012-2016  Alan SCHNEIDER
+#                          <shk.schneider[at]gmail.com>
 #
 # This program comes with ABSOLUTELY NO WARRANTY.
 # This is free software, and you are welcome to redistribute it
@@ -15,8 +15,8 @@ function usage() {
 }
 
 for argv in $@ ; do
-    [ ! -e "$argv" ] && echo "mime: no such file or directory '$argv'" >&2 && continue
-    [ ! -r "$argv" ] && echo "mime: permission denied '$argv'" >&2 && continue
+    [ ! -e "$argv" ] && echo "E: $argv: no such file or directory" >&2 && continue
+    [ ! -r "$argv" ] && echo "E: $argv: permission denied" >&2 && continue
     if [ -d "$argv" ] ; then
 	echo "directory"
     elif [ ! -f "$argv" ] ; then
@@ -25,5 +25,7 @@ for argv in $@ ; do
 	file -i "$argv" | cut -d';' -f1 | cut -d' ' -f2
     fi
 done
+
+exit 0
 
 # EOF

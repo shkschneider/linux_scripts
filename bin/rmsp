@@ -1,7 +1,7 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # rmsp -- removes spaces in filenames
-# Copyright (C) 2010-2012  Alan SCHNEIDER
+# Copyright (C) 2010-2016  Alan SCHNEIDER
 #                          <shk.schneider[at]gmail.com>
 #
 # This program comes with ABSOLUTELY NO WARRANTY.
@@ -12,9 +12,11 @@
 ls | while read -r file ; do
     new_file=$(echo $file | tr ' ' '_' | tr -d '[{}(),\!]' | tr -d "'\"" | tr '[A-Z]' '[a-z]' | sed 's/_-_/_/g')
     if [ "_$file" != "_${new_file}" ] ; then
-	[ -e "$new_file" ] && echo "W: \`$file' not renamed because \`$new_file' already exists" >&2 && continue
+	[ -e "$new_file" ] && echo "W: '$file' not renamed because '$new_file' already exists" >&2 && continue
 	mv "$file" "$new_file"
     fi
 done
+
+exit 0
 
 # EOF

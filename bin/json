@@ -1,31 +1,33 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # json -- json prettyfier from url or file
-# Copyright (C) 2012  Alan SCHNEIDER
-#                     <shk.schneider[at]gmail.com>
+# Copyright (C) 2012-2016  Alan SCHNEIDER
+#                          <shk.schneider[at]gmail.com>
 #
 # This program comes with ABSOLUTELY NO WARRANTY.
 # This is free software, and you are welcome to redistribute it
 # under certain conditions.
 #
 
-[ ! -x "$(which python)" ] && echo "E: python: command not found" >&2 && exit 1
-[ ! -x "$(which pygmentize)" ] && echo "E: pygmentize: command not found" >&2 && exit 1
+command -v python >/dev/null 2>&1 || { echo "E: python: command not found" >&2 ; exit 1 ; }
+command -v pygmentize >/dev/null 2>&1 || { echo "E: pygmentize: command not found" >&2 ; exit 1 ; }
 
 if [ $# -gt 0 ] ; then
-    [ ! -x "$(which curl)" ] && echo "E: curl: command not found" >&2 && exit 1
     for url in $@ ; do
 	echo "$url"
 	if [ -n "$(echo $url | egrep '^https?://')" ] ; then
+            command -v curl >/dev/null 2>&1 || { echo "E: curl: command not found" >&2 ; exit 1 ; }
 	    curl --silent "$url" | python -m json.tool | pygmentize -O style=monokai -f console256 -g
 	else
 	    cat "$url" | python -m json.tool | pygmentize -O style=monokai -f console256 -g
 	fi
     done
 else
-    read -u 0 JSON
-    echo $JSON
-    echo $JSON | python -m json.tool | pygmentize -O style=monokai -f console256 -g
+    read -u 0 json
+    echo $json
+    echo $json | python -m json.tool | pygmentize -O style=monokai -f console256 -g
 fi
+
+exit 0
 
 # EOF

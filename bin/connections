@@ -1,16 +1,25 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # connections -- list incoming connections
-# Copyright (C) 2011-2012  Alan SCHNEIDER
+# Copyright (C) 2011-2016  Alan SCHNEIDER
 #                          <shk.schneider[at]gmail.com>
+#
+# From <http://tldp.org/LDP/abs/html/networkprogramming.html>
 #
 # This program comes with ABSOLUTELY NO WARRANTY.
 # This is free software, and you are welcome to redistribute it
 # under certain conditions.
 #
-# From <http://tldp.org/LDP/abs/html/networkprogramming.html>
-#
 
-lsof -ni | grep TCP | grep -v "LISTEN" | awk '{print $3,$1,$9}' | sed -r 's/ [0-9\.]+:[0-9]+\->/ /g' | sed -r 's/:.+$//g' | sort | uniq
+lsof -ni \
+    | grep TCP \
+    | grep -v "LISTEN" \
+    | awk '{print $3,$1,$9}' \
+    | sed -r 's/ [0-9\.]+:[0-9]+\->/ /g' \
+    | sed -r 's/:.+$//g' \
+    | sort \
+    | uniq
+
+exit 0
 
 # EOF

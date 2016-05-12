@@ -1,7 +1,7 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # nrand -- generate random number
-# Copyright (C) 2009-2012  Alan SCHNEIDER
+# Copyright (C) 2009-2016  Alan SCHNEIDER
 #                          <shk.schneider[at]gmail.com>
 #
 # This program comes with ABSOLUTELY NO WARRANTY.
@@ -12,5 +12,7 @@
 [ $# -ne 1 ] && echo "Usage: nrand <max>" >&2 && exit 1
 
 echo $[ ( $RANDOM % $1 ) + 1 ]
+
+exit $?
 
 # EOF
