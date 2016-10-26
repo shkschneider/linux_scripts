@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+#
+# bclock -- binary clock
+# Copyright (C) 2016  Alan SCHNEIDER
+#                     <shk.schneider[at]gmail.com>
+#
+# From <http://spikesnell.com/index.php?entry=entry111001-230139>
+#
+# This program comes with ABSOLUTELY NO WARRANTY.
+# This is free software, and you are welcome to redistribute it
+# under certain conditions.
+#
+
+format="line"
+while getopts ":lhv" opt ; do
+    case $opt in
+        l) format="line" ;;
+        h) format="horizontal" ;;
+        v) format="vertical" ;;
+        # allows no other option
+        \?) echo "bclock: $opt: unknown option" >&2 && exit 1 ;;
+    esac
+done
+shift $((OPTIND - 1))
+
+h=$(date '+%H')
+h=$(printf "%06d" "$(echo "ibase=10;obase=2;$h" | bc -q)")
+m=$(date '+%M')
+m=$(printf "%06d" "$(echo "ibase=10;obase=2;$m" | bc -q)")
+s=$(date '+%S')
+s=$(printf "%06d" "$(echo "ibase=10;obase=2;$s" | bc -q)")
+case $format in
+    "line")
+        echo "$h $m $s"
+        ;;
+    "horizontal")
+        printf "   16 8 4 2 1\n"
+        printf "H   %s\nM %s\nS %s\n" \
+               "$(echo "$h" | cut -c 2- | sed -e 's/\(.\)/\1 /g' | tr "0" " " | tr "1" "*")" \
+               "$(echo "$m" | sed -e 's/\(.\)/\1 /g' | tr "0" " " | tr "1" "*")" \
+               "$(echo "$s" | sed -e 's/\(.\)/\1 /g' | tr "0" " " | tr "1" "*")"
+        ;;
+    "vertical")
+        echo "   H M S"
+        n=32
+        for i in {1..6} ; do
+            printf "%2d %s %s %s\n" "$n" \
+                   "$(echo "$h" | cut -c $i | tr "0" " " | tr "1" "*")" \
+                   "$(echo "$m" | cut -c $i | tr "0" " " | tr "1" "*")" \
+                   "$(echo "$s" | cut -c $i | tr "0" " " | tr "1" "*")"
+            n=$(($n / 2))
+        done
+        ;;
+esac
+
+# echo "$(date '+%H'):$(date '+%M'):$(date '+%S')"
+
+exit 0
+
+# EOF
