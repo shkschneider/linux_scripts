@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+#
+# cpus -- counts and displays CPUs (human friendly)
+# Copyright (C) 2016  Alan SCHNEIDER
+#                     <shk.schneider[at]gmail.com>
+#
+# This program comes with ABSOLUTELY NO WARRANTY.
+# This is free software, and you are welcome to redistribute it
+# under certain conditions.
+#
+
+n="$(nproc)"
+[ $? -ne 0 ] && exit 1
+m="$(lscpu | egrep '^Model name:' | cut -c24- | sed -r 's;\s+; ;g')"
+[ $? -ne 0 ] && exit 1
+echo "$n x $m"
+
+exit 0
+
+# EOF
