@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# swap -- displays configured SWAP (human friendly)
+# ram -- displays intalled RAM (human friendly)
 # Copyright (C) 2016  Alan SCHNEIDER
 #                     <shk.schneider[at]gmail.com>
 #
@@ -9,7 +9,7 @@
 # under certain conditions.
 #
 
-free -h | egrep '^Swap:' | awk '{print $2}'
+free -h | egrep '^Mem:' | awk '{print $2}'
 
 exit $?
 
