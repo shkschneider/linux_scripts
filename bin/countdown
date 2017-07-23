@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+
+# <http://superuser.com/a/611582>
+
+[ $# -ne 1 ] && exit 1
+[ -z "$1" ] && exit 1
+n="$1"
+[ $(echo -n "$n" | wc -c) -ne $(tr -dc '0-9' <<< "$n" | wc -c) ] && exit 1
+
+[ $n -ge 86400 ] && exit 1
+
+trap 'echo && exit 0' INT
+
+start=$(($(date +%s) + $n));
+while [ "$start" -ge $(date +%s) ]; do
+    countdown=$(date -u --date @$(($start - $(date +%s))) +%s)
+    echo -ne "\r$(date -u --date @$countdown +%H:%M:%S)"
+    [ $countdown -le 0 ] && break
+    sleep 0.1
+done
+echo
+
+exit 0
+
+# EOF

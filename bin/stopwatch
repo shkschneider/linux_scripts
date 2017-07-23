@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+# <http://superuser.com/a/611582>
+
+trap 'echo && exit 0' INT
+
+start=$(date +%s)
+while true ; do
+    echo -ne "\r$(date -u --date @$(($(date +%s) - $start)) +%H:%M:%S)"
+    sleep 0.1
+done
+
+exit 0
+
+# EOF
