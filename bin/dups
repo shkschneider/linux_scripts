@@ -30,15 +30,17 @@ dir=${dir:="."}
 [ ! -r ] && echo "E: path is not readable" >&2 && exit 1
 dir=$(readlink -f "$dir")
 
-n=0
-while read path ; do
-    echo "$path"
-    while read p ; do
-        echo -e "\t$p"
-        n=$(($n + 1))
-    done < <(find "$dir" $type -name "*$path" 2>/dev/null)
-done < <(find "$dir" $type 2>/dev/null | sed 's;.*/;;' | sort | uniq -d)
+name="$2"
+name=${name:="*"}
 
-exit $n
+while read filename ; do
+    echo "[$filename]"
+    while read path ; do
+        echo -n "$path"
+        [ -d "$path" ] && echo "/" || echo ""
+    done < <(find "$dir" $type -name "*$filename" 2>/dev/null)
+done < <(find "$dir" $type -name "$name" 2>/dev/null | sed 's;.*/;;' | sort | uniq -d)
+
+exit 0
 
 # EOF
