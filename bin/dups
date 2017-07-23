@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+#
+# dups - duplicated filenames
+# Copyright (C) 2017  Alan SCHNEIDER
+#                     <shk.schneider[at]gmail.com>
+#
+# This program comes with ABSOLUTELY NO WARRANTY.
+# This is free software, and you are welcome to redistribute it
+# under certain conditions.
+#
+
+f=0
+d=0
+while getopts "fd" opt ; do
+    case $opt in
+        "f") f=1 ;;
+        "d") d=1 ;;
+    esac
+done
+[ "$f" = "0" -a "$d" = "0" ] && f=1 && d=1
+type=""
+[ "$f" = "1" -a "$d" = "0" ] && type="-type f"
+[ "$f" = "0" -a "$d" = "1" ] && type="-type d"
+
+shift $((OPTIND-1))
+
+dir="$1"
+dir=${dir:="."}
+[ ! -d ] && echo "E: path does not exists" >&2 && exit 1
+[ ! -r ] && echo "E: path is not readable" >&2 && exit 1
+dir=$(readlink -f "$dir")
+
+n=0
+while read path ; do
+    echo "$path"
+    while read p ; do
+        echo -e "\t$p"
+        n=$(($n + 1))
+    done < <(find "$dir" $type -name "*$path" 2>/dev/null)
+done < <(find "$dir" $type 2>/dev/null | sed 's;.*/;;' | sort | uniq -d)
+
+exit $n
+
+# EOF
