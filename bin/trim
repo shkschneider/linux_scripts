@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+#
+# trim -- trims leading and trailing whitespace
+# Copyright (C) 2017  Alan SCHNEIDER
+#                     <shk.schneider[at]gmail.com>
+#
+# This program comes with ABSOLUTELY NO WARRANTY.
+# This is free software, and you are welcome to redistribute it
+# under certain conditions.
+#
+
+while read line ; do
+    # https://stackoverflow.com/a/12973694
+    echo "$line" | xargs
+done
+
+exit 0
+
+# EOF
