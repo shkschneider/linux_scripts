@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # humans -- retrieve the Human population on Earth from command line
-# Copyright (C) 2010-2016  Alan SCHNEIDER
+# Copyright (C) 2010-2017  Alan SCHNEIDER
 #                          <shk.schneider[at]gmail.com>
 #
 # This program comes with ABSOLUTELY NO WARRANTY.
@@ -9,9 +9,27 @@
 # under certain conditions.
 #
 
-#[ -z "$(cat /proc/net/arp | egrep '^[0-9]')" ] && echo "E: no network connection" >&2 && exit 1
+name="API_SP.POP.TOTL_DS2_en_csv_v2"
 
-# unable to get from World Bank from command line
-exit 1
+zip="/tmp/$name.zip"
+if [ ! -f "$zip" ] ; then
+    wget --quiet "http://api.worldbank.org/v2/en/indicator/SP.POP.TOTL?downloadformat=csv" -O "/tmp/$name.zip" 2>/dev/null
+    [ $? -ne 0 ] && exit 1
+    [ ! -f "$zip" ] && exit 1
+fi
+dir=$(mktemp -d)
+cd $dir >/dev/null || exit 1
+unzip $zip >/dev/null || exit 1
+csv="$name.csv"
+[ ! -f "$csv" ] && exit 1
+
+population=$(egrep '^"World"' "$csv" | rev | cut -d ',' -f2 | rev | tr -d '"')
+year=$(cat "$csv" | sed -n '5p' | rev | cut -d ',' -f2 | rev | tr -d '"')
+echo "$population $year"
+
+cd - >/dev/null
+rm -rf "$dir" 2>/dev/null
+
+exit 0
 
 # EOF
