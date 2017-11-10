@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # 64bits -- know if your computer runs and supports 64bits OS
-# Copyright (C) 2011-2016  Alan SCHNEIDER
+# Copyright (C) 2011-2017  Alan SCHNEIDER
 #                          <shk.schneider[at]gmail.com>
 #
 # This program comes with ABSOLUTELY NO WARRANTY.
@@ -10,8 +10,13 @@
 #
 
 echo "System: "$(uname -o)" "$(file -b "$(command -v file 2>/dev/null)" | awk '{print $2}')
-echo "Supports 64bits: "$(cat /proc/cpuinfo | grep flags | grep lm > /dev/null && echo "Yes" || echo "No")
-
-exit 0
+cat /proc/cpuinfo | grep flags | grep lm > /dev/null
+if [ $? -eq 0 ] ; then
+    echo "Supports 64bits: Yes"
+    exit 0
+else
+    echo "Supports 64bits: No"
+    exit 1
+fi
 
 # EOF
