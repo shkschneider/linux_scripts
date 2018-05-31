@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+#
+# shell -- prints current shell and level
+# Copyright (C) 2018  Alan SCHNEIDER
+#                     <shk.schneider[at]gmail.com>
+#
+# This program comes with ABSOLUTELY NO WARRANTY.
+# This is free software, and you are welcome to redistribute it
+# under certain conditions.
+#
+
+shell=$(basename -- $(ps -o cmd -h $$))
+echo "$shell $SHLVL"
+
+exit 0
+
+# EOF
